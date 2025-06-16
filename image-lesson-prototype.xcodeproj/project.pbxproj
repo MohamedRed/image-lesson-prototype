@@ -1,0 +1,436 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		6A1379322DFFB3A600F14437 /* GliteImageLessonService in Frameworks */ = {isa = PBXBuildFile; productRef = 6A1379312DFFB3A600F14437 /* GliteImageLessonService */; };
+		6A1379352DFFB3BA00F14437 /* GliteImageLessonFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6A1379342DFFB3BA00F14437 /* GliteImageLessonFeature */; };
+		6A70A9032DFA5AE1001D60BA /* image_lesson_prototypeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A70A9022DFA5AE1001D60BA /* image_lesson_prototypeApp.swift */; };
+		6A70A9052DFA5AE1001D60BA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A70A9042DFA5AE1001D60BA /* ContentView.swift */; };
+		6A70A9072DFA5AE3001D60BA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6A70A9062DFA5AE3001D60BA /* Assets.xcassets */; };
+		6A70A90A2DFA5AE3001D60BA /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6A70A9092DFA5AE3001D60BA /* Preview Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		6A1379272DFFB28800F14437 /* GliteImageLessonService */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = GliteImageLessonService; path = Packages/GliteImageLessonService; sourceTree = "<group>"; };
+		6A1379282DFFB28800F14437 /* GliteImageLessonFeature */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = GliteImageLessonFeature; path = Packages/GliteImageLessonFeature; sourceTree = "<group>"; };
+		6A70A8FF2DFA5AE1001D60BA /* image-lesson-prototype.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "image-lesson-prototype.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6A70A9022DFA5AE1001D60BA /* image_lesson_prototypeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = image_lesson_prototypeApp.swift; sourceTree = "<group>"; };
+		6A70A9042DFA5AE1001D60BA /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		6A70A9062DFA5AE3001D60BA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		6A70A9092DFA5AE3001D60BA /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		6A70A9132DFA5AE3001D60BA /* image_lesson_prototypeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = image_lesson_prototypeTests.swift; sourceTree = "<group>"; };
+		6A70A91D2DFA5AE3001D60BA /* image_lesson_prototypeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = image_lesson_prototypeUITests.swift; sourceTree = "<group>"; };
+		6A70A91F2DFA5AE3001D60BA /* image_lesson_prototypeUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = image_lesson_prototypeUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		6A70A9352DFB3884001D60BA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6A70A8FC2DFA5AE1001D60BA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6A1379322DFFB3A600F14437 /* GliteImageLessonService in Frameworks */,
+				6A1379352DFFB3BA00F14437 /* GliteImageLessonFeature in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		6A70A8F62DFA5AE1001D60BA = {
+			isa = PBXGroup;
+			children = (
+				6A73D4DA2DFCD5F0005CF70F /* Packages */,
+				6A70A9012DFA5AE1001D60BA /* image-lesson-prototype */,
+				6A70A9122DFA5AE3001D60BA /* image-lesson-prototypeTests */,
+				6A70A91C2DFA5AE3001D60BA /* image-lesson-prototypeUITests */,
+				6A70A9002DFA5AE1001D60BA /* Products */,
+				6A70A9302DFB3320001D60BA /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		6A70A9002DFA5AE1001D60BA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6A70A8FF2DFA5AE1001D60BA /* image-lesson-prototype.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6A70A9012DFA5AE1001D60BA /* image-lesson-prototype */ = {
+			isa = PBXGroup;
+			children = (
+				6A70A9352DFB3884001D60BA /* Info.plist */,
+				6A70A9022DFA5AE1001D60BA /* image_lesson_prototypeApp.swift */,
+				6A70A9042DFA5AE1001D60BA /* ContentView.swift */,
+				6A70A9062DFA5AE3001D60BA /* Assets.xcassets */,
+				6A70A9082DFA5AE3001D60BA /* Preview Content */,
+			);
+			path = "image-lesson-prototype";
+			sourceTree = "<group>";
+		};
+		6A70A9082DFA5AE3001D60BA /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				6A70A9092DFA5AE3001D60BA /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		6A70A9122DFA5AE3001D60BA /* image-lesson-prototypeTests */ = {
+			isa = PBXGroup;
+			children = (
+				6A70A9132DFA5AE3001D60BA /* image_lesson_prototypeTests.swift */,
+			);
+			path = "image-lesson-prototypeTests";
+			sourceTree = "<group>";
+		};
+		6A70A91C2DFA5AE3001D60BA /* image-lesson-prototypeUITests */ = {
+			isa = PBXGroup;
+			children = (
+				6A70A91D2DFA5AE3001D60BA /* image_lesson_prototypeUITests.swift */,
+				6A70A91F2DFA5AE3001D60BA /* image_lesson_prototypeUITestsLaunchTests.swift */,
+			);
+			path = "image-lesson-prototypeUITests";
+			sourceTree = "<group>";
+		};
+		6A70A9302DFB3320001D60BA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				6A1379282DFFB28800F14437 /* GliteImageLessonFeature */,
+				6A1379272DFFB28800F14437 /* GliteImageLessonService */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		6A73D4DA2DFCD5F0005CF70F /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6A70A8FE2DFA5AE1001D60BA /* image-lesson-prototype */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6A70A9232DFA5AE3001D60BA /* Build configuration list for PBXNativeTarget "image-lesson-prototype" */;
+			buildPhases = (
+				6A70A8FB2DFA5AE1001D60BA /* Sources */,
+				6A70A8FC2DFA5AE1001D60BA /* Frameworks */,
+				6A70A8FD2DFA5AE1001D60BA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "image-lesson-prototype";
+			packageProductDependencies = (
+				6A1379312DFFB3A600F14437 /* GliteImageLessonService */,
+				6A1379342DFFB3BA00F14437 /* GliteImageLessonFeature */,
+			);
+			productName = "image-lesson-prototype";
+			productReference = 6A70A8FF2DFA5AE1001D60BA /* image-lesson-prototype.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6A70A8F72DFA5AE1001D60BA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1400;
+				LastUpgradeCheck = 1400;
+				TargetAttributes = {
+					6A70A8FE2DFA5AE1001D60BA = {
+						CreatedOnToolsVersion = 14.0.1;
+					};
+				};
+			};
+			buildConfigurationList = 6A70A8FA2DFA5AE1001D60BA /* Build configuration list for PBXProject "image-lesson-prototype" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 6A70A8F62DFA5AE1001D60BA;
+			packageReferences = (
+				6A1379302DFFB3A600F14437 /* XCLocalSwiftPackageReference "Packages/GliteImageLessonService" */,
+				6A1379332DFFB3BA00F14437 /* XCLocalSwiftPackageReference "Packages/GliteImageLessonFeature" */,
+			);
+			productRefGroup = 6A70A9002DFA5AE1001D60BA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6A70A8FE2DFA5AE1001D60BA /* image-lesson-prototype */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		6A70A8FD2DFA5AE1001D60BA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6A70A90A2DFA5AE3001D60BA /* Preview Assets.xcassets in Resources */,
+				6A70A9072DFA5AE3001D60BA /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6A70A8FB2DFA5AE1001D60BA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6A70A9052DFA5AE1001D60BA /* ContentView.swift in Sources */,
+				6A70A9032DFA5AE1001D60BA /* image_lesson_prototypeApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		6A70A9212DFA5AE3001D60BA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		6A70A9222DFA5AE3001D60BA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		6A70A9242DFA5AE3001D60BA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"image-lesson-prototype/Preview Content\"";
+				DEVELOPMENT_TEAM = EYR6YYD3N3;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "image-lesson-prototype/Info.plist";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app may use the camera in future lessons.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses the microphone to capture your voice for the language lesson.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.glite.image-lesson-prototype";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6A70A9252DFA5AE3001D60BA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"image-lesson-prototype/Preview Content\"";
+				DEVELOPMENT_TEAM = EYR6YYD3N3;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "image-lesson-prototype/Info.plist";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app may use the camera in future lessons.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses the microphone to capture your voice for the language lesson.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.glite.image-lesson-prototype";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6A70A8FA2DFA5AE1001D60BA /* Build configuration list for PBXProject "image-lesson-prototype" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6A70A9212DFA5AE3001D60BA /* Debug */,
+				6A70A9222DFA5AE3001D60BA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6A70A9232DFA5AE3001D60BA /* Build configuration list for PBXNativeTarget "image-lesson-prototype" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6A70A9242DFA5AE3001D60BA /* Debug */,
+				6A70A9252DFA5AE3001D60BA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		6A1379302DFFB3A600F14437 /* XCLocalSwiftPackageReference "Packages/GliteImageLessonService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/GliteImageLessonService;
+		};
+		6A1379332DFFB3BA00F14437 /* XCLocalSwiftPackageReference "Packages/GliteImageLessonFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/GliteImageLessonFeature;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		6A1379312DFFB3A600F14437 /* GliteImageLessonService */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = GliteImageLessonService;
+		};
+		6A1379342DFFB3BA00F14437 /* GliteImageLessonFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = GliteImageLessonFeature;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 6A70A8F72DFA5AE1001D60BA /* Project object */;
+}
