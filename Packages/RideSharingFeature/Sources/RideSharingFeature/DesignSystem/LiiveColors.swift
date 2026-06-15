@@ -78,6 +78,8 @@ public enum LiiveColor {
     public static let mapBackground = dyn(Color(hex: "DCE7E8"), Color(hex: "0A1822"))
     public static let mapRoad       = dyn(Color(hex: "FFFFFF"), Color(hex: "15293A"))
     public static let mapWater      = dyn(Color(hex: "B6D9DC"), Color(hex: "0C2230"))
+    public static let mapPark       = dyn(Color(hex: "D7E6D4"), Color(hex: "222A22"))
+    public static let mapDistrict   = dyn(Color(hex: "E6DED4"), Color(hex: "2A2722"))
     public static let mapRoute      = accent
     public static let mapRouteWalk  = warning
 }

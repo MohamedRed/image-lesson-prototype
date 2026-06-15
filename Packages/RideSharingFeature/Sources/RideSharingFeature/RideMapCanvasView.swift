@@ -58,11 +58,11 @@ struct RideMapCanvasView: View {
                 .rotationEffect(.degrees(-8))
                 .offset(x: -145, y: 285)
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color(hex: "222A22").opacity(0.55))
+                .fill(LiiveColor.mapPark.opacity(0.55))
                 .frame(width: 240, height: 180)
                 .offset(x: 230, y: -260)
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color(hex: "2A2722").opacity(0.50))
+                .fill(LiiveColor.mapDistrict.opacity(0.50))
                 .frame(width: 150, height: 150)
                 .offset(x: -150, y: -210)
         }

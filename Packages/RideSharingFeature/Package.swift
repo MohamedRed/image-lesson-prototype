@@ -19,6 +19,9 @@ let package = Package(
         .target(
             name: "RideSharingFeature",
             dependencies: [],
+            resources: [
+                .process("Resources")
+            ],
             swiftSettings: [.define("USE_LIVEKIT")]
         ),
     ]

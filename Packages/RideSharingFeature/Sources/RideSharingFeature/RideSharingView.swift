@@ -4,6 +4,7 @@ public struct RideSharingView: View {
     @StateObject private var viewModel: RideSharingViewModel
 
     public init(service: RideSharingServicing = MockRideSharingService()) {
+        LiiveFontRegistrar.registerBundledFonts()
         _viewModel = StateObject(wrappedValue: RideSharingViewModel(service: service))
     }
 

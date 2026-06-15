@@ -40,14 +40,14 @@ fun RideMapCanvas(phase: RidePhase, isMultiLeg: Boolean, carProgress: Float) {
     BoxWithConstraints(Modifier.fillMaxSize().background(c.mapBackground)) {
         Canvas(Modifier.fillMaxSize()) {
             drawRect(c.mapWater, topLeft = Offset(-40f, size.height * 0.73f), size = androidx.compose.ui.geometry.Size(size.width * 0.55f, size.height * 0.35f), alpha = 0.9f)
-            drawRect(Color(0xFF222A22), topLeft = Offset(size.width * 0.62f, size.height * 0.05f), size = androidx.compose.ui.geometry.Size(size.width * 0.60f, size.height * 0.24f), alpha = 0.55f)
-            drawRect(Color(0xFF2A2722), topLeft = Offset(-20f, size.height * 0.16f), size = androidx.compose.ui.geometry.Size(size.width * 0.38f, size.height * 0.20f), alpha = 0.50f)
+            drawRect(c.mapPark, topLeft = Offset(size.width * 0.62f, size.height * 0.05f), size = androidx.compose.ui.geometry.Size(size.width * 0.60f, size.height * 0.24f), alpha = 0.55f)
+            drawRect(c.mapDistrict, topLeft = Offset(-20f, size.height * 0.16f), size = androidx.compose.ui.geometry.Size(size.width * 0.38f, size.height * 0.20f), alpha = 0.50f)
             drawStreets(c.mapRoad)
             if (showRoute) {
                 drawPath(routePath(size.width, size.height, isMultiLeg), c.accent, style = Stroke(width = 7.dp.toPx(), cap = StrokeCap.Round))
                 if (isMultiLeg) {
                     val t = point(150f, 320f, size.width, size.height)
-                    drawCircle(Color.White, radius = 5.dp.toPx(), center = t)
+                    drawCircle(androidx.compose.ui.graphics.Color.White, radius = 5.dp.toPx(), center = t)
                     drawCircle(c.warning, radius = 5.dp.toPx(), center = t, style = Stroke(width = 3.dp.toPx()))
                 }
             }
@@ -120,7 +120,7 @@ private fun PulseMarker(point: MapPoint, maxWidth: Dp, maxHeight: Dp) {
             Canvas(Modifier.fillMaxSize()) {
                 drawCircle(c.accentTint, radius = size.minDimension / 2f * scale, center = center, alpha = 1f - scale)
                 drawCircle(c.accent, radius = 11.dp.toPx(), center = center)
-                drawCircle(Color.White, radius = 11.dp.toPx(), center = center, style = Stroke(width = 3.dp.toPx()))
+                drawCircle(androidx.compose.ui.graphics.Color.White, radius = 11.dp.toPx(), center = center, style = Stroke(width = 3.dp.toPx()))
             }
         }
     }
@@ -143,7 +143,7 @@ private fun RadarMarker(point: MapPoint, maxWidth: Dp, maxHeight: Dp) {
         Canvas(Modifier.fillMaxSize()) {
             drawCircle(c.accent, radius = size.minDimension / 2f * scale, center = center, alpha = 1f - scale)
             drawCircle(c.accent, radius = 7.dp.toPx(), center = center)
-            drawCircle(Color.White, radius = 7.dp.toPx(), center = center, style = Stroke(width = 3.dp.toPx()))
+            drawCircle(androidx.compose.ui.graphics.Color.White, radius = 7.dp.toPx(), center = center, style = Stroke(width = 3.dp.toPx()))
         }
     }
 }

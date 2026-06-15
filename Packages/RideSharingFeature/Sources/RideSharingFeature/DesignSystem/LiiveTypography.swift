@@ -1,7 +1,6 @@
 //  LiiveTypography.swift
 //  Liive Ride — "TIDE" type tokens (SwiftUI)
-//  Typeface: Schibsted Grotesk (bundle the TTFs + register in Info.plist
-//  UIAppFonts). Falls back to the system font until registered.
+//  Typeface: Schibsted Grotesk.
 
 import SwiftUI
 
@@ -10,7 +9,6 @@ public enum LiiveFont {
     public static let family = "Schibsted Grotesk"
 
     private static func sg(_ size: CGFloat, _ weight: Font.Weight) -> Font {
-        // Use the custom family when available; system font keeps Dynamic Type.
         Font.custom(family, size: size).weight(weight)
     }
 

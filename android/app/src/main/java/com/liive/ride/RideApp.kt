@@ -17,12 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.liive.ride.designsystem.*
 import com.liive.ride.ui.*
 
 @Composable
-fun RideApp(viewModel: RideViewModel = viewModel()) {
+fun RideApp(viewModel: RideViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LiiveTheme(darkTheme = true) {
