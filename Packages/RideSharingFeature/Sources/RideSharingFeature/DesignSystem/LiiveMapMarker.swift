@@ -30,26 +30,60 @@ public struct LiiveMapMarker: View {
     }
 
     public var body: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 5) {
-                Image(systemName: icon)
-                    .font(.system(size: 12, weight: .bold))
-                Text(label)
-                    .font(LiiveFont.caption1.weight(.semibold))
-                    .lineLimit(1)
+        VStack(spacing: 4) {
+            if kind == .origin {
+                originDot
+            } else {
+                pinMarker
             }
-            .foregroundColor(kind == .car ? LiiveColor.onAccent : .white)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 6)
-            .background(color)
-            .clipShape(Capsule())
+            labelTag
+        }
+        .fixedSize()
+    }
+
+    private var originDot: some View {
+        Circle()
+            .fill(color)
+            .frame(width: 18, height: 18)
+            .overlay(Circle().stroke(.white, lineWidth: 3))
             .liiveShadow(.pin)
+    }
+
+    private var pinMarker: some View {
+        VStack(spacing: 0) {
+            ZStack {
+                Circle()
+                    .fill(color)
+                    .frame(width: 38, height: 38)
+                    .overlay(Circle().stroke(.white, lineWidth: 2.5))
+                    .liiveShadow(.pin)
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.white)
+            }
             Triangle()
                 .fill(color)
                 .frame(width: 12, height: 8)
-                .offset(y: -8)
+                .overlay(Triangle().stroke(.white, lineWidth: 2.5))
+                .offset(y: -1)
         }
-        .fixedSize()
+    }
+
+    private var labelTag: some View {
+        Text(label)
+            .font(LiiveFont.caption1.weight(.semibold))
+            .foregroundColor(LiiveColor.text)
+            .lineLimit(1)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 2)
+            .background(LiiveColor.surface)
+            .clipShape(Capsule())
+            .overlay(alignment: .bottom) {
+                Capsule()
+                    .fill(color)
+                    .frame(height: 2)
+            }
+            .liiveShadow(.card)
     }
 }
 
