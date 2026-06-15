@@ -46,7 +46,7 @@ data class LiiveColors(
     val text: Color, val textSecondary: Color, val textTertiary: Color, val textQuaternary: Color,
     val separator: Color,
     val mapBackground: Color, val mapRoad: Color, val mapWater: Color,
-    val mapPark: Color, val mapDistrict: Color,
+    val mapPark: Color, val mapDistrict: Color, val mapRoute: Color, val mapRouteWalk: Color,
     val isDark: Boolean,
 )
 
@@ -68,6 +68,7 @@ val LiiveDarkColors = LiiveColors(
     separator = Color(0xFF78AAB9).copy(alpha = 0.18f),
     mapBackground = Ink900, mapRoad = Ink700, mapWater = Color(0xFF0C2230),
     mapPark = Color(0xFF222A22), mapDistrict = Color(0xFF2A2722),
+    mapRoute = Aqua500, mapRouteWalk = Amber500,
     isDark = true,
 )
 
@@ -89,5 +90,6 @@ val LiiveLightColors = LiiveColors(
     separator = Ink950.copy(alpha = 0.12f),
     mapBackground = Color(0xFFDCE7E8), mapRoad = Paper0, mapWater = Color(0xFFB6D9DC),
     mapPark = Color(0xFFD7E6D4), mapDistrict = Color(0xFFE6DED4),
+    mapRoute = Aqua700, mapRouteWalk = Color(0xFFD99412),
     isDark = false,
 )

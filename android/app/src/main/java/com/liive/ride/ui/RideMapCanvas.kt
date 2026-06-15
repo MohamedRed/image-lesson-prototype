@@ -1,5 +1,7 @@
 package com.liive.ride.ui
 
+import android.graphics.BlurMaskFilter
+import android.graphics.Paint
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -19,7 +21,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -44,7 +50,7 @@ fun RideMapCanvas(phase: RidePhase, isMultiLeg: Boolean, carProgress: Float) {
             drawRect(c.mapDistrict, topLeft = Offset(-20f, size.height * 0.16f), size = androidx.compose.ui.geometry.Size(size.width * 0.38f, size.height * 0.20f), alpha = 0.50f)
             drawStreets(c.mapRoad)
             if (showRoute) {
-                drawPath(routePath(size.width, size.height, isMultiLeg), c.accent, style = Stroke(width = 7.dp.toPx(), cap = StrokeCap.Round))
+                drawShadowedRoute(routePath(size.width, size.height, isMultiLeg), c.mapRoute)
                 if (isMultiLeg) {
                     val t = point(150f, 320f, size.width, size.height)
                     drawCircle(androidx.compose.ui.graphics.Color.White, radius = 5.dp.toPx(), center = t)
@@ -70,6 +76,24 @@ fun RideMapCanvas(phase: RidePhase, isMultiLeg: Boolean, carProgress: Float) {
         }
         if (phase == RidePhase.Matching) RadarMarker(point = MapPoint(196f, 470f), maxWidth = maxWidth, maxHeight = maxHeight)
     }
+}
+
+private fun DrawScope.drawShadowedRoute(path: Path, routeColor: Color) {
+    drawIntoCanvas { canvas ->
+        val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.BLACK
+            alpha = (255 * RouteShadowAlpha).roundToInt()
+            style = Paint.Style.STROKE
+            strokeWidth = RouteStrokeWidth.toPx()
+            strokeCap = Paint.Cap.ROUND
+            maskFilter = BlurMaskFilter(RouteShadowBlur.toPx(), BlurMaskFilter.Blur.NORMAL)
+        }
+        canvas.nativeCanvas.save()
+        canvas.nativeCanvas.translate(0f, RouteShadowYOffset.toPx())
+        canvas.nativeCanvas.drawPath(path.asAndroidPath(), shadowPaint)
+        canvas.nativeCanvas.restore()
+    }
+    drawPath(path, routeColor, style = Stroke(width = RouteStrokeWidth.toPx(), cap = StrokeCap.Round))
 }
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawStreets(roadColor: Color) {
@@ -164,3 +188,8 @@ private fun carPoint(multiLeg: Boolean, progress: Float): MapPoint {
 
 private data class MapPoint(val x: Float, val y: Float)
 private data class MapLine(val x1: Float, val y1: Float, val x2: Float, val y2: Float)
+
+private val RouteStrokeWidth = 7.dp
+private val RouteShadowBlur = 3.dp
+private val RouteShadowYOffset = 2.dp
+private const val RouteShadowAlpha = 0.35f
