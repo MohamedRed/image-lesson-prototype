@@ -1,0 +1,54 @@
+//  LiiveDriverCard.kt  ·  Liive Ride DS (Compose)  ·  mirrors components/ride/DriverCard
+//  Composes LiiveAvatar + LiiveRatingStars.
+package com.liive.ride.designsystem
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun LiiveDriverCard(
+    name: String,
+    rating: Double? = null,
+    vehicle: String? = null,
+    plate: String? = null,
+    eta: String? = null,
+    speaking: Boolean = false,
+    trailing: @Composable (() -> Unit)? = null,
+) {
+    val c = LiiveTheme.colors
+    Row(
+        Modifier.clip(LiiveRadius.lg).background(c.surface).padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        LiiveAvatar(name = name, size = 54.dp, ring = speaking)
+        Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(name, color = c.text, style = MaterialTheme.typography.titleLarge)
+                if (rating != null) LiiveRatingStars(value = rating, size = 13.dp)
+            }
+            if (vehicle != null || plate != null) {
+                Row {
+                    if (vehicle != null) Text(vehicle, color = c.textSecondary, style = MaterialTheme.typography.titleMedium)
+                    if (vehicle != null && plate != null) Text(" · ", color = c.textSecondary, style = MaterialTheme.typography.titleMedium)
+                    if (plate != null) Text(plate, color = c.text, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                }
+            }
+        }
+        if (eta != null) {
+            Column(horizontalAlignment = Alignment.End) {
+                Text(eta, color = c.accent, style = MaterialTheme.typography.headlineMedium)
+                Text("away", color = c.textSecondary, style = MaterialTheme.typography.labelSmall)
+            }
+        }
+        trailing?.invoke()
+    }
+}

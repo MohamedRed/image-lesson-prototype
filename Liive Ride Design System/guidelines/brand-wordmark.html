@@ -1,0 +1,27 @@
+<!-- @dsCard group="Brand" viewport="700x180" name="Wordmark" subtitle="Lowercase liive + aqua pulse — typographic reconstruction" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<link rel="stylesheet" href="../assets/wordmark.css" />
+<style>
+  body { margin: 0; padding: 0; height: 180px; background: var(--bg); display: flex; align-items: center; justify-content: center; gap: 48px; }
+  .big { font-size: 54px; }
+  .small { font-size: 30px; }
+  .onaccent { background: var(--accent); border-radius: var(--radius-xl); padding: 22px 30px; }
+  .onaccent .liive-wordmark { color: var(--on-accent); }
+  .onaccent .liive-wordmark .pulse { background: var(--on-accent); box-shadow: 0 0 0 0.16em rgba(4,22,26,0.25); }
+</style>
+</head>
+<body>
+  <div class="liive-lockup big">
+    <span class="route-dot"></span>
+    <span class="liive-wordmark">liive<span class="pulse"></span></span>
+    <span class="liive-sublabel">Ride</span>
+  </div>
+  <div class="onaccent">
+    <span class="liive-wordmark small">liive<span class="pulse"></span></span>
+  </div>
+</body>
+</html>

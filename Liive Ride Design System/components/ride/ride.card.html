@@ -1,0 +1,74 @@
+<!-- @dsCard group="Components" viewport="700x520" name="Ride — Driver, Map, SOS, Journey" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  body { margin: 0; padding: 22px;
+    background:
+      radial-gradient(circle at 78% 22%, rgba(84,224,198,0.18), transparent 45%),
+      repeating-linear-gradient(58deg, var(--map-road) 0 2px, transparent 2px 30px),
+      repeating-linear-gradient(150deg, var(--map-road) 0 2px, transparent 2px 34px),
+      var(--map-bg);
+  }
+  .col { display: flex; flex-direction: column; gap: 18px; max-width: 380px; }
+  .label { font: var(--weight-semibold) 11px var(--font-mono); color: rgba(235,235,245,0.7); text-transform: uppercase; letter-spacing: 0.06em; }
+  .markers { display: flex; gap: 22px; align-items: flex-start; }
+  [data-lucide] { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script type="text/babel">
+    const NS = window.LiiveRideDesignSystem_b6f128;
+    const { DriverCard, Button, GlassPanel, Badge, MapMarker, SOSButton, ProgressDots, FareRow } = NS;
+    function Demo() {
+      return (
+        <div className="col">
+          <div className="label">Driver card</div>
+          <DriverCard name="John Driver" rating={4.8} vehicle="Toyota Camry · Blue" plate="ABC 123" eta="4 min" speaking
+            trailing={<Button variant="tinted" icon={<i data-lucide="phone"></i>} style={{width:44,padding:0}} />} />
+
+          <div className="label">Glass HUD · markers</div>
+          <div style={{display:"flex",gap:10,alignItems:"center"}}>
+            <GlassPanel material="thin" radius="var(--radius-full)" padding={8} style={{display:"inline-flex"}}>
+              <Badge color="success" dot>Connected</Badge>
+            </GlassPanel>
+            <GlassPanel material="thin" radius="var(--radius-full)" padding="6px 10px" style={{display:"inline-flex",alignItems:"center",gap:8,color:"var(--text)"}}>
+              <i data-lucide="mic" style={{width:18,height:18}}></i>
+            </GlassPanel>
+          </div>
+          <div className="markers">
+            <MapMarker kind="car" label="4 min" />
+            <MapMarker kind="origin" label="Pickup" />
+            <MapMarker kind="destination" label="Union Sq" />
+            <MapMarker kind="transfer" label="Transfer" />
+          </div>
+
+          <div className="label">Multi-leg journey</div>
+          <GlassPanel material="thick"><ProgressDots legs={3} current={2} /></GlassPanel>
+
+          <div className="label">Fare · SOS</div>
+          <div style={{display:"flex",gap:16,alignItems:"center"}}>
+            <GlassPanel material="thick" style={{flex:1}}>
+              <FareRow label="Ride fare" amount="$11.49" />
+              <FareRow label="Tax & fees" amount="$1.01" />
+              <div style={{borderTop:"1px solid var(--separator)"}}></div>
+              <FareRow label="Total" amount="$12.50" total />
+            </GlassPanel>
+            <SOSButton />
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+    setTimeout(() => window.lucide && lucide.createIcons(), 60);
+  </script>
+</body>
+</html>

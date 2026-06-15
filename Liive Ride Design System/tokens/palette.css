@@ -1,0 +1,45 @@
+/* ============================================================
+   Liive Ride — Raw Palette  ·  "TIDE" brand
+   Cool ink canvas + luminous aqua accent + premium status hues.
+   These are the *base* values; never reference them in UI directly.
+   Use the semantic aliases in semantic.css instead.
+   ============================================================ */
+
+:root {
+  /* --- Ink scale (cool navy-black canvas → raised surfaces) --- */
+  --ink-950: #07121A;   /* base canvas */
+  --ink-900: #0A1822;   /* map / deep surface */
+  --ink-850: #0C1E2A;
+  --ink-800: #0E1E2A;   /* surface / cards */
+  --ink-700: #15293A;   /* raised rows / map roads */
+  --ink-600: #1E3548;
+  --ink-500: #2C4456;   /* hairlines / borders */
+  --ink-400: #3D586C;
+
+  /* --- Aqua accent ramp (the TIDE signature) --- */
+  --aqua-300: #9FF1E0;
+  --aqua-400: #7FECD6;
+  --aqua-500: #54E0C6;   /* primary accent */
+  --aqua-600: #2EC9AD;   /* pressed */
+  --aqua-700: #17A98F;   /* accent on light */
+
+  /* --- Premium status hues (cool-harmonised) --- */
+  --mint-500: #2FD08A;   /* success / connected / paid */
+  --amber-500: #F5B83D;  /* warning / transfers / walk / surge */
+  --amber-star: #F5C24B; /* rating stars */
+  --coral-500: #FF5A5F;  /* danger / SOS / error / origin pin */
+
+  /* --- Light surfaces (cool off-white) --- */
+  --paper-0: #FFFFFF;
+  --paper-50: #F4F8F8;
+  --paper-100: #EEF3F4;
+  --paper-200: #E2EAEC;
+
+  /* --- Text neutrals --- */
+  --ice-0: #EAF4F4;      /* primary text on ink */
+  --slate-900: #07121A;  /* primary text on paper */
+
+  /* --- Pure values --- */
+  --white: #FFFFFF;
+  --black: #000000;
+}

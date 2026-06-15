@@ -1,0 +1,58 @@
+/* ============================================================
+   Liive Ride — wordmark  ·  "TIDE"
+   Lowercase "liive" in Schibsted Grotesk, tight tracking, with a
+   luminous aqua "pulse" dot — the assured, in-motion mark.
+   No official logo exists; this is a typographic reconstruction.
+   Pure CSS — no image assets.
+   ============================================================ */
+
+.liive-wordmark {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.04em;
+  color: var(--text);
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* the aqua pulse dot that follows the mark */
+.liive-wordmark .pulse {
+  width: 0.16em;
+  height: 0.16em;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  margin-left: 0.14em;
+  margin-bottom: -0.06em;
+  box-shadow: 0 0 0 0.16em var(--accent-tint);
+}
+
+/* lockup with a leading location/route dot */
+.liive-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42em;
+}
+
+.liive-lockup .route-dot {
+  width: 0.4em;
+  height: 0.4em;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  box-shadow: 0 0 0 0.16em var(--accent-tint);
+}
+
+/* "Ride" sub-label sits after the wordmark as a capsule */
+.liive-sublabel {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  background: var(--accent-tint);
+  border-radius: var(--radius-full);
+  padding: 0.22em 0.66em;
+  font-size: 0.34em;
+  text-transform: uppercase;
+  align-self: center;
+}

@@ -1,0 +1,23 @@
+<!-- @dsCard group="Spacing" viewport="700x170" name="Spacing Scale" subtitle="4 / 8-point rhythm · 16px screen gutter · 44px touch target" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 20px 24px; background: var(--bg); display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; align-items: center; gap: 14px; }
+  .bar { height: 16px; background: var(--accent); border-radius: 3px; }
+  .lbl { font: 400 11px var(--font-mono); color: var(--text-secondary); width: 130px; }
+</style>
+</head>
+<body>
+  <div class="row"><span class="lbl">--space-2 · 4</span><span class="bar" style="width:4px"></span></div>
+  <div class="row"><span class="lbl">--space-3 · 8</span><span class="bar" style="width:8px"></span></div>
+  <div class="row"><span class="lbl">--space-4 · 12</span><span class="bar" style="width:12px"></span></div>
+  <div class="row"><span class="lbl">--space-5 · 16 (gutter)</span><span class="bar" style="width:16px"></span></div>
+  <div class="row"><span class="lbl">--space-7 · 24</span><span class="bar" style="width:24px"></span></div>
+  <div class="row"><span class="lbl">--space-8 · 32</span><span class="bar" style="width:32px"></span></div>
+  <div class="row"><span class="lbl">--touch-min · 44</span><span class="bar" style="width:44px; background:var(--success)"></span></div>
+</body>
+</html>

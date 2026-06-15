@@ -1,0 +1,22 @@
+<!-- @dsCard group="Spacing" viewport="700x180" name="Elevation & Shadows" subtitle="card · HUD · pin · SOS glow" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 28px 24px; background: var(--bg); display: flex; gap: 26px; align-items: center; }
+  .item { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .box { width: 110px; height: 70px; background: var(--surface); border-radius: var(--radius-lg); }
+  .pin { width: 44px; height: 44px; border-radius: var(--radius-full); background: var(--accent); }
+  .sos { width: 56px; height: 56px; border-radius: var(--radius-full); background: var(--danger); display: flex; align-items: center; justify-content: center; font: var(--weight-bold) 13px var(--font-rounded); color: #fff; }
+  .lbl { font: 400 11px var(--font-mono); color: var(--text-secondary); }
+</style>
+</head>
+<body>
+  <div class="item"><div class="box" style="box-shadow:var(--shadow-card)"></div><span class="lbl">card</span></div>
+  <div class="item"><div class="box" style="box-shadow:var(--shadow-hud)"></div><span class="lbl">hud</span></div>
+  <div class="item"><div class="pin" style="box-shadow:var(--shadow-pin)"></div><span class="lbl">pin</span></div>
+  <div class="item"><div class="sos" style="box-shadow:var(--shadow-sos)">SOS</div><span class="lbl">sos glow</span></div>
+</body>
+</html>

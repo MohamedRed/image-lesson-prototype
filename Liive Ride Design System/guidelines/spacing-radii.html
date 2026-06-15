@@ -1,0 +1,23 @@
+<!-- @dsCard group="Spacing" viewport="700x160" name="Corner Radii" subtitle="chip 8 · button 10 · card/HUD 12 · feature 16 · sheet 20 · capsule" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 20px; background: var(--bg); display: flex; gap: 16px; align-items: flex-end; }
+  .item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .box { width: 84px; height: 64px; background: var(--surface-raised); border: 1px solid var(--separator); border-top: 3px solid var(--accent); }
+  .cap { width: 110px; height: 40px; background: var(--accent-tint); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font: var(--weight-semibold) 12px var(--font-sans); color: var(--accent); }
+  .lbl { font: 400 11px var(--font-mono); color: var(--text-secondary); }
+</style>
+</head>
+<body>
+  <div class="item"><div class="box" style="border-radius:var(--radius-sm)"></div><span class="lbl">sm · 8</span></div>
+  <div class="item"><div class="box" style="border-radius:var(--radius-md)"></div><span class="lbl">md · 10</span></div>
+  <div class="item"><div class="box" style="border-radius:var(--radius-lg)"></div><span class="lbl">lg · 12</span></div>
+  <div class="item"><div class="box" style="border-radius:var(--radius-xl)"></div><span class="lbl">xl · 16</span></div>
+  <div class="item"><div class="box" style="border-radius:var(--radius-2xl)"></div><span class="lbl">2xl · 20</span></div>
+  <div class="item"><div class="cap">capsule</div><span class="lbl">full</span></div>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!-- @dsCard group="Colors" viewport="700x170" name="Status Colors" subtitle="Semantic: success · warning · danger · info, each with a tint" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 20px; background: var(--bg); }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .sw { flex: 1; min-width: 150px; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; }
+  .chip { height: 56px; display: flex; align-items: center; gap: 8px; padding: 0 12px; }
+  .dot { width: 12px; height: 12px; border-radius: var(--radius-full); }
+  .tintbar { height: 22px; }
+  .meta { padding: 8px 12px; }
+  .name { font: var(--weight-semibold) 13px var(--font-sans); }
+  .use { font: 400 11px var(--font-sans); color: var(--text-secondary); margin-top: 2px; }
+  .lbl { font: var(--weight-semibold) 13px var(--font-sans); color: #fff; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="sw">
+      <div class="chip" style="background:var(--success)"><span class="lbl">Success</span></div>
+      <div class="tintbar" style="background:var(--success-tint)"></div>
+      <div class="meta"><div class="name" style="color:var(--success)">--success</div><div class="use">connected · paid · driver</div></div>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:var(--warning)"><span class="lbl">Warning</span></div>
+      <div class="tintbar" style="background:var(--warning-tint)"></div>
+      <div class="meta"><div class="name" style="color:var(--warning)">--warning</div><div class="use">transfers · walk · surge</div></div>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:var(--danger)"><span class="lbl">Danger</span></div>
+      <div class="tintbar" style="background:var(--danger-tint)"></div>
+      <div class="meta"><div class="name" style="color:var(--danger)">--danger</div><div class="use">SOS · error · origin pin</div></div>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:var(--info)"><span class="lbl" style="color:#000">Info</span></div>
+      <div class="tintbar" style="background:var(--info-tint)"></div>
+      <div class="meta"><div class="name" style="color:var(--info)">--info</div><div class="use">neutral highlight</div></div>
+    </div>
+  </div>
+</body>
+</html>

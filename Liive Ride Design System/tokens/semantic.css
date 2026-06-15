@@ -1,0 +1,115 @@
+/* ============================================================
+   Liive Ride — Semantic Tokens  ·  "TIDE" brand
+   Dark-mode FIRST (the app lives on a dark map). Premium, minimal,
+   cool ink + luminous aqua.
+   :root          → dark theme (default)
+   [data-theme="light"] → light theme (opt-in)
+   Reference ONLY these aliases in components, cards and kits.
+   ============================================================ */
+
+:root {
+  /* ---- Accent / brand (aqua) ---- */
+  --accent: var(--aqua-500);
+  --accent-pressed: var(--aqua-600);
+  --accent-bright: var(--aqua-400);
+  --accent-tint: rgba(84, 224, 198, 0.15);   /* fills behind icons */
+  --on-accent: #04161A;                        /* dark ink on aqua */
+
+  /* ---- Semantic status ---- */
+  --success: var(--mint-500);        /* connected, paid, driver, complete */
+  --success-tint: rgba(47, 208, 138, 0.16);
+  --warning: var(--amber-500);       /* transfers, walking, surge */
+  --warning-tint: rgba(245, 184, 61, 0.16);
+  --danger: var(--coral-500);        /* SOS, errors, origin pin */
+  --danger-tint: rgba(255, 90, 95, 0.16);
+  --info: var(--aqua-400);
+  --info-tint: rgba(127, 236, 214, 0.15);
+  --star: var(--amber-star);         /* rating stars */
+
+  /* ---- Backgrounds (base canvas → raised surfaces) ---- */
+  --bg: var(--ink-950);
+  --surface: var(--ink-800);
+  --surface-raised: var(--ink-700);
+  --surface-sheet: var(--ink-850);
+
+  /* ---- Fill colors (translucent chips, track fills) ---- */
+  --fill: rgba(120, 160, 175, 0.20);
+  --fill-secondary: rgba(120, 160, 175, 0.16);
+  --fill-tertiary: rgba(120, 160, 175, 0.12);
+  --fill-quaternary: rgba(120, 160, 175, 0.08);
+
+  /* ---- Labels / text ---- */
+  --text: var(--ice-0);
+  --text-secondary: rgba(234, 244, 244, 0.58);
+  --text-tertiary: rgba(234, 244, 244, 0.32);
+  --text-quaternary: rgba(234, 244, 244, 0.18);
+
+  /* ---- Hairlines / borders ---- */
+  --separator: rgba(120, 170, 185, 0.18);
+  --separator-opaque: var(--ink-600);
+  --border-strong: rgba(255, 255, 255, 0.10);
+
+  /* ---- Map surface (dark) ---- */
+  --map-bg: var(--ink-900);
+  --map-road: var(--ink-700);
+  --map-water: #0C2230;
+  --map-route: var(--accent);
+  --map-route-walk: var(--warning);
+
+  /* ---- Materials (frosted glass HUD backgrounds) ---- */
+  --material-thin: rgba(14, 30, 42, 0.55);
+  --material-regular: rgba(10, 24, 34, 0.70);
+  --material-thick: rgba(8, 18, 26, 0.86);
+
+  color-scheme: dark;
+}
+
+/* ============================================================
+   LIGHT THEME (opt-in)
+   ============================================================ */
+:root[data-theme="light"] {
+  --accent: var(--aqua-700);
+  --accent-pressed: #0E8E78;
+  --accent-bright: var(--aqua-600);
+  --accent-tint: rgba(23, 169, 143, 0.12);
+  --on-accent: #FFFFFF;
+
+  --success: #16A36B;
+  --success-tint: rgba(22, 163, 107, 0.12);
+  --warning: #D99412;
+  --warning-tint: rgba(217, 148, 18, 0.14);
+  --danger: #E5484D;
+  --danger-tint: rgba(229, 72, 77, 0.12);
+  --info: var(--aqua-700);
+  --info-tint: rgba(23, 169, 143, 0.12);
+  --star: #E0A41F;
+
+  --bg: var(--paper-100);
+  --surface: var(--paper-0);
+  --surface-raised: var(--paper-0);
+  --surface-sheet: var(--paper-0);
+
+  --fill: rgba(70, 110, 125, 0.14);
+  --fill-secondary: rgba(70, 110, 125, 0.11);
+  --fill-tertiary: rgba(70, 110, 125, 0.08);
+  --fill-quaternary: rgba(70, 110, 125, 0.05);
+
+  --text: var(--slate-900);
+  --text-secondary: rgba(7, 18, 26, 0.58);
+  --text-tertiary: rgba(7, 18, 26, 0.32);
+  --text-quaternary: rgba(7, 18, 26, 0.20);
+
+  --separator: rgba(7, 18, 26, 0.12);
+  --separator-opaque: var(--paper-200);
+  --border-strong: rgba(7, 18, 26, 0.10);
+
+  --map-bg: #DCE7E8;
+  --map-road: #FFFFFF;
+  --map-water: #B6D9DC;
+
+  --material-thin: rgba(244, 248, 248, 0.70);
+  --material-regular: rgba(255, 255, 255, 0.80);
+  --material-thick: rgba(255, 255, 255, 0.92);
+
+  color-scheme: light;
+}

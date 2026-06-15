@@ -1,0 +1,36 @@
+<!-- @dsCard group="Colors" viewport="700x160" name="Accent Ramp & Hues" subtitle="Aqua ramp + premium status hues (mint / amber / coral)" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 20px; background: var(--bg); }
+  .stack { display: flex; flex-direction: column; gap: 16px; }
+  .ramp { display: flex; gap: 0; border-radius: var(--radius-md); overflow: hidden; }
+  .ramp .sw { flex: 1; height: 46px; display: flex; align-items: flex-end; padding: 6px; }
+  .ramp .name { font: var(--weight-medium) 10px var(--font-mono); color: rgba(4,22,26,0.7); }
+  .hues { display: flex; gap: 12px; }
+  .hue { flex: 1; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .hue .chip { width: 100%; height: 46px; border-radius: var(--radius-md); }
+  .hue .lbl { font: var(--weight-medium) 11px var(--font-sans); color: var(--text-secondary); }
+</style>
+</head>
+<body>
+  <div class="stack">
+    <div class="ramp">
+      <div class="sw" style="background:var(--aqua-300)"><span class="name">300</span></div>
+      <div class="sw" style="background:var(--aqua-400)"><span class="name">400</span></div>
+      <div class="sw" style="background:var(--aqua-500)"><span class="name">500</span></div>
+      <div class="sw" style="background:var(--aqua-600)"><span class="name">600</span></div>
+      <div class="sw" style="background:var(--aqua-700)"><span class="name">700</span></div>
+    </div>
+    <div class="hues">
+      <div class="hue"><div class="chip" style="background:var(--success)"></div><span class="lbl">success · mint</span></div>
+      <div class="hue"><div class="chip" style="background:var(--warning)"></div><span class="lbl">warning · amber</span></div>
+      <div class="hue"><div class="chip" style="background:var(--danger)"></div><span class="lbl">danger · coral</span></div>
+      <div class="hue"><div class="chip" style="background:var(--star)"></div><span class="lbl">star · gold</span></div>
+    </div>
+  </div>
+</body>
+</html>

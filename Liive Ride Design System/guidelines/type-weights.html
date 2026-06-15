@@ -1,0 +1,29 @@
+<!-- @dsCard group="Type" viewport="700x140" name="Weights & Tabular Numbers" subtitle="Regular→Bold, plus tnum for fares & ETAs" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 22px 24px; background: var(--bg); display: flex; gap: 40px; align-items: center; }
+  .weights { display: flex; gap: 22px; align-items: baseline; }
+  .w { color: var(--text); font-size: 24px; }
+  .wl { display: block; font: 400 10px var(--font-mono); color: var(--text-tertiary); text-align: center; margin-top: 4px; }
+  .nums { border-left: 1px solid var(--separator); padding-left: 36px; }
+  .fare { font: var(--weight-bold) 30px var(--font-sans); color: var(--text); }
+  .cap { font: 400 11px var(--font-mono); color: var(--text-tertiary); margin-top: 4px; }
+</style>
+</head>
+<body>
+  <div class="weights">
+    <div><span class="w" style="font-weight:400">Aa</span><span class="wl">400</span></div>
+    <div><span class="w" style="font-weight:500">Aa</span><span class="wl">500</span></div>
+    <div><span class="w" style="font-weight:600">Aa</span><span class="wl">600</span></div>
+    <div><span class="w" style="font-weight:700">Aa</span><span class="wl">700</span></div>
+  </div>
+  <div class="nums">
+    <div class="fare tnum">$12.50 · ETA 4m</div>
+    <div class="cap">.tnum — tabular-nums for aligned figures</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!-- @dsCard group="Type" viewport="700x200" name="Font Families" subtitle="Schibsted Grotesk — display & UI — plus mono" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 22px 24px; background: var(--bg); }
+  .blk { padding: 10px 0; border-bottom: 1px solid var(--separator); }
+  .blk:last-child { border-bottom: 0; }
+  .big { color: var(--text); font-size: 27px; }
+  .tag { font: 400 11px var(--font-mono); color: var(--text-tertiary); margin-top: 4px; }
+</style>
+</head>
+<body>
+  <div class="blk">
+    <div class="big" style="font-family:var(--font-display); font-weight:700; letter-spacing:-0.04em">Your ride is arriving · 0123</div>
+    <div class="tag">--font-display — Schibsted Grotesk Bold. Titles, fares, the wordmark.</div>
+  </div>
+  <div class="blk">
+    <div class="big" style="font-family:var(--font-sans); font-weight:400; letter-spacing:-0.01em">Find the closest legal pickup zone · 0123</div>
+    <div class="tag">--font-sans — Schibsted Grotesk Regular/Medium. UI default.</div>
+  </div>
+  <div class="blk">
+    <div class="big" style="font-family:var(--font-mono)">$12.50 · ABC 123 · ride_12345</div>
+    <div class="tag">--font-mono — system mono. Plates, IDs, code.</div>
+  </div>
+</body>
+</html>

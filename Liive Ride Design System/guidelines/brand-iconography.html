@@ -1,0 +1,39 @@
+<!-- @dsCard group="Brand" viewport="700x170" name="Iconography (Lucide ≈ SF Symbols)" subtitle="Web substitute for SF Symbols — see assets/icon-map.md" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 22px; background: var(--bg); }
+  .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 16px 10px; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .ic { width: 44px; height: 44px; border-radius: var(--radius-full); background: var(--fill-tertiary); display: flex; align-items: center; justify-content: center; }
+  .ic svg { width: 22px; height: 22px; }
+  .accent .ic { background: var(--accent-tint); color: var(--accent); }
+  .nm { font: 400 10px var(--font-mono); color: var(--text-secondary); }
+</style>
+</head>
+<body>
+  <div class="grid">
+    <div class="cell accent"><div class="ic"><i data-lucide="car"></i></div><span class="nm">car</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="navigation"></i></div><span class="nm">locate</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="map-pin"></i></div><span class="nm">pin</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="footprints"></i></div><span class="nm">walk</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="arrow-left-right"></i></div><span class="nm">transfer</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="mic"></i></div><span class="nm">mic</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="shield"></i></div><span class="nm">pool</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="credit-card"></i></div><span class="nm">pay</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="users"></i></div><span class="nm">seats</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="luggage"></i></div><span class="nm">luggage</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="paw-print"></i></div><span class="nm">pet</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="baby"></i></div><span class="nm">child</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="star"></i></div><span class="nm">premium</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="clock"></i></div><span class="nm">eta</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="phone"></i></div><span class="nm">call</span></div>
+    <div class="cell"><div class="ic"><i data-lucide="settings"></i></div><span class="nm">settings</span></div>
+  </div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

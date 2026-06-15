@@ -1,0 +1,23 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Text & Labels (Dark)" subtitle="Four label levels on the base canvas" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 20px; background: var(--bg); }
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .line { display: flex; align-items: baseline; gap: 14px; }
+  .t { font: var(--weight-semibold) 20px var(--font-sans); }
+  .tag { font: 400 11px var(--font-mono); color: var(--text-tertiary); }
+</style>
+</head>
+<body>
+  <div class="stack">
+    <div class="line"><span class="t" style="color:var(--text)">Driver is 4 minutes away</span><span class="tag">--text · label</span></div>
+    <div class="line"><span class="t" style="color:var(--text-secondary)">Toyota Camry · ABC 123</span><span class="tag">--text-secondary · 60%</span></div>
+    <div class="line"><span class="t" style="color:var(--text-tertiary)">Searching for drivers…</span><span class="tag">--text-tertiary · 30%</span></div>
+    <div class="line"><span class="t" style="color:var(--text-quaternary)">Where to?</span><span class="tag">--text-quaternary · placeholder</span></div>
+  </div>
+</body>
+</html>

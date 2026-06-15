@@ -1,0 +1,24 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Surfaces (Dark)" subtitle="Cool-ink elevation: bg → surface → raised, plus fill" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 20px; background: var(--bg); }
+  .row { display: flex; gap: 14px; }
+  .sw { flex: 1; height: 96px; border-radius: var(--radius-lg); padding: 12px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-card); }
+  .name { font: var(--weight-semibold) 13px var(--font-sans); color: var(--text); }
+  .val { font: 400 11px var(--font-mono); color: var(--text-secondary); }
+  .border { border: 1px solid var(--separator); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="sw border" style="background:var(--bg)"><div class="name">bg</div><div class="val">#07121A</div></div>
+    <div class="sw" style="background:var(--surface)"><div class="name">surface</div><div class="val">#0E1E2A</div></div>
+    <div class="sw" style="background:var(--surface-raised)"><div class="name">surface-raised</div><div class="val">#15293A</div></div>
+    <div class="sw" style="background:var(--fill)"><div class="name">fill</div><div class="val">cool / 20%</div></div>
+  </div>
+</body>
+</html>

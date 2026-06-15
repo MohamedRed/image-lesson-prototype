@@ -1,0 +1,83 @@
+/* ============================================================
+   Liive Ride — Typography  ·  "TIDE" brand
+   Schibsted Grotesk — a clean, confident grotesque, bundled as a
+   real webfont (tokens/fonts.css) so it ships identically on every
+   platform. --font-display drives titles/fares/wordmark with tight
+   negative tracking; --font-sans is the UI default.
+   ============================================================ */
+
+:root {
+  /* ---- Families ----
+     Schibsted Grotesk is the TIDE brand typeface (bundled via fonts.css).
+     --font-display drives titles + the wordmark; --font-sans the UI. */
+  --font-display: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-sans: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-rounded: "Schibsted Grotesk", -apple-system, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, monospace;
+
+  /* ---- Weights ---- */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-heavy: 800;
+
+  /* ---- iOS text styles: size / line-height / tracking ----
+     Values are the iOS point sizes (1pt == 1px on web). */
+  --type-large-title-size: 34px;
+  --type-large-title-line: 40px;
+  --type-large-title-tracking: -0.8px;
+
+  --type-title1-size: 28px;
+  --type-title1-line: 34px;
+  --type-title1-tracking: -0.6px;
+
+  --type-title2-size: 22px;
+  --type-title2-line: 28px;
+  --type-title2-tracking: -0.5px;
+
+  --type-title3-size: 20px;
+  --type-title3-line: 25px;
+  --type-title3-tracking: -0.4px;
+
+  --type-headline-size: 17px;
+  --type-headline-line: 22px;
+  --type-headline-tracking: -0.3px;
+
+  --type-body-size: 17px;
+  --type-body-line: 22px;
+  --type-body-tracking: -0.43px;
+
+  --type-callout-size: 16px;
+  --type-callout-line: 21px;
+  --type-callout-tracking: -0.31px;
+
+  --type-subhead-size: 15px;
+  --type-subhead-line: 20px;
+  --type-subhead-tracking: -0.23px;
+
+  --type-footnote-size: 13px;
+  --type-footnote-line: 18px;
+  --type-footnote-tracking: -0.08px;
+
+  --type-caption1-size: 12px;
+  --type-caption1-line: 16px;
+  --type-caption1-tracking: 0px;
+
+  --type-caption2-size: 11px;
+  --type-caption2-line: 13px;
+  --type-caption2-tracking: 0.06px;
+}
+
+/* ---- Optional helper classes (use vars directly in components) ---- */
+.t-large-title { font: var(--weight-bold) var(--type-large-title-size)/var(--type-large-title-line) var(--font-display); letter-spacing: var(--type-large-title-tracking); }
+.t-title1 { font: var(--weight-bold) var(--type-title1-size)/var(--type-title1-line) var(--font-display); letter-spacing: var(--type-title1-tracking); }
+.t-title2 { font: var(--weight-bold) var(--type-title2-size)/var(--type-title2-line) var(--font-display); letter-spacing: var(--type-title2-tracking); }
+.t-title3 { font: var(--weight-semibold) var(--type-title3-size)/var(--type-title3-line) var(--font-display); letter-spacing: var(--type-title3-tracking); }
+.t-headline { font: var(--weight-semibold) var(--type-headline-size)/var(--type-headline-line) var(--font-sans); letter-spacing: var(--type-headline-tracking); }
+.t-body { font: var(--weight-regular) var(--type-body-size)/var(--type-body-line) var(--font-sans); letter-spacing: var(--type-body-tracking); }
+.t-callout { font: var(--weight-regular) var(--type-callout-size)/var(--type-callout-line) var(--font-sans); letter-spacing: var(--type-callout-tracking); }
+.t-subhead { font: var(--weight-regular) var(--type-subhead-size)/var(--type-subhead-line) var(--font-sans); letter-spacing: var(--type-subhead-tracking); }
+.t-footnote { font: var(--weight-regular) var(--type-footnote-size)/var(--type-footnote-line) var(--font-sans); letter-spacing: var(--type-footnote-tracking); }
+.t-caption1 { font: var(--weight-regular) var(--type-caption1-size)/var(--type-caption1-line) var(--font-sans); letter-spacing: var(--type-caption1-tracking); }
+.t-caption2 { font: var(--weight-regular) var(--type-caption2-size)/var(--type-caption2-line) var(--font-sans); letter-spacing: var(--type-caption2-tracking); }

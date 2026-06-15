@@ -1,0 +1,74 @@
+<!-- @dsCard group="Components" viewport="700x440" name="Core — Buttons, Badges, Controls" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  body { margin: 0; padding: 22px; background: var(--bg); }
+  .grid { display: flex; flex-direction: column; gap: 20px; }
+  .block { display: flex; flex-direction: column; gap: 10px; }
+  .label { font: var(--weight-semibold) 11px var(--font-mono); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+  .rowf { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  [data-lucide] { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script type="text/babel">
+    const { Button, Badge, SegmentedControl, Switch, Stepper, IconCircle } = window.LiiveRideDesignSystem_b6f128;
+    function Demo() {
+      const [mode, setMode] = React.useState("rider");
+      const [on, setOn] = React.useState(true);
+      const [seats, setSeats] = React.useState(2);
+      return (
+        <div className="grid">
+          <div className="block">
+            <div className="label">Buttons</div>
+            <div className="rowf">
+              <Button variant="primary">Request Ride</Button>
+              <Button variant="secondary">Details</Button>
+              <Button variant="tinted" icon={<i data-lucide="phone"></i>}>Call</Button>
+              <Button variant="plain">Edit</Button>
+              <Button variant="destructive-plain">Cancel Ride</Button>
+              <Button variant="primary" loading>Loading</Button>
+              <Button variant="primary" disabled>Disabled</Button>
+            </div>
+            <div className="rowf">
+              <Button variant="primary" size="lg" shape="capsule" fullWidth>Confirm Pickup · $12.50</Button>
+            </div>
+          </div>
+          <div className="block">
+            <div className="label">Badges</div>
+            <div className="rowf">
+              <Badge color="success" dot>Connected</Badge>
+              <Badge color="warning" dot>Reconnecting</Badge>
+              <Badge color="danger" dot>Failed</Badge>
+              <Badge color="accent">2 legs</Badge>
+              <Badge color="warning" solid>Surge ×1.5</Badge>
+              <Badge color="neutral">Demo</Badge>
+            </div>
+          </div>
+          <div className="block">
+            <div className="label">Segmented · Switch · Stepper</div>
+            <div className="rowf">
+              <div style={{width:200}}><SegmentedControl options={["rider","driver"]} value={mode} onChange={setMode} /></div>
+              <Switch checked={on} onChange={setOn} />
+              <Stepper value={seats} min={1} max={4} onChange={setSeats} />
+              <IconCircle color="accent"><i data-lucide="car"></i></IconCircle>
+              <IconCircle color="danger" filled><i data-lucide="shield"></i></IconCircle>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+    setTimeout(() => window.lucide && lucide.createIcons(), 50);
+  </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+/* ============================================================
+   Liive Ride — Effects: shadows, blur materials, motion, z-index
+   ============================================================ */
+
+:root {
+  /* ---- Elevation shadows ---- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.12);
+  --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.10);
+  --shadow-hud: 0 6px 20px rgba(0, 0, 0, 0.28);
+  --shadow-raised: 0 8px 24px rgba(0, 0, 0, 0.18);
+  --shadow-sheet: 0 -8px 30px rgba(0, 0, 0, 0.30);
+  --shadow-pin: 0 4px 10px rgba(0, 0, 0, 0.35);
+  --shadow-sos: 0 6px 18px rgba(255, 69, 58, 0.45);
+
+  /* ---- Blur materials (apply with backdrop-filter) ---- */
+  --blur-thin: saturate(180%) blur(20px); /* @kind other */
+  --blur-regular: saturate(180%) blur(30px); /* @kind other */
+  --blur-thick: saturate(180%) blur(40px); /* @kind other */
+
+  /* ---- Motion ----
+     iOS favours spring-like ease-out; quick & subtle. */
+  --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1); /* @kind other */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* @kind other */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* @kind other */
+  --dur-fast: 150ms; /* @kind other */
+  --dur-base: 250ms; /* @kind other */
+  --dur-slow: 400ms; /* @kind other */
+
+  /* Press feedback: controls dim & shrink slightly */
+  --press-scale: 0.96; /* @kind other */
+  --press-opacity: 0.6; /* @kind other */
+
+  /* ---- Z-index ladder ---- */
+  --z-map: 0; /* @kind other */
+  --z-content: 10; /* @kind other */
+  --z-hud: 20; /* @kind other */
+  --z-sheet: 30; /* @kind other */
+  --z-nav: 40; /* @kind other */
+  --z-sos: 45; /* @kind other */
+  --z-toast: 50; /* @kind other */
+  --z-modal: 60; /* @kind other */
+}

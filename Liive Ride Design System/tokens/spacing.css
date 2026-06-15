@@ -1,0 +1,42 @@
+/* ============================================================
+   Liive Ride — Spacing, Radii, Sizing
+   iOS uses a 4 / 8-point rhythm. Touch targets ≥ 44pt.
+   ============================================================ */
+
+:root {
+  /* ---- Spacing scale (4pt base) ---- */
+  --space-0: 0;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;   /* standard screen gutter */
+  --space-6: 20px;
+  --space-7: 24px;
+  --space-8: 32px;
+  --space-9: 40px;
+  --space-10: 48px;
+  --space-12: 64px;
+
+  /* ---- Layout ---- */
+  --screen-gutter: 16px;     /* default horizontal page padding */
+  --safe-top: 44px;          /* status-bar / notch inset */
+  --safe-bottom: 34px;       /* home-indicator inset */
+  --touch-min: 44px;         /* minimum hit target */
+
+  /* ---- Corner radii ---- */
+  --radius-xs: 6px;
+  --radius-sm: 8px;          /* small chips / badges */
+  --radius-md: 10px;         /* buttons, inputs */
+  --radius-lg: 12px;         /* cards, HUD panels */
+  --radius-xl: 16px;         /* feature cards */
+  --radius-2xl: 20px;        /* bottom sheets */
+  --radius-3xl: 28px;        /* large sheet top */
+  --radius-full: 999px;      /* capsules / pills */
+
+  /* ---- Control heights ---- */
+  --control-sm: 32px;
+  --control-md: 44px;        /* standard iOS button / row */
+  --control-lg: 50px;        /* prominent full-width CTA */
+  --control-xl: 56px;
+}
