@@ -30,6 +30,7 @@ public final class RideSharingViewModel: ObservableObject {
     private let storageKey = "liive-ride-state"
     private var matchingTask: Task<Void, Never>?
     private var rideTask: Task<Void, Never>?
+    private var activeSession: RideSession?
 
     public init(service: RideSharingServicing = MockRideSharingService(), storage: UserDefaults = .standard) {
         self.service = service
@@ -66,29 +67,33 @@ public final class RideSharingViewModel: ObservableObject {
         case .confirmPickup:
             startMatching()
         case .cancelMatching:
-            stopActiveRide()
+            cancelActiveRide()
             mutate { $0.phase = .options }
         case .cancelRide:
-            resetRide()
+            cancelRideAndReset()
         case .matchingComplete:
             startEnroute()
         case .setCarProgress(let progress):
             mutate { $0.carProgress = min(max(progress, 0), 1) }
         case .finishRide:
-            stopActiveRide()
+            cancelTimeline()
             mutate {
                 $0.carProgress = 1
                 $0.phase = .complete
             }
         case .toggleMic:
             mutate { $0.micEnabled.toggle() }
-            Task { await service.toggleMicrophone() }
+            let enabled = state.micEnabled
+            Task { await service.setMicrophoneEnabled(enabled) }
         case .presentSOS(let presented):
             mutate { $0.isSOSPresented = presented }
         case .pay:
-            mutate { $0.paid = true }
+            capturePayment()
         case .rate(let rating):
             mutate { $0.rating = min(max(rating, 0), 5) }
+            let boundedRating = state.rating
+            let session = activeSession
+            Task { await service.submitRating(boundedRating, session: session) }
         case .reset:
             resetRide()
         }
@@ -99,20 +104,25 @@ public final class RideSharingViewModel: ObservableObject {
     }
 
     private func startMatching() {
-        matchingTask?.cancel()
-        rideTask?.cancel()
+        cancelActiveRide()
+        let config = state.config
         mutate {
             $0.phase = .matching
             $0.carProgress = 0
             $0.paid = false
             $0.rating = 0
         }
-        Task { try? await service.start() }
         matchingTask = Task { [weak self] in
+            guard let self else { return }
+            let session = try? await service.requestRide(with: config)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                self.activeSession = session
+            }
             try? await Task.sleep(nanoseconds: 2_600_000_000)
             guard !Task.isCancelled else { return }
             await MainActor.run {
-                self?.handle(.matchingComplete)
+                self.handle(.matchingComplete)
             }
         }
     }
@@ -148,16 +158,39 @@ public final class RideSharingViewModel: ObservableObject {
     }
 
     private func resetRide() {
-        stopActiveRide()
+        cancelTimeline()
+        activeSession = nil
         mutate { $0 = RideUIState() }
     }
 
-    private func stopActiveRide() {
+    private func cancelRideAndReset() {
+        cancelActiveRide()
+        mutate { $0 = RideUIState() }
+    }
+
+    private func cancelTimeline() {
         matchingTask?.cancel()
         rideTask?.cancel()
         matchingTask = nil
         rideTask = nil
-        service.stop()
+    }
+
+    private func cancelActiveRide() {
+        cancelTimeline()
+        service.cancelRide(activeSession)
+        activeSession = nil
+    }
+
+    private func capturePayment() {
+        let amount = state.config.price
+        let destinationName = state.config.destinationName
+        Task { [weak self] in
+            guard let self else { return }
+            _ = try? await service.capturePayment(amount: amount, destinationName: destinationName)
+            await MainActor.run {
+                self.mutate { $0.paid = true }
+            }
+        }
     }
 
     private func resumeTimelineIfNeeded() {

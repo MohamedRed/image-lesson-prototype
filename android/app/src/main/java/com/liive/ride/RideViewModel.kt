@@ -13,12 +13,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.math.round
 
-class RideViewModel(private val stateStore: RideStateStore) : ViewModel() {
+class RideViewModel(
+    private val stateStore: RideStateStore,
+    private val service: RideService,
+) : ViewModel() {
     private val mutableState = MutableStateFlow(stateStore.read())
     val state: StateFlow<RideUiState> = mutableState.asStateFlow()
 
     private var matchingJob: Job? = null
     private var rideJob: Job? = null
+    private var activeSession: RideSession? = null
 
     init {
         resumeTimelineIfNeeded()
@@ -41,27 +45,39 @@ class RideViewModel(private val stateStore: RideStateStore) : ViewModel() {
             is RideEvent.SetChildSeat -> updateState { it.copy(config = it.config.copy(childSeat = event.enabled)) }
             RideEvent.ConfirmPickup -> startMatching()
             RideEvent.CancelMatching -> {
-                cancelActiveJobs()
+                cancelActiveRide()
                 updateState { it.copy(phase = RidePhase.Options) }
             }
-            RideEvent.CancelRide, RideEvent.Reset -> reset()
+            RideEvent.CancelRide -> cancelRideAndReset()
+            RideEvent.Reset -> reset()
             RideEvent.MatchingComplete -> startEnroute()
             is RideEvent.SetCarProgress -> updateState { it.copy(carProgress = event.progress.coerceIn(0f, 1f)) }
             RideEvent.FinishRide -> {
-                cancelActiveJobs()
+                cancelTimeline()
                 updateState { it.copy(phase = RidePhase.Complete, carProgress = 1f) }
             }
-            RideEvent.ToggleMic -> updateState { it.copy(micEnabled = !it.micEnabled) }
+            RideEvent.ToggleMic -> {
+                updateState { it.copy(micEnabled = !it.micEnabled) }
+                val enabled = mutableState.value.micEnabled
+                viewModelScope.launch { service.setMicrophoneEnabled(enabled) }
+            }
             is RideEvent.PresentSOS -> updateState { it.copy(sosPresented = event.presented) }
-            RideEvent.Pay -> updateState { it.copy(paid = true) }
-            is RideEvent.Rate -> updateState { it.copy(rating = event.rating.coerceIn(0, 5)) }
+            RideEvent.Pay -> capturePayment()
+            is RideEvent.Rate -> {
+                updateState { it.copy(rating = event.rating.coerceIn(0, 5)) }
+                val rating = mutableState.value.rating
+                val session = activeSession
+                viewModelScope.launch { service.submitRating(rating, session) }
+            }
         }
     }
 
     private fun startMatching() {
-        cancelActiveJobs()
+        cancelActiveRide()
+        val config = mutableState.value.config
         updateState { it.copy(phase = RidePhase.Matching, paid = false, rating = 0, carProgress = 0f) }
         matchingJob = viewModelScope.launch {
+            activeSession = service.requestRide(config)
             delay(2_600)
             onEvent(RideEvent.MatchingComplete)
         }
@@ -74,16 +90,29 @@ class RideViewModel(private val stateStore: RideStateStore) : ViewModel() {
     }
 
     private fun reset() {
-        cancelActiveJobs()
+        cancelTimeline()
+        activeSession = null
         mutableState.value = RideUiState()
         stateStore.clear()
     }
 
-    private fun cancelActiveJobs() {
+    private fun cancelRideAndReset() {
+        cancelActiveRide()
+        mutableState.value = RideUiState()
+        stateStore.clear()
+    }
+
+    private fun cancelTimeline() {
         matchingJob?.cancel()
         rideJob?.cancel()
         matchingJob = null
         rideJob = null
+    }
+
+    private fun cancelActiveRide() {
+        cancelTimeline()
+        service.cancelRide(activeSession)
+        activeSession = null
     }
 
     private fun updateState(transform: (RideUiState) -> RideUiState) {
@@ -113,12 +142,23 @@ class RideViewModel(private val stateStore: RideStateStore) : ViewModel() {
         }
     }
 
+    private fun capturePayment() {
+        val config = mutableState.value.config
+        viewModelScope.launch {
+            service.capturePayment(config.tier.price, config.destinationName)
+            updateState { it.copy(paid = true) }
+        }
+    }
+
     companion object {
-        fun factory(stateStore: RideStateStore): ViewModelProvider.Factory =
+        fun factory(
+            stateStore: RideStateStore,
+            service: RideService = MockRideService(),
+        ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-                    return RideViewModel(stateStore) as T
+                    return RideViewModel(stateStore, service) as T
                 }
             }
     }
