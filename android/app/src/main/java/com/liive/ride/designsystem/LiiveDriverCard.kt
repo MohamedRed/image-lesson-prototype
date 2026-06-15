@@ -10,8 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun LiiveDriverCard(
@@ -25,7 +28,11 @@ fun LiiveDriverCard(
 ) {
     val c = LiiveTheme.colors
     Row(
-        Modifier.clip(LiiveRadius.lg).background(c.surface).padding(14.dp),
+        Modifier
+            .shadow(LiiveElevation.card, LiiveRadius.lg)
+            .clip(LiiveRadius.lg)
+            .background(c.surface)
+            .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
@@ -36,10 +43,29 @@ fun LiiveDriverCard(
                 if (rating != null) LiiveRatingStars(value = rating, size = 13.dp)
             }
             if (vehicle != null || plate != null) {
-                Row {
-                    if (vehicle != null) Text(vehicle, color = c.textSecondary, style = MaterialTheme.typography.titleMedium)
-                    if (vehicle != null && plate != null) Text(" · ", color = c.textSecondary, style = MaterialTheme.typography.titleMedium)
-                    if (plate != null) Text(plate, color = c.text, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                Row(Modifier.fillMaxWidth()) {
+                    if (vehicle != null) {
+                        Text(
+                            vehicle,
+                            color = c.textSecondary,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                    }
+                    if (vehicle != null && plate != null) {
+                        Text(" · ", color = c.textSecondary, style = MaterialTheme.typography.titleMedium)
+                    }
+                    if (plate != null) {
+                        Text(
+                            plate,
+                            color = c.text,
+                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.titleMedium.copy(letterSpacing = 0.5.sp),
+                            maxLines = 1
+                        )
+                    }
                 }
             }
         }

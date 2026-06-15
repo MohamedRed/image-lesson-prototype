@@ -32,9 +32,10 @@ public struct LiiveDriverCard<Trailing: View>: View {
                     HStack(spacing: 0) {
                         if let vehicle { Text(vehicle).foregroundColor(LiiveColor.textSecondary) }
                         if vehicle != nil && plate != nil { Text(" · ").foregroundColor(LiiveColor.textSecondary) }
-                        if let plate { Text(plate).fontWeight(.semibold).foregroundColor(LiiveColor.text) }
+                        if let plate { Text(plate).fontWeight(.semibold).tracking(0.5).foregroundColor(LiiveColor.text) }
                     }
                     .font(LiiveFont.subhead)
+                    .lineLimit(1)
                 }
             }
             Spacer(minLength: 8)
