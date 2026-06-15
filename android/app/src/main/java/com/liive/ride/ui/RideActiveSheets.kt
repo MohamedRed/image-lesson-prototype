@@ -94,7 +94,8 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
                 onClick = {},
                 modifier = Modifier.weight(1f),
                 variant = LiiveButtonVariant.Secondary,
-                size = LiiveButtonSize.Lg
+                size = LiiveButtonSize.Lg,
+                icon = RideIcons.Message
             )
             LiiveButton(
                 title = "Cancel Ride",

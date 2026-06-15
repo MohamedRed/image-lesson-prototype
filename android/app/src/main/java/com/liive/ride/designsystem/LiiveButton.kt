@@ -3,11 +3,15 @@
 //  Mirror this pattern for Badge, Card, ListRow, GlassPanel, SosButton, etc.
 package com.liive.ride.designsystem
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,9 +20,9 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.foundation.clickable
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 enum class LiiveButtonVariant { Primary, Secondary, Tinted, Plain, Destructive, DestructivePlain }
@@ -34,6 +38,8 @@ fun LiiveButton(
     capsule: Boolean = false,
     fullWidth: Boolean = false,
     tabularNumbers: Boolean = false,
+    @DrawableRes icon: Int? = null,
+    @DrawableRes iconRight: Int? = null,
 ) {
     val c = LiiveTheme.colors
     val interaction = remember { MutableInteractionSource() }
@@ -68,11 +74,17 @@ fun LiiveButton(
             .padding(horizontal = if (size == LiiveButtonSize.Lg) 22.dp else 18.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = title,
-            color = fg,
-            style = if (tabularNumbers) MaterialTheme.typography.titleLarge.tabularNumbers() else MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (icon != null) Icon(painterResource(icon), null, tint = fg, modifier = Modifier.size(18.dp))
+            Text(
+                text = title,
+                color = fg,
+                style = if (tabularNumbers) MaterialTheme.typography.titleLarge.tabularNumbers() else MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (iconRight != null) Icon(painterResource(iconRight), null, tint = fg, modifier = Modifier.size(18.dp))
+        }
     }
 }
