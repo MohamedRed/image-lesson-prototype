@@ -14,16 +14,23 @@ public struct LiiveFareRow: View {
     }
 
     public var body: some View {
-        HStack {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
             Text(label)
                 .font(total ? LiiveFont.headline : LiiveFont.subhead)
-                .foregroundColor(muted ? LiiveColor.textSecondary : LiiveColor.text)
+                .fontWeight(total ? .semibold : .regular)
+                .foregroundColor(labelColor)
             Spacer()
             Text(amount)
                 .font((total ? LiiveFont.headline : LiiveFont.subhead).monospacedDigit())
-                .fontWeight(total ? .bold : .regular)
-                .foregroundColor(total ? LiiveColor.text : LiiveColor.textSecondary)
+                .fontWeight(total ? .bold : .medium)
+                .foregroundColor(LiiveColor.text)
         }
-        .padding(.vertical, 7)
+        .padding(.top, total ? 12 : 6)
+        .padding(.bottom, total ? 0 : 6)
+    }
+
+    private var labelColor: Color {
+        if total { return LiiveColor.text }
+        return muted ? LiiveColor.textTertiary : LiiveColor.textSecondary
     }
 }
