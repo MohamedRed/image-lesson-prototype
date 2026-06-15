@@ -2,6 +2,8 @@ package com.liive.ride.designsystem
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,14 +11,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -34,9 +40,24 @@ fun LiiveListRow(
     onClick: (() -> Unit)? = null,
 ) {
     val c = LiiveTheme.colors
-    Column(modifier.then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val clickModifier = if (onClick != null) {
+        Modifier.clickable(
+            interactionSource = interactionSource,
+            indication = null,
+            onClick = onClick
+        )
+    } else {
+        Modifier
+    }
+    Column(modifier.then(clickModifier)) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = LiiveSpacing.touchMin)
+                .background(if (onClick != null && pressed) c.fillQuaternary else Color.Transparent)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -56,7 +77,7 @@ fun LiiveListRow(
             }
         }
         if (divider) {
-            Box(Modifier.padding(start = 60.dp).fillMaxWidth().height(0.5.dp).background(c.separator))
+            Box(Modifier.fillMaxWidth().height(0.5.dp).background(c.separator))
         }
     }
 }

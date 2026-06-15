@@ -64,6 +64,7 @@ public enum LiiveColor {
     public static let fill          = dyn(Color(hex: "466E7D", opacity: 0.14), Color(hex: "78A0AF", opacity: 0.20))
     public static let fillSecondary = dyn(Color(hex: "466E7D", opacity: 0.11), Color(hex: "78A0AF", opacity: 0.16))
     public static let fillTertiary  = dyn(Color(hex: "466E7D", opacity: 0.08), Color(hex: "78A0AF", opacity: 0.12))
+    public static let fillQuaternary = dyn(Color(hex: "466E7D", opacity: 0.05), Color(hex: "78A0AF", opacity: 0.08))
 
     // MARK: Text
     public static let text          = dyn(Color(hex: "07121A"), Color(hex: "EAF4F4"))

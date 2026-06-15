@@ -1,6 +1,8 @@
 import SwiftUI
 
 public struct LiiveListRow<Leading: View, Trailing: View>: View {
+    @GestureState private var isPressed = false
+
     let title: String
     var subtitle: String?
     var value: String?
@@ -58,16 +60,25 @@ public struct LiiveListRow<Leading: View, Trailing: View>: View {
                         .foregroundColor(LiiveColor.textTertiary)
                 }
             }
-            .padding(.horizontal, 12)
+            .frame(minHeight: LiiveSpacing.touchMin)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 16)
             .padding(.vertical, 10)
+            .background(action != nil && isPressed ? LiiveColor.fillQuaternary : Color.clear)
             if divider {
                 Rectangle()
                     .fill(LiiveColor.separator)
                     .frame(height: 0.5)
-                    .padding(.leading, 60)
             }
         }
         .contentShape(Rectangle())
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .updating($isPressed) { _, state, _ in
+                    state = action != nil
+                }
+        )
+        .animation(.easeOut(duration: LiiveMotion.fast), value: isPressed)
         .onTapGesture { action?() }
     }
 }
