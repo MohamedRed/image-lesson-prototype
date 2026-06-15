@@ -163,7 +163,7 @@ struct RideCompleteSheetView: View {
                     .foregroundColor(LiiveColor.text)
                     .padding(.top, 14)
                 Text("\(fare.ridePrice) paid to John · receipt sent")
-                    .font(LiiveFont.subhead)
+                    .font(LiiveFont.subhead.monospacedDigit())
                     .foregroundColor(LiiveColor.textSecondary)
                     .padding(.top, 6)
             }
@@ -186,7 +186,7 @@ struct RideCompleteSheetView: View {
                         .liiveStyle(.title3)
                         .foregroundColor(LiiveColor.text)
                     Text("\(config.destinationName) · 18 min · 5.2 km")
-                        .font(LiiveFont.footnote)
+                        .font(LiiveFont.footnote.monospacedDigit())
                         .foregroundColor(LiiveColor.textSecondary)
                 }
                 Spacer()
@@ -220,7 +220,7 @@ struct RideCompleteSheetView: View {
             .padding(.bottom, 12)
 
             ratingControl
-            LiiveButton("Pay \(fare.ridePrice)", variant: .primary, size: .lg, shape: .capsule, fullWidth: true) {
+            LiiveButton("Pay \(fare.ridePrice)", variant: .primary, size: .lg, shape: .capsule, fullWidth: true, tabularNumbers: true) {
                 viewModel.handle(.pay)
             }
             Text("Secured by Stripe")

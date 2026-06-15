@@ -15,15 +15,18 @@ public struct LiiveButton: View {
     var shape: Shape = .rounded
     var fullWidth: Bool = false
     var icon: Image? = nil
+    var tabularNumbers: Bool = false
     let action: () -> Void
 
     @State private var pressed = false
 
     public init(_ title: String, variant: Variant = .primary, size: Size = .md,
                 shape: Shape = .rounded, fullWidth: Bool = false, icon: Image? = nil,
+                tabularNumbers: Bool = false,
                 action: @escaping () -> Void) {
         self.title = title; self.variant = variant; self.size = size
-        self.shape = shape; self.fullWidth = fullWidth; self.icon = icon; self.action = action
+        self.shape = shape; self.fullWidth = fullWidth; self.icon = icon
+        self.tabularNumbers = tabularNumbers; self.action = action
     }
 
     private var height: CGFloat { size == .sm ? 32 : size == .lg ? 50 : 44 }
@@ -53,7 +56,7 @@ public struct LiiveButton: View {
             HStack(spacing: LiiveSpacing.s) {
                 if let icon { icon }
                 Text(title)
-                    .font(LiiveFont.headline)
+                    .font(tabularNumbers ? LiiveFont.headline.monospacedDigit() : LiiveFont.headline)
                     .tracking(LiiveFont.Tracking.headline)
             }
             .frame(maxWidth: fullWidth ? .infinity : nil)

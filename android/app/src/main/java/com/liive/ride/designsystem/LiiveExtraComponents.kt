@@ -161,6 +161,11 @@ fun LiiveFareRow(label: String, amount: String, muted: Boolean = false, total: B
     Row(Modifier.fillMaxWidth().padding(vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, color = if (muted) c.textSecondary else c.text, style = if (total) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium)
         Spacer(Modifier.weight(1f))
-        Text(amount, color = if (total) c.text else c.textSecondary, style = if (total) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium, fontWeight = if (total) FontWeight.Bold else FontWeight.Normal)
+        Text(
+            amount,
+            color = if (total) c.text else c.textSecondary,
+            style = (if (total) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium).tabularNumbers(),
+            fontWeight = if (total) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }

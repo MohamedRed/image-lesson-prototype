@@ -28,6 +28,8 @@ private fun sg(size: Int, line: Int, weight: FontWeight, tracking: Double) = Tex
     letterSpacing = tracking.sp,
 )
 
+fun TextStyle.tabularNumbers(): TextStyle = copy(fontFeatureSettings = "tnum")
+
 // iOS-derived scale (size / line / tracking in pt). Material3 slot mapping:
 val LiiveType = Typography(
     displayLarge   = sg(34, 40, FontWeight.Bold, -0.8),   // Large Title

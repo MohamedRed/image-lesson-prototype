@@ -70,7 +70,8 @@ struct RideOptionsSheetView: View {
                 variant: .primary,
                 size: .lg,
                 shape: .capsule,
-                fullWidth: true
+                fullWidth: true,
+                tabularNumbers: true
             ) {
                 viewModel.handle(.confirmPickup)
             }
@@ -180,7 +181,7 @@ private struct RideTierRow: View {
                         .font(LiiveFont.headline.monospacedDigit())
                         .foregroundColor(LiiveColor.text)
                     Text(tier.eta)
-                        .font(LiiveFont.caption1)
+                        .font(LiiveFont.caption1.monospacedDigit())
                         .foregroundColor(LiiveColor.textSecondary)
                 }
             }

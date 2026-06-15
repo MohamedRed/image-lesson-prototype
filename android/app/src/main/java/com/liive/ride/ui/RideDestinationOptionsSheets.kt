@@ -107,7 +107,8 @@ fun RideOptionsSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             onClick = { onEvent(RideEvent.ConfirmPickup) },
             fullWidth = true,
             size = LiiveButtonSize.Lg,
-            capsule = true
+            capsule = true,
+            tabularNumbers = true
         )
     }
 }
@@ -134,8 +135,8 @@ private fun RideTierRow(tier: RideTier, selected: Boolean, onClick: () -> Unit) 
             Text(tier.detail, color = c.textSecondary, style = MaterialTheme.typography.bodySmall)
         }
         Column(horizontalAlignment = Alignment.End) {
-            Text(tier.price.ridePrice(), color = c.text, style = MaterialTheme.typography.titleLarge)
-            Text(tier.eta, color = c.textSecondary, style = MaterialTheme.typography.labelMedium)
+            Text(tier.price.ridePrice(), color = c.text, style = MaterialTheme.typography.titleLarge.tabularNumbers())
+            Text(tier.eta, color = c.textSecondary, style = MaterialTheme.typography.labelMedium.tabularNumbers())
         }
     }
 }

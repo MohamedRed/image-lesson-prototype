@@ -34,7 +34,7 @@ public struct LiiveRatingStars: View {
             }
             if showValue {
                 Text(String(format: "%.1f", value))
-                    .font(.system(size: size - 1, weight: .semibold).monospacedDigit())
+                    .font(Font.custom(LiiveFont.family, size: size - 1).weight(.semibold).monospacedDigit())
                     .foregroundColor(LiiveColor.text)
             }
         }

@@ -3,6 +3,7 @@ package com.liive.ride.designsystem
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,8 +34,14 @@ fun LiiveRatingStars(value: Double, max: Int = 5, size: Dp = 14.dp, showValue: B
             }
         }
         if (showValue) {
-            Text(String.format("%.1f", value), color = c.text, fontWeight = FontWeight.SemiBold,
-                fontSize = (size.value - 1).sp, fontFamily = SchibstedGrotesk)
+            Text(
+                String.format("%.1f", value),
+                color = c.text,
+                style = MaterialTheme.typography.labelMedium.tabularNumbers().copy(
+                    fontSize = (size.value - 1).sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            )
         }
     }
 }

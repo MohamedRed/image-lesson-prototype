@@ -139,7 +139,7 @@ private fun PaidReceiptSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
         Column(Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             LiiveIconCircle(RideIcons.Check, IconCircleColor.Success, 56.dp, filled = true)
             Text("Thanks for riding", color = c.text, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 14.dp))
-            Text("${state.config.tier.price.ridePrice()} paid to John · receipt sent", color = c.textSecondary, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 6.dp))
+            Text("${state.config.tier.price.ridePrice()} paid to John · receipt sent", color = c.textSecondary, style = MaterialTheme.typography.titleMedium.tabularNumbers(), modifier = Modifier.padding(top = 6.dp))
         }
         Spacer(Modifier.height(20.dp))
         LiiveButton(
@@ -163,7 +163,7 @@ private fun PaymentSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             LiiveIconCircle(RideIcons.Flag, IconCircleColor.Success, 36.dp, filled = true)
             Column(Modifier.weight(1f)) {
                 Text("You've arrived", color = c.text, style = MaterialTheme.typography.headlineSmall)
-                Text("${state.config.destinationName} · 18 min · 5.2 km", color = c.textSecondary, style = MaterialTheme.typography.bodySmall)
+                Text("${state.config.destinationName} · 18 min · 5.2 km", color = c.textSecondary, style = MaterialTheme.typography.bodySmall.tabularNumbers())
             }
         }
         Column(Modifier.fillMaxWidth().clip(LiiveRadius.lg).background(c.surfaceRaised).padding(horizontal = 14.dp, vertical = 8.dp)) {
@@ -175,7 +175,7 @@ private fun PaymentSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
         }
         Spacer(Modifier.height(12.dp))
         Column(Modifier.fillMaxWidth().clip(LiiveRadius.lg).background(c.surfaceRaised)) {
-            LiiveListRow("Apple Pay", value = "default", divider = false, chevron = true, leading = {
+            LiiveListRow("Google Pay", value = "default", divider = false, chevron = true, leading = {
                 LiiveIconCircle(RideIcons.CreditCard, IconCircleColor.Neutral, 32.dp)
             })
         }
@@ -185,7 +185,8 @@ private fun PaymentSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             onClick = { onEvent(RideEvent.Pay) },
             fullWidth = true,
             size = LiiveButtonSize.Lg,
-            capsule = true
+            capsule = true,
+            tabularNumbers = true
         )
         Text("Secured by Stripe", color = c.textTertiary, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
     }

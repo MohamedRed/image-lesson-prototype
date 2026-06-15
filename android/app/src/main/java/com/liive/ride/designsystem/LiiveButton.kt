@@ -33,6 +33,7 @@ fun LiiveButton(
     size: LiiveButtonSize = LiiveButtonSize.Md,
     capsule: Boolean = false,
     fullWidth: Boolean = false,
+    tabularNumbers: Boolean = false,
 ) {
     val c = LiiveTheme.colors
     val interaction = remember { MutableInteractionSource() }
@@ -70,7 +71,7 @@ fun LiiveButton(
         Text(
             text = title,
             color = fg,
-            style = MaterialTheme.typography.titleLarge, // Headline
+            style = if (tabularNumbers) MaterialTheme.typography.titleLarge.tabularNumbers() else MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center,
         )
     }
