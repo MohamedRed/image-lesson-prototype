@@ -1,18 +1,12 @@
 package com.liive.ride.designsystem
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.DirectionsCar
-import androidx.compose.material.icons.rounded.LocationOn
-import androidx.compose.material.icons.rounded.Remove
-import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -24,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -72,7 +66,7 @@ fun LiiveListRow(
             }
             if (value != null) Text(value, color = c.textSecondary, style = MaterialTheme.typography.titleMedium)
             trailing()
-            if (chevron) Icon(Icons.Rounded.ChevronRight, null, tint = c.textTertiary, modifier = Modifier.size(18.dp))
+            if (chevron) Icon(painterResource(RideIcons.ChevronRight), null, tint = c.textTertiary, modifier = Modifier.size(18.dp))
         }
         if (divider) Box(Modifier.padding(start = 60.dp).fillMaxWidth().height(0.5.dp).background(c.separator))
     }
@@ -81,21 +75,21 @@ fun LiiveListRow(
 @Composable
 fun LiiveStepper(value: Int, range: IntRange, onChange: (Int) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        StepperControl(Icons.Rounded.Remove, enabled = value > range.first) { onChange((value - 1).coerceAtLeast(range.first)) }
+        StepperControl(RideIcons.Remove, enabled = value > range.first) { onChange((value - 1).coerceAtLeast(range.first)) }
         Text(value.toString(), color = LiiveTheme.colors.text, style = MaterialTheme.typography.titleLarge, modifier = Modifier.width(20.dp))
-        StepperControl(Icons.Rounded.Add, enabled = value < range.last) { onChange((value + 1).coerceAtMost(range.last)) }
+        StepperControl(RideIcons.Add, enabled = value < range.last) { onChange((value + 1).coerceAtMost(range.last)) }
     }
 }
 
 @Composable
-private fun StepperControl(icon: ImageVector, enabled: Boolean, onClick: () -> Unit) {
+private fun StepperControl(@DrawableRes icon: Int, enabled: Boolean, onClick: () -> Unit) {
     val c = LiiveTheme.colors
     Box(
         Modifier.size(30.dp).clip(CircleShape).background(if (enabled) c.fill else c.fillTertiary)
             .clickable(enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Icon(icon, null, tint = if (enabled) c.text else c.textQuaternary, modifier = Modifier.size(16.dp))
+        Icon(painterResource(icon), null, tint = if (enabled) c.text else c.textQuaternary, modifier = Modifier.size(16.dp))
     }
 }
 
@@ -135,9 +129,9 @@ fun LiiveMapMarker(kind: MapMarkerKind, label: String) {
         MapMarkerKind.Transfer -> c.warning
     }
     val icon = when (kind) {
-        MapMarkerKind.Car -> Icons.Rounded.DirectionsCar
-        MapMarkerKind.Origin, MapMarkerKind.Destination -> Icons.Rounded.LocationOn
-        MapMarkerKind.Transfer -> Icons.Rounded.SwapHoriz
+        MapMarkerKind.Car -> RideIcons.Car
+        MapMarkerKind.Origin, MapMarkerKind.Destination -> RideIcons.LocationOn
+        MapMarkerKind.Transfer -> RideIcons.SwapHoriz
     }
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.widthIn(max = 150.dp)) {
         Row(
@@ -145,7 +139,7 @@ fun LiiveMapMarker(kind: MapMarkerKind, label: String) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
-            Icon(icon, null, tint = if (kind == MapMarkerKind.Car) c.onAccent else androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(14.dp))
+            Icon(painterResource(icon), null, tint = if (kind == MapMarkerKind.Car) c.onAccent else androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(14.dp))
             Text(label, color = if (kind == MapMarkerKind.Car) c.onAccent else androidx.compose.ui.graphics.Color.White, style = MaterialTheme.typography.labelMedium)
         }
         Canvas(Modifier.size(width = 12.dp, height = 8.dp)) {

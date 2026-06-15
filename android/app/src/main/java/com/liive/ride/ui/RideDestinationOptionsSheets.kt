@@ -3,9 +3,6 @@ package com.liive.ride.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ChevronLeft
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -14,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.liive.ride.*
@@ -34,7 +32,7 @@ fun RideDestinationSheet(onEvent: (RideEvent) -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Icon(Icons.Rounded.Search, null, tint = c.textSecondary, modifier = Modifier.size(18.dp))
+            Icon(painterResource(RideIcons.Search), null, tint = c.textSecondary, modifier = Modifier.size(18.dp))
             Text("Search a place or address", color = c.textTertiary, style = MaterialTheme.typography.bodyMedium)
         }
 
@@ -64,7 +62,7 @@ fun RideOptionsSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
                     .clickableNoRipple { onEvent(RideEvent.BackToDestination) },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Rounded.ChevronLeft, null, tint = c.text, modifier = Modifier.size(20.dp))
+                Icon(painterResource(RideIcons.ChevronLeft), null, tint = c.text, modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {

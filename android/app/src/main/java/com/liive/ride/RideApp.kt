@@ -1,20 +1,18 @@
 package com.liive.ride
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.LocationSearching
-import androidx.compose.material.icons.rounded.Mic
-import androidx.compose.material.icons.rounded.MicOff
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.liive.ride.designsystem.*
@@ -92,13 +90,13 @@ private fun RideTopChrome(state: RideUiState, onToggleMic: () -> Unit) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (state.phase == RidePhase.Enroute) {
                 ChromeButton(
-                    icon = if (state.micEnabled) Icons.Rounded.Mic else Icons.Rounded.MicOff,
+                    icon = if (state.micEnabled) RideIcons.Mic else RideIcons.MicOff,
                     tint = if (state.micEnabled) LiiveTheme.colors.text else LiiveTheme.colors.danger,
                     onClick = onToggleMic
                 )
             }
             ChromeButton(
-                icon = Icons.Rounded.LocationSearching,
+                icon = RideIcons.LocationSearching,
                 tint = LiiveTheme.colors.accent,
                 onClick = {}
             )
@@ -108,7 +106,7 @@ private fun RideTopChrome(state: RideUiState, onToggleMic: () -> Unit) {
 
 @Composable
 private fun ChromeButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    @DrawableRes icon: Int,
     tint: Color,
     onClick: () -> Unit
 ) {
@@ -119,7 +117,7 @@ private fun ChromeButton(
         padding = 0.dp
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = tint, modifier = Modifier.size(19.dp))
+            Icon(painterResource(icon), null, tint = tint, modifier = Modifier.size(19.dp))
         }
     }
 }

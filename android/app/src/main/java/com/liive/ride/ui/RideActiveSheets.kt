@@ -8,15 +8,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.DirectionsWalk
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.CreditCard
-import androidx.compose.material.icons.rounded.Flag
-import androidx.compose.material.icons.rounded.Map
-import androidx.compose.material.icons.rounded.Message
-import androidx.compose.material.icons.rounded.Phone
-import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.liive.ride.*
@@ -92,7 +84,7 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             speaking = true
         ) {
             Box(Modifier.size(44.dp).clip(LiiveRadius.md).background(c.accentTint), contentAlignment = Alignment.Center) {
-                Icon(Icons.Rounded.Phone, null, tint = c.accent, modifier = Modifier.size(18.dp))
+                Icon(painterResource(RideIcons.Phone), null, tint = c.accent, modifier = Modifier.size(18.dp))
             }
         }
         if (config.tier.multiLeg) MultiLegPanel()
@@ -123,13 +115,13 @@ private fun MultiLegPanel() {
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Icon(Icons.Rounded.Map, null, tint = c.accent, modifier = Modifier.size(16.dp))
+            Icon(painterResource(RideIcons.Map), null, tint = c.accent, modifier = Modifier.size(16.dp))
             Text("Multi-leg journey", color = c.text, style = MaterialTheme.typography.titleMedium)
         }
         LiiveProgressDots(legs = 2, current = 2)
         Box(Modifier.fillMaxWidth().height(0.5.dp).background(c.separator))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Icon(Icons.AutoMirrored.Rounded.DirectionsWalk, null, tint = c.warning, modifier = Modifier.size(15.dp))
+            Icon(painterResource(RideIcons.Walk), null, tint = c.warning, modifier = Modifier.size(15.dp))
             Text("Transfer at Hayes St complete · 150m walk", color = c.textSecondary, style = MaterialTheme.typography.bodySmall)
         }
     }
@@ -145,7 +137,7 @@ private fun PaidReceiptSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
     val c = LiiveTheme.colors
     LiiveBottomSheet {
         Column(Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            LiiveIconCircle(Icons.Rounded.Check, IconCircleColor.Success, 56.dp, filled = true)
+            LiiveIconCircle(RideIcons.Check, IconCircleColor.Success, 56.dp, filled = true)
             Text("Thanks for riding", color = c.text, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 14.dp))
             Text("${state.config.tier.price.ridePrice()} paid to John · receipt sent", color = c.textSecondary, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 6.dp))
         }
@@ -168,7 +160,7 @@ private fun PaymentSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
     val tax = kotlin.math.round((fare - base) * 100.0) / 100.0
     LiiveBottomSheet {
         Row(Modifier.fillMaxWidth().padding(bottom = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            LiiveIconCircle(Icons.Rounded.Flag, IconCircleColor.Success, 36.dp, filled = true)
+            LiiveIconCircle(RideIcons.Flag, IconCircleColor.Success, 36.dp, filled = true)
             Column(Modifier.weight(1f)) {
                 Text("You've arrived", color = c.text, style = MaterialTheme.typography.headlineSmall)
                 Text("${state.config.destinationName} · 18 min · 5.2 km", color = c.textSecondary, style = MaterialTheme.typography.bodySmall)
@@ -184,7 +176,7 @@ private fun PaymentSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
         Spacer(Modifier.height(12.dp))
         Column(Modifier.fillMaxWidth().clip(LiiveRadius.lg).background(c.surfaceRaised)) {
             LiiveListRow("Apple Pay", value = "default", divider = false, chevron = true, leading = {
-                LiiveIconCircle(Icons.Rounded.CreditCard, IconCircleColor.Neutral, 32.dp)
+                LiiveIconCircle(RideIcons.CreditCard, IconCircleColor.Neutral, 32.dp)
             })
         }
         RatingControl(state.rating, onEvent)
@@ -207,7 +199,7 @@ private fun RatingControl(rating: Int, onEvent: (RideEvent) -> Unit) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 8.dp)) {
             (1..5).forEach { value ->
                 Icon(
-                    Icons.Rounded.Star,
+                    painterResource(RideIcons.Star),
                     null,
                     tint = if (value <= rating) c.star else c.fill,
                     modifier = Modifier.size(28.dp).clickableNoRipple { onEvent(RideEvent.Rate(value)) }

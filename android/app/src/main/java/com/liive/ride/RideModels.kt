@@ -1,24 +1,14 @@
 package com.liive.ride
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ChildCare
-import androidx.compose.material.icons.rounded.DirectionsCar
-import androidx.compose.material.icons.rounded.Flight
-import androidx.compose.material.icons.rounded.Group
-import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Luggage
-import androidx.compose.material.icons.rounded.Shield
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.Work
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.annotation.DrawableRes
 import com.liive.ride.designsystem.IconCircleColor
+import com.liive.ride.designsystem.RideIcons
 
 enum class RidePhase { Destination, Options, Matching, Enroute, Complete }
 
 data class RideDestination(
     val id: String,
-    val icon: ImageVector,
+    @param:DrawableRes val icon: Int,
     val color: IconCircleColor,
     val title: String,
     val subtitle: String,
@@ -26,15 +16,15 @@ data class RideDestination(
 
 enum class RideTier(
     val displayName: String,
-    val icon: ImageVector,
+    @param:DrawableRes val icon: Int,
     val detail: String,
     val price: Double,
     val eta: String,
     val multiLeg: Boolean,
 ) {
-    Pool("Pool", Icons.Rounded.Group, "Share · may transfer once", 9.50, "12 min", true),
-    Premium("Premium", Icons.Rounded.DirectionsCar, "Private · direct route", 12.50, "8 min", false),
-    Exclusive("Exclusive", Icons.Rounded.Star, "Top-rated · luxury", 18.00, "7 min", false),
+    Pool("Pool", RideIcons.Group, "Share · may transfer once", 9.50, "12 min", true),
+    Premium("Premium", RideIcons.Car, "Private · direct route", 12.50, "8 min", false),
+    Exclusive("Exclusive", RideIcons.Star, "Top-rated · luxury", 18.00, "7 min", false),
 }
 
 data class RideConfig(
@@ -80,16 +70,16 @@ sealed interface RideEvent {
 
 object RideFixtures {
     val destinations = listOf(
-        RideDestination("home", Icons.Rounded.Home, IconCircleColor.Accent, "Home", "1208 Sutter St"),
-        RideDestination("work", Icons.Rounded.Work, IconCircleColor.Neutral, "Work", "455 Market St, Floor 12"),
-        RideDestination("union-square", Icons.Rounded.History, IconCircleColor.Neutral, "Union Square", "Geary & Powell"),
-        RideDestination("sfo-terminal-2", Icons.Rounded.Flight, IconCircleColor.Neutral, "SFO — Terminal 2", "Airport"),
+        RideDestination("home", RideIcons.Home, IconCircleColor.Accent, "Home", "1208 Sutter St"),
+        RideDestination("work", RideIcons.Work, IconCircleColor.Neutral, "Work", "455 Market St, Floor 12"),
+        RideDestination("union-square", RideIcons.History, IconCircleColor.Neutral, "Union Square", "Geary & Powell"),
+        RideDestination("sfo-terminal-2", RideIcons.Flight, IconCircleColor.Neutral, "SFO — Terminal 2", "Airport"),
     )
 
-    val passengerIcon = Icons.Rounded.Group
-    val bagIcon = Icons.Rounded.Luggage
-    val safetyIcon = Icons.Rounded.Shield
-    val childSeatIcon = Icons.Rounded.ChildCare
+    val passengerIcon = RideIcons.Group
+    val bagIcon = RideIcons.Bag
+    val safetyIcon = RideIcons.Shield
+    val childSeatIcon = RideIcons.ChildSeat
 }
 
 fun Double.ridePrice(): String = "$" + "%,.2f".format(this)

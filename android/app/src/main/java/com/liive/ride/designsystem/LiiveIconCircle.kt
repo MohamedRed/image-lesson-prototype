@@ -1,6 +1,7 @@
 //  LiiveIconCircle.kt  ·  Liive Ride DS (Compose)  ·  mirrors components/core/IconCircle
 package com.liive.ride.designsystem
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -11,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -19,7 +20,7 @@ enum class IconCircleColor { Accent, Success, Warning, Danger, Info, Neutral }
 
 @Composable
 fun LiiveIconCircle(
-    icon: ImageVector,
+    @DrawableRes icon: Int,
     color: IconCircleColor = IconCircleColor.Accent,
     size: Dp = 44.dp,
     filled: Boolean = false,
@@ -44,7 +45,7 @@ fun LiiveIconCircle(
         Modifier.size(size).clip(CircleShape).background(if (filled) solid else tint),
         contentAlignment = Alignment.Center
     ) {
-        Icon(icon, contentDescription = null, tint = if (filled) Color.White else fg,
+        Icon(painterResource(icon), contentDescription = null, tint = if (filled) Color.White else fg,
             modifier = Modifier.size(size * 0.45f))
     }
 }
