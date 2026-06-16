@@ -157,7 +157,14 @@ private fun MultiLegPanel() {
             )
         }
         LiiveProgressDots(legs = 2, current = 2)
-        Box(Modifier.fillMaxWidth().height(0.5.dp).background(c.separator))
+        Box(Modifier.fillMaxWidth().height(2.5.dp)) {
+            Box(
+                Modifier.align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(0.5.dp)
+                    .background(c.separator)
+            )
+        }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Icon(painterResource(RideIcons.Walk), null, tint = c.warning, modifier = Modifier.size(15.dp))
             Text("Transfer at Hayes St complete · 150m walk", color = c.textSecondary, style = MaterialTheme.typography.bodySmall)

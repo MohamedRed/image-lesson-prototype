@@ -73,7 +73,7 @@ fun LiiveDriverCard(
             }
         }
         if (eta != null) {
-            Column(horizontalAlignment = Alignment.End) {
+            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(eta, color = c.accent, style = MaterialTheme.typography.headlineMedium.tabularNumbers())
                 Text("away", color = c.textSecondary, style = MaterialTheme.typography.labelSmall)
             }
