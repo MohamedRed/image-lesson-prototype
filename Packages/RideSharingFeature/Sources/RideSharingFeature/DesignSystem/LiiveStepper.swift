@@ -13,7 +13,7 @@ public struct LiiveStepper: View {
 
     public var body: some View {
         HStack(spacing: 0) {
-            control(label: "-", enabled: value > range.lowerBound) {
+            control(label: "\u{2212}", enabled: value > range.lowerBound) {
                 onChange(max(range.lowerBound, value - 1))
             }
             Rectangle()
