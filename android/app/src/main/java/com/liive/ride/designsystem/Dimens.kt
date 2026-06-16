@@ -45,6 +45,7 @@ object LiiveElevation {
     val card = 4.dp
     val hud = 12.dp
     val sheet = 16.dp
+    val sos = 18.dp
 }
 
 object LiiveMotion {

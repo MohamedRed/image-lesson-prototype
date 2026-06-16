@@ -21,7 +21,6 @@ public struct LiiveSOSButton: View {
             ZStack {
                 Circle()
                     .fill(LiiveColor.danger)
-                    .opacity(0.35)
                     .scaleEffect(pulse ? 1.5 : 1)
                     .opacity(pulse ? 0 : 0.35)
                 Circle().fill(LiiveColor.danger).liiveShadow(.sos)
@@ -36,6 +35,7 @@ public struct LiiveSOSButton: View {
             }
             .frame(width: size, height: size)
             .scaleEffect(pressed ? 0.94 : 1)
+            .animation(.easeOut(duration: LiiveMotion.fast), value: pressed)
         }
         .buttonStyle(.plain)
         .simultaneousGesture(DragGesture(minimumDistance: 0)

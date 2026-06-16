@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
@@ -46,7 +47,15 @@ fun LiiveSosButton(
             }.clip(CircleShape).background(c.danger)
         )
         Box(
-            Modifier.matchParentSize().scale(if (pressed) 0.94f else 1f).clip(CircleShape)
+            Modifier.matchParentSize().scale(if (pressed) 0.94f else 1f)
+                .shadow(
+                    elevation = LiiveElevation.sos,
+                    shape = CircleShape,
+                    clip = false,
+                    ambientColor = c.danger.copy(alpha = 0.45f),
+                    spotColor = c.danger.copy(alpha = 0.45f),
+                )
+                .clip(CircleShape)
                 .background(c.danger)
                 .clickable(interactionSource = interaction, indication = null) { onActivate() },
             contentAlignment = Alignment.Center
