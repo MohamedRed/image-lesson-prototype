@@ -36,10 +36,15 @@ fun LiiveSosButton(
     val c = LiiveTheme.colors
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed) 0.94f else 1f,
+        animationSpec = tween(durationMillis = LiiveMotion.fastMs, easing = LiiveMotion.easeOut),
+        label = "LiiveSosButtonPressScale"
+    )
     val transition = rememberInfiniteTransition(label = "sos")
     val pulse by transition.animateFloat(
         initialValue = 0f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(1500, easing = LinearOutSlowInEasing), RepeatMode.Restart),
+        animationSpec = infiniteRepeatable(tween(1500, easing = LiiveMotion.easeOut), RepeatMode.Restart),
         label = "pulse"
     )
     Box(
@@ -54,7 +59,7 @@ fun LiiveSosButton(
             }.clip(CircleShape).background(c.danger)
         )
         Box(
-            Modifier.matchParentSize().scale(if (pressed) 0.94f else 1f)
+            Modifier.matchParentSize().scale(pressScale)
                 .shadow(
                     elevation = LiiveElevation.sos,
                     shape = CircleShape,
@@ -67,7 +72,10 @@ fun LiiveSosButton(
                 .clickable(interactionSource = interaction, indication = null) { onActivate() },
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(1.dp)
+            ) {
                 Text("SOS", color = Color.White, fontWeight = FontWeight.Bold,
                     fontSize = (size.value * 0.28f).sp, fontFamily = SchibstedGrotesk)
                 if (showLabel) Text("HELP", color = Color.White.copy(alpha = 0.9f),
