@@ -17,25 +17,38 @@ public struct LiiveButton: View {
     var icon: Image? = nil
     var iconRight: Image? = nil
     var tabularNumbers: Bool = false
+    var disabled: Bool = false
+    var loading: Bool = false
     let action: () -> Void
 
-    @State private var pressed = false
+    @GestureState private var pressed = false
 
     public init(_ title: String, variant: Variant = .primary, size: Size = .md,
                 shape: Shape = .rounded, fullWidth: Bool = false, icon: Image? = nil,
                 iconRight: Image? = nil,
-                tabularNumbers: Bool = false,
+                tabularNumbers: Bool = false, disabled: Bool = false, loading: Bool = false,
                 action: @escaping () -> Void) {
         self.title = title; self.variant = variant; self.size = size
         self.shape = shape; self.fullWidth = fullWidth; self.icon = icon
-        self.iconRight = iconRight; self.tabularNumbers = tabularNumbers; self.action = action
+        self.iconRight = iconRight; self.tabularNumbers = tabularNumbers
+        self.disabled = disabled; self.loading = loading; self.action = action
     }
 
     private var height: CGFloat { size == .sm ? 32 : size == .lg ? 50 : 44 }
     private var bg: Color {
+        if pressed { return bgPressed }
         switch variant {
         case .primary: return LiiveColor.accent
         case .secondary: return LiiveColor.fill
+        case .tinted: return LiiveColor.accentTint
+        case .plain, .destructivePlain: return .clear
+        case .destructive: return LiiveColor.danger
+        }
+    }
+    private var bgPressed: Color {
+        switch variant {
+        case .primary: return LiiveColor.accentPressed
+        case .secondary: return LiiveColor.fillSecondary
         case .tinted: return LiiveColor.accentTint
         case .plain, .destructivePlain: return .clear
         case .destructive: return LiiveColor.danger
@@ -52,15 +65,33 @@ public struct LiiveButton: View {
         }
     }
     private var radius: CGFloat { shape == .capsule ? LiiveRadius.full : LiiveRadius.md }
+    private var isInteractive: Bool { !disabled && !loading }
+    private var opacity: Double {
+        if disabled { return 0.4 }
+        if pressed {
+            switch variant {
+            case .plain, .tinted, .destructivePlain: return 0.5
+            default: return 0.85
+            }
+        }
+        return 1
+    }
 
     public var body: some View {
-        Button(action: action) {
+        Button(action: { if isInteractive { action() } }) {
             HStack(spacing: LiiveSpacing.s) {
-                if let icon { icon }
-                Text(title)
-                    .font(tabularNumbers ? LiiveFont.headline.monospacedDigit() : LiiveFont.headline)
-                    .tracking(LiiveFont.Tracking.headline)
-                if let iconRight { iconRight }
+                if loading {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .tint(fg)
+                        .frame(width: 18, height: 18)
+                } else {
+                    if let icon { icon }
+                    Text(title)
+                        .font(tabularNumbers ? LiiveFont.headline.monospacedDigit() : LiiveFont.headline)
+                        .tracking(LiiveFont.Tracking.headline)
+                    if let iconRight { iconRight }
+                }
             }
             .frame(maxWidth: fullWidth ? .infinity : nil)
             .frame(height: height)
@@ -69,12 +100,16 @@ public struct LiiveButton: View {
             .background(bg)
             .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
             .scaleEffect(pressed ? LiiveMotion.pressScale : 1)
-            .opacity(pressed ? 0.85 : 1)
+            .opacity(opacity)
             .animation(.easeOut(duration: LiiveMotion.fast), value: pressed)
         }
         .buttonStyle(.plain)
-        .simultaneousGesture(DragGesture(minimumDistance: 0)
-            .onChanged { _ in pressed = true }
-            .onEnded { _ in pressed = false })
+        .disabled(disabled || loading)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .updating($pressed) { _, state, _ in
+                    state = isInteractive
+                }
+        )
     }
 }

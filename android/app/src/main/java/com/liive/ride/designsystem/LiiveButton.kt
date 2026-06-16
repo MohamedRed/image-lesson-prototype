@@ -10,6 +10,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,18 +41,32 @@ fun LiiveButton(
     tabularNumbers: Boolean = false,
     @DrawableRes icon: Int? = null,
     @DrawableRes iconRight: Int? = null,
+    disabled: Boolean = false,
+    loading: Boolean = false,
 ) {
     val c = LiiveTheme.colors
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
+    val enabled = !disabled && !loading
 
     val height = when (size) { LiiveButtonSize.Sm -> 32.dp; LiiveButtonSize.Lg -> 50.dp; else -> 44.dp }
-    val bg = when (variant) {
-        LiiveButtonVariant.Primary -> c.accent
-        LiiveButtonVariant.Secondary -> c.fill
+    val bgPressed = when (variant) {
+        LiiveButtonVariant.Primary -> c.accentPressed
+        LiiveButtonVariant.Secondary -> c.fillSecondary
         LiiveButtonVariant.Tinted -> c.accentTint
         LiiveButtonVariant.Plain, LiiveButtonVariant.DestructivePlain -> Color.Transparent
         LiiveButtonVariant.Destructive -> c.danger
+    }
+    val bg = if (enabled && pressed) {
+        bgPressed
+    } else {
+        when (variant) {
+            LiiveButtonVariant.Primary -> c.accent
+            LiiveButtonVariant.Secondary -> c.fill
+            LiiveButtonVariant.Tinted -> c.accentTint
+            LiiveButtonVariant.Plain, LiiveButtonVariant.DestructivePlain -> Color.Transparent
+            LiiveButtonVariant.Destructive -> c.danger
+        }
     }
     val fg = when (variant) {
         LiiveButtonVariant.Primary -> c.onAccent
@@ -61,30 +76,48 @@ fun LiiveButton(
         LiiveButtonVariant.DestructivePlain -> c.danger
     }
     val shape: RoundedCornerShape = if (capsule) LiiveRadius.full else LiiveRadius.md
+    val opacity = when {
+        disabled -> 0.4f
+        enabled && pressed && variant in setOf(
+            LiiveButtonVariant.Plain,
+            LiiveButtonVariant.Tinted,
+            LiiveButtonVariant.DestructivePlain
+        ) -> 0.5f
+        enabled && pressed -> 0.85f
+        else -> 1f
+    }
 
     Box(
         modifier = modifier
             .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
             .height(height)
-            .scale(if (pressed) LiiveMotion.pressScale else 1f)
-            .alpha(if (pressed) 0.85f else 1f)
+            .scale(if (enabled && pressed) LiiveMotion.pressScale else 1f)
+            .alpha(opacity)
             .clip(shape)
             .background(bg)
-            .clickable(interactionSource = interaction, indication = null) { onClick() }
+            .clickable(interactionSource = interaction, indication = null, enabled = enabled) { onClick() }
             .padding(horizontal = if (size == LiiveButtonSize.Lg) 22.dp else 18.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (icon != null) Icon(painterResource(icon), null, tint = fg, modifier = Modifier.size(18.dp))
-            Text(
-                text = title,
+        if (loading) {
+            CircularProgressIndicator(
                 color = fg,
-                style = if (tabularNumbers) MaterialTheme.typography.titleLarge.tabularNumbers() else MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(18.dp)
             )
-            if (iconRight != null) Icon(painterResource(iconRight), null, tint = fg, modifier = Modifier.size(18.dp))
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (icon != null) Icon(painterResource(icon), null, tint = fg, modifier = Modifier.size(18.dp))
+                Text(
+                    text = title,
+                    color = fg,
+                    style = if (tabularNumbers) MaterialTheme.typography.titleLarge.tabularNumbers() else MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (iconRight != null) Icon(painterResource(iconRight), null, tint = fg, modifier = Modifier.size(18.dp))
+            }
         }
     }
 }
