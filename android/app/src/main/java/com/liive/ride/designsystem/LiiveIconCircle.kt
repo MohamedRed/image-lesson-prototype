@@ -39,7 +39,7 @@ fun LiiveIconCircle(
     val tint = when (color) {
         IconCircleColor.Accent -> c.accentTint; IconCircleColor.Success -> c.successTint
         IconCircleColor.Warning -> c.warningTint; IconCircleColor.Danger -> c.dangerTint
-        IconCircleColor.Info -> c.info.copy(alpha = 0.15f); IconCircleColor.Neutral -> c.fillTertiary
+        IconCircleColor.Info -> c.infoTint; IconCircleColor.Neutral -> c.fillTertiary
     }
     Box(
         Modifier.size(size).clip(CircleShape).background(if (filled) solid else tint),

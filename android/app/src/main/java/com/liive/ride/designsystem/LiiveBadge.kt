@@ -31,7 +31,7 @@ fun LiiveBadge(text: String, color: BadgeColor = BadgeColor.Neutral, solid: Bool
     val tintBg = when (color) {
         BadgeColor.Neutral -> c.fillTertiary; BadgeColor.Accent -> c.accentTint
         BadgeColor.Success -> c.successTint; BadgeColor.Warning -> c.warningTint
-        BadgeColor.Danger -> c.dangerTint; BadgeColor.Info -> c.info.copy(alpha = 0.15f)
+        BadgeColor.Danger -> c.dangerTint; BadgeColor.Info -> c.infoTint
     }
     val onSolid = if (color == BadgeColor.Warning || color == BadgeColor.Info) Color.Black else Color.White
     val content = if (solid) onSolid else fg

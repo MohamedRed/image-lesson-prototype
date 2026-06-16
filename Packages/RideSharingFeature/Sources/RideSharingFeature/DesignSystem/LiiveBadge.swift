@@ -41,7 +41,7 @@ public struct LiiveBadge: View {
         case .success: return LiiveColor.successTint
         case .warning: return LiiveColor.warningTint
         case .danger: return LiiveColor.dangerTint
-        case .info: return LiiveColor.info.opacity(0.15)
+        case .info: return LiiveColor.infoTint
         }
     }
     private var onSolid: SwiftUI.Color {

@@ -52,6 +52,7 @@ public enum LiiveColor {
     public static let danger        = dyn(Color(hex: "E5484D"), Color(hex: "FF5A5F"))
     public static let dangerTint    = dyn(Color(hex: "E5484D", opacity: 0.12), Color(hex: "FF5A5F", opacity: 0.16))
     public static let info          = dyn(Color(hex: "17A98F"), Color(hex: "7FECD6"))
+    public static let infoTint      = dyn(Color(hex: "17A98F", opacity: 0.12), Color(hex: "7FECD6", opacity: 0.15))
     public static let star          = dyn(Color(hex: "E0A41F"), Color(hex: "F5C24B"))
 
     // MARK: Surfaces
