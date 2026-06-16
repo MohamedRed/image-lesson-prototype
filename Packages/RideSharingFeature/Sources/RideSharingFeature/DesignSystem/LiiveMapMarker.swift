@@ -4,9 +4,9 @@ public struct LiiveMapMarker: View {
     public enum Kind { case car, origin, destination, transfer }
 
     let kind: Kind
-    let label: String
+    let label: String?
 
-    public init(kind: Kind, label: String) {
+    public init(kind: Kind, label: String? = nil) {
         self.kind = kind
         self.label = label
     }
@@ -36,7 +36,9 @@ public struct LiiveMapMarker: View {
             } else {
                 pinMarker
             }
-            labelTag
+            if let label, !label.isEmpty {
+                labelTag(label)
+            }
         }
         .fixedSize()
     }
@@ -69,7 +71,7 @@ public struct LiiveMapMarker: View {
         }
     }
 
-    private var labelTag: some View {
+    private func labelTag(_ label: String) -> some View {
         Text(label)
             .font(LiiveFont.caption1.weight(.semibold))
             .foregroundColor(LiiveColor.text)

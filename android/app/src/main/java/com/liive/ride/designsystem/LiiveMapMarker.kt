@@ -28,7 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun LiiveMapMarker(kind: MapMarkerKind, label: String) {
+fun LiiveMapMarker(kind: MapMarkerKind, label: String? = null) {
     val c = LiiveTheme.colors
     val color = when (kind) {
         MapMarkerKind.Car -> c.accent
@@ -72,7 +72,9 @@ fun LiiveMapMarker(kind: MapMarkerKind, label: String) {
                 PointerTail(color = color)
             }
         }
-        MarkerLabel(label = label, color = color)
+        if (!label.isNullOrEmpty()) {
+            MarkerLabel(label = label, color = color)
+        }
     }
 }
 
