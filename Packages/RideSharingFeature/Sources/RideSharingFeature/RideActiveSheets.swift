@@ -241,6 +241,7 @@ struct RideCompleteSheetView: View {
                         Image(systemName: "star.fill")
                             .font(.system(size: 28))
                             .foregroundColor(value <= viewModel.state.rating ? LiiveColor.star : LiiveColor.fill)
+                            .padding(2)
                     }
                     .buttonStyle(.plain)
                 }

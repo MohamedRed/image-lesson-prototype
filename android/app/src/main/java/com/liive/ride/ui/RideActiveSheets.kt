@@ -258,7 +258,10 @@ private fun RatingControl(rating: Int, onEvent: (RideEvent) -> Unit) {
                     painterResource(RideIcons.Star),
                     null,
                     tint = if (value <= rating) c.star else c.fill,
-                    modifier = Modifier.size(28.dp).clickableNoRipple { onEvent(RideEvent.Rate(value)) }
+                    modifier = Modifier
+                        .padding(2.dp)
+                        .size(28.dp)
+                        .clickableNoRipple { onEvent(RideEvent.Rate(value)) }
                 )
             }
         }
