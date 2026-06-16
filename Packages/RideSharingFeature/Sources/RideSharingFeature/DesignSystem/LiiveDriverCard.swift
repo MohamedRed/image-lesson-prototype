@@ -11,18 +11,19 @@ public struct LiiveDriverCard<Trailing: View>: View {
     var plate: String? = nil
     var eta: String? = nil
     var speaking: Bool = false
+    var avatarImage: Image? = nil
     let trailing: Trailing
 
     public init(name: String, rating: Double? = nil, vehicle: String? = nil, plate: String? = nil,
-                eta: String? = nil, speaking: Bool = false,
+                eta: String? = nil, speaking: Bool = false, avatarImage: Image? = nil,
                 @ViewBuilder trailing: () -> Trailing = { EmptyView() }) {
         self.name = name; self.rating = rating; self.vehicle = vehicle; self.plate = plate
-        self.eta = eta; self.speaking = speaking; self.trailing = trailing()
+        self.eta = eta; self.speaking = speaking; self.avatarImage = avatarImage; self.trailing = trailing()
     }
 
     public var body: some View {
         HStack(spacing: 14) {
-            LiiveAvatar(name: name, size: 54, ring: speaking)
+            LiiveAvatar(name: name, image: avatarImage, size: 54, ring: speaking)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 8) {
                     Text(name).font(LiiveFont.headline).foregroundColor(LiiveColor.text)

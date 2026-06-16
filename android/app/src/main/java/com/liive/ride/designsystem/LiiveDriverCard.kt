@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -24,6 +25,7 @@ fun LiiveDriverCard(
     plate: String? = null,
     eta: String? = null,
     speaking: Boolean = false,
+    avatarPainter: Painter? = null,
     trailing: @Composable (() -> Unit)? = null,
 ) {
     val c = LiiveTheme.colors
@@ -36,7 +38,7 @@ fun LiiveDriverCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        LiiveAvatar(name = name, size = 54.dp, ring = speaking)
+        LiiveAvatar(name = name, size = 54.dp, ring = speaking, image = avatarPainter)
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(name, color = c.text, style = MaterialTheme.typography.titleLarge)
