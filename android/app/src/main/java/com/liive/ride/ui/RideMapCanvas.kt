@@ -10,9 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,9 +27,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.dp
 import com.liive.ride.RidePhase
 import com.liive.ride.designsystem.LiiveMapMarker
@@ -46,7 +42,7 @@ fun RideMapCanvas(phase: RidePhase, isMultiLeg: Boolean, carProgress: Float) {
     val showRoute = effectivePhase != RidePhase.Destination
     val showCar = effectivePhase == RidePhase.Enroute
 
-    BoxWithConstraints(Modifier.fillMaxSize().background(c.mapBackground)) {
+    Box(Modifier.fillMaxSize().background(c.mapBackground)) {
         Canvas(Modifier.fillMaxSize()) {
             val viewport = MapSvgViewport(size.width, size.height)
             rotate(degrees = -8f, pivot = viewport.point(70f, 670f)) {
@@ -83,21 +79,25 @@ fun RideMapCanvas(phase: RidePhase, isMultiLeg: Boolean, carProgress: Float) {
         }
 
         if (effectivePhase == RidePhase.Destination) {
-            PulseMarker(point = MapPoint(196f, 470f), maxWidth = maxWidth, maxHeight = maxHeight)
+            OverlayAt(MapPoint(196f, 470f), OverlayAnchor.Center) {
+                PulseMarker()
+            }
         }
-        if (showRoute && !showCar) MarkerAt(MapPoint(196f, 470f), maxWidth, maxHeight) {
+        if (showRoute && !showCar) OverlayAt(MapPoint(196f, 470f), OverlayAnchor.Bottom) {
             LiiveMapMarker(MapMarkerKind.Origin, "Pickup")
         }
-        if (showCar) MarkerAt(carPoint(isMultiLeg, carProgress), maxWidth, maxHeight) {
+        if (showCar) OverlayAt(carPoint(isMultiLeg, carProgress), OverlayAnchor.Bottom) {
             LiiveMapMarker(MapMarkerKind.Car, if (isMultiLeg) "Leg 2 · 3 min" else "4 min")
         }
-        if (isMultiLeg && showRoute) MarkerAt(MapPoint(150f, 320f), maxWidth, maxHeight) {
+        if (isMultiLeg && showRoute) OverlayAt(MapPoint(150f, 320f), OverlayAnchor.Bottom) {
             LiiveMapMarker(MapMarkerKind.Transfer, "Transfer")
         }
-        if (effectivePhase != RidePhase.Destination) MarkerAt(MapPoint(250f, 165f), maxWidth, maxHeight) {
+        if (effectivePhase != RidePhase.Destination) OverlayAt(MapPoint(250f, 165f), OverlayAnchor.Bottom) {
             LiiveMapMarker(MapMarkerKind.Destination, "Union Square")
         }
-        if (phase == RidePhase.Matching) RadarMarker(point = MapPoint(196f, 470f), maxWidth = maxWidth, maxHeight = maxHeight)
+        if (phase == RidePhase.Matching) OverlayAt(MapPoint(196f, 470f), OverlayAnchor.Center) {
+            RadarMarker()
+        }
     }
 }
 
@@ -175,42 +175,44 @@ private fun Path.cubicToPoint(c1: MapPoint, c2: MapPoint, end: MapPoint, viewpor
 }
 
 @Composable
-private fun MarkerAt(point: MapPoint, maxWidth: Dp, maxHeight: Dp, content: @Composable () -> Unit) {
-    Box(Modifier.offset(x = maxWidth * (point.x / 402f) - 58.dp, y = maxHeight * (point.y / 740f) - 48.dp)) {
-        content()
+private fun OverlayAt(point: MapPoint, anchor: OverlayAnchor, content: @Composable () -> Unit) {
+    SubcomposeLayout(Modifier.fillMaxSize()) { constraints ->
+        val placeable = subcompose("content", content).first().measure(
+            constraints.copy(minWidth = 0, minHeight = 0)
+        )
+        val x = (constraints.maxWidth * (point.x / MapWidth) - placeable.width / 2f).roundToInt()
+        val yAnchor = when (anchor) {
+            OverlayAnchor.Center -> placeable.height / 2f
+            OverlayAnchor.Bottom -> placeable.height.toFloat()
+        }
+        val y = (constraints.maxHeight * (point.y / MapHeight) - yAnchor).roundToInt()
+
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            placeable.placeRelative(x, y)
+        }
     }
 }
 
 @Composable
-private fun PulseMarker(point: MapPoint, maxWidth: Dp, maxHeight: Dp) {
+private fun PulseMarker() {
     val c = LiiveTheme.colors
     val transition = rememberInfiniteTransition(label = "pulse")
     val scale by transition.animateFloat(0.35f, 1f, infiniteRepeatable(tween(2000), RepeatMode.Restart), label = "scale")
-    MarkerAt(point, maxWidth, maxHeight) {
-        Box(Modifier.size(66.dp)) {
-            Canvas(Modifier.fillMaxSize()) {
-                drawCircle(c.accentTint, radius = size.minDimension / 2f * scale, center = center, alpha = 1f - scale)
-                drawCircle(c.accent, radius = 11.dp.toPx(), center = center)
-                drawCircle(androidx.compose.ui.graphics.Color.White, radius = 11.dp.toPx(), center = center, style = Stroke(width = 3.dp.toPx()))
-            }
+    Box(Modifier.size(66.dp)) {
+        Canvas(Modifier.fillMaxSize()) {
+            drawCircle(c.accentTint, radius = size.minDimension / 2f * scale, center = center, alpha = 1f - scale)
+            drawCircle(c.accent, radius = 11.dp.toPx(), center = center)
+            drawCircle(androidx.compose.ui.graphics.Color.White, radius = 11.dp.toPx(), center = center, style = Stroke(width = 3.dp.toPx()))
         }
     }
 }
 
 @Composable
-private fun RadarMarker(point: MapPoint, maxWidth: Dp, maxHeight: Dp) {
+private fun RadarMarker() {
     val c = LiiveTheme.colors
-    val density = LocalDensity.current
     val transition = rememberInfiniteTransition(label = "radar")
     val scale by transition.animateFloat(0.11f, 1f, infiniteRepeatable(tween(1800), RepeatMode.Restart), label = "scale")
-    Box(Modifier.offset {
-        with(density) {
-            IntOffset(
-                (maxWidth.toPx() * (point.x / 402f) - 63.dp.toPx()).roundToInt(),
-                (maxHeight.toPx() * (point.y / 740f) - 63.dp.toPx()).roundToInt()
-            )
-        }
-    }.size(126.dp)) {
+    Box(Modifier.size(126.dp)) {
         Canvas(Modifier.fillMaxSize()) {
             drawCircle(c.accent, radius = size.minDimension / 2f * scale, center = center, alpha = 1f - scale)
             drawCircle(c.accent, radius = 7.dp.toPx(), center = center)
@@ -233,6 +235,7 @@ private fun carPoint(multiLeg: Boolean, progress: Float): MapPoint {
     return MapPoint(start.x + (end.x - start.x) * local, start.y + (end.y - start.y) * local)
 }
 
+private enum class OverlayAnchor { Center, Bottom }
 private data class MapPoint(val x: Float, val y: Float)
 private data class MapLine(val x1: Float, val y1: Float, val x2: Float, val y2: Float)
 private data class MapSvgViewport(val width: Float, val height: Float) {

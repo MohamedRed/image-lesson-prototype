@@ -116,20 +116,32 @@ struct RideMapCanvasView: View {
                 .position(markerPoint(origin, in: size))
         }
         if showsRoute && !showsCar {
-            LiiveMapMarker(kind: .origin, label: "Pickup")
-                .position(markerPoint(origin, in: size))
+            bottomAnchoredMarker(kind: .origin, label: "Pickup", at: origin, size: size)
         }
         if showsCar {
-            LiiveMapMarker(kind: .car, label: isMultiLeg ? "Leg 2 · 3 min" : "4 min")
-                .position(markerPoint(carPosition(), in: size))
+            bottomAnchoredMarker(
+                kind: .car,
+                label: isMultiLeg ? "Leg 2 · 3 min" : "4 min",
+                at: carPosition(),
+                size: size
+            )
         }
         if isMultiLeg && showsRoute {
-            LiiveMapMarker(kind: .transfer, label: "Transfer")
-                .position(markerPoint(transfer, in: size))
+            bottomAnchoredMarker(kind: .transfer, label: "Transfer", at: transfer, size: size)
         }
         if effectivePhase != .destination {
-            LiiveMapMarker(kind: .destination, label: "Union Square")
-                .position(markerPoint(destination, in: size))
+            bottomAnchoredMarker(kind: .destination, label: "Union Square", at: destination, size: size)
+        }
+    }
+
+    private func bottomAnchoredMarker(
+        kind: LiiveMapMarker.Kind,
+        label: String,
+        at point: MapPoint,
+        size: CGSize
+    ) -> some View {
+        MapBottomAnchoredView(position: markerPoint(point, in: size)) {
+            LiiveMapMarker(kind: kind, label: label)
         }
     }
 
