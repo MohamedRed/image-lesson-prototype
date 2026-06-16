@@ -79,8 +79,10 @@ private fun RideTopChrome(state: RideUiState, onToggleMic: () -> Unit) {
         verticalAlignment = Alignment.Top
     ) {
         if (state.phase == RidePhase.Enroute) {
-            LiiveGlassPanel(material = GlassMaterial.Thin, shape = LiiveRadius.full, padding = 7.dp) {
-                LiiveBadge("Voice connected", BadgeColor.Success, dot = true)
+            LiiveGlassPanel(material = GlassMaterial.Thin, shape = LiiveRadius.full, padding = 0.dp) {
+                Box(Modifier.padding(horizontal = 12.dp, vertical = 7.dp)) {
+                    LiiveBadge("Voice connected", BadgeColor.Success, dot = true)
+                }
             }
         } else {
             Spacer(Modifier.size(1.dp))

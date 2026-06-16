@@ -8,8 +8,10 @@ struct RideChromeView: View {
     var body: some View {
         HStack(alignment: .top) {
             if state.phase == .enroute {
-                LiiveGlassPanel(material: .thin, cornerRadius: LiiveRadius.full, padding: 7) {
+                LiiveGlassPanel(material: .thin, cornerRadius: LiiveRadius.full, padding: 0) {
                     LiiveBadge("Voice connected", color: .success, dot: true)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
                 }
             } else {
                 Spacer().frame(width: 1, height: 1)
