@@ -62,14 +62,22 @@ fun LiiveListRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             leading()
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(title, color = c.text, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                Text(
+                    title,
+                    color = c.text,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        letterSpacing = MaterialTheme.typography.headlineSmall.letterSpacing
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 if (subtitle != null) {
                     Text(subtitle, color = c.textSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 2)
                 }
             }
             if (value != null) {
-                Text(value, color = c.textSecondary, style = MaterialTheme.typography.titleMedium)
+                Text(value, color = c.textSecondary, style = MaterialTheme.typography.bodyLarge)
             }
             trailing()
             if (chevron) {

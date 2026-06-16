@@ -36,10 +36,12 @@ public struct LiiveListRow<Leading: View, Trailing: View>: View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 leading
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 1) {
                     Text(title)
-                        .font(LiiveFont.headline)
+                        .font(LiiveFont.body)
+                        .tracking(LiiveFont.Tracking.title3)
                         .foregroundColor(LiiveColor.text)
+                        .lineLimit(1)
                     if let subtitle {
                         Text(subtitle)
                             .font(LiiveFont.footnote)
@@ -50,7 +52,7 @@ public struct LiiveListRow<Leading: View, Trailing: View>: View {
                 Spacer(minLength: 8)
                 if let value {
                     Text(value)
-                        .font(LiiveFont.subhead)
+                        .font(LiiveFont.body)
                         .foregroundColor(LiiveColor.textSecondary)
                 }
                 trailing
