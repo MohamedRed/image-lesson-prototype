@@ -3,6 +3,9 @@
 //  Mirror this pattern for Badge, Card, ListRow, GlassPanel, SosButton, etc.
 package com.liive.ride.designsystem
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -76,7 +79,7 @@ fun LiiveButton(
         LiiveButtonVariant.DestructivePlain -> c.danger
     }
     val shape: RoundedCornerShape = if (capsule) LiiveRadius.full else LiiveRadius.md
-    val opacity = when {
+    val targetOpacity = when {
         disabled -> 0.4f
         enabled && pressed && variant in setOf(
             LiiveButtonVariant.Plain,
@@ -86,15 +89,31 @@ fun LiiveButton(
         enabled && pressed -> 0.85f
         else -> 1f
     }
+    val motionSpec = tween<Float>(durationMillis = LiiveMotion.fastMs, easing = LiiveMotion.easeOut)
+    val animatedScale by animateFloatAsState(
+        targetValue = if (enabled && pressed) LiiveMotion.pressScale else 1f,
+        animationSpec = motionSpec,
+        label = "LiiveButtonScale"
+    )
+    val animatedOpacity by animateFloatAsState(
+        targetValue = targetOpacity,
+        animationSpec = motionSpec,
+        label = "LiiveButtonOpacity"
+    )
+    val animatedBackground by animateColorAsState(
+        targetValue = bg,
+        animationSpec = tween(durationMillis = LiiveMotion.fastMs, easing = LiiveMotion.easeOut),
+        label = "LiiveButtonBackground"
+    )
 
     Box(
         modifier = modifier
             .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
             .height(height)
-            .scale(if (enabled && pressed) LiiveMotion.pressScale else 1f)
-            .alpha(opacity)
+            .scale(animatedScale)
+            .alpha(animatedOpacity)
             .clip(shape)
-            .background(bg)
+            .background(animatedBackground)
             .clickable(interactionSource = interaction, indication = null, enabled = enabled) { onClick() }
             .padding(horizontal = if (size == LiiveButtonSize.Lg) 22.dp else 18.dp),
         contentAlignment = Alignment.Center,
