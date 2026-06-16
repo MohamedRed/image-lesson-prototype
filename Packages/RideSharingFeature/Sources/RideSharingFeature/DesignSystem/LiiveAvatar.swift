@@ -8,9 +8,11 @@ public struct LiiveAvatar: View {
     var image: Image? = nil
     var size: CGFloat = 48
     var ring: Bool = false
+    var ringColor: Color = LiiveColor.accent
 
-    public init(name: String, image: Image? = nil, size: CGFloat = 48, ring: Bool = false) {
-        self.name = name; self.image = image; self.size = size; self.ring = ring
+    public init(name: String, image: Image? = nil, size: CGFloat = 48, ring: Bool = false, ringColor: Color = LiiveColor.accent) {
+        self.name = name; self.image = image; self.size = size
+        self.ring = ring; self.ringColor = ringColor
     }
 
     private var initials: String {
@@ -31,8 +33,15 @@ public struct LiiveAvatar: View {
         .frame(width: size, height: size)
         .clipShape(Circle())
         .overlay(
-            Circle().strokeBorder(LiiveColor.accent, lineWidth: ring ? 2.5 : 0)
-                .padding(-4.5)
+            Circle()
+                .stroke(LiiveColor.surface, lineWidth: ring ? 2.5 : 0)
+                .padding(-2.5)
+                .opacity(ring ? 1 : 0)
+        )
+        .overlay(
+            Circle()
+                .stroke(ringColor, lineWidth: ring ? 2.5 : 0)
+                .padding(-5)
                 .opacity(ring ? 1 : 0)
         )
     }
