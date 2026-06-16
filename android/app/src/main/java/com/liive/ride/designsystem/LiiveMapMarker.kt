@@ -22,8 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
@@ -57,7 +58,16 @@ fun LiiveMapMarker(kind: MapMarkerKind, label: String? = null) {
                     .border(3.dp, Color.White, CircleShape)
             )
         } else {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(0.dp)) {
+            Box(
+                Modifier.size(38.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                PointerTail(
+                    color = color,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .offset(y = 7.5.dp)
+                )
                 Box(
                     Modifier
                         .size(38.dp)
@@ -69,7 +79,6 @@ fun LiiveMapMarker(kind: MapMarkerKind, label: String? = null) {
                 ) {
                     Icon(painterResource(icon), null, tint = Color.White, modifier = Modifier.size(18.dp))
                 }
-                PointerTail(color = color)
             }
         }
         if (!label.isNullOrEmpty()) {
@@ -79,17 +88,20 @@ fun LiiveMapMarker(kind: MapMarkerKind, label: String? = null) {
 }
 
 @Composable
-private fun PointerTail(color: Color) {
-    Canvas(Modifier.size(width = 12.dp, height = 8.dp).offset(y = (-1).dp)) {
-        val fill = Path().apply {
-            moveTo(size.width / 2f, size.height)
-            lineTo(0f, 0f)
-            lineTo(size.width, 0f)
-            close()
+private fun PointerTail(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier.size(18.dp)) {
+        val edge = 12.dp.toPx()
+        val strokeWidth = 2.5.dp.toPx()
+        val left = (size.width - edge) / 2f
+        val top = (size.height - edge) / 2f
+        val right = left + edge
+        val bottom = top + edge
+
+        rotate(degrees = 45f, pivot = center) {
+            drawRect(color, topLeft = Offset(left, top), size = Size(edge, edge))
+            drawLine(Color.White, Offset(right, top), Offset(right, bottom), strokeWidth = strokeWidth)
+            drawLine(Color.White, Offset(left, bottom), Offset(right, bottom), strokeWidth = strokeWidth)
         }
-        drawPath(fill, color)
-        drawLine(Color.White, Offset(size.width / 2f, size.height), Offset(0f, 0f), strokeWidth = 2.5f)
-        drawLine(Color.White, Offset(size.width / 2f, size.height), Offset(size.width, 0f), strokeWidth = 2.5f)
     }
 }
 

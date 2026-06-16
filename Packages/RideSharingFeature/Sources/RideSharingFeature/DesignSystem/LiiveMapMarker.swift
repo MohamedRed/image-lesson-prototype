@@ -52,23 +52,20 @@ public struct LiiveMapMarker: View {
     }
 
     private var pinMarker: some View {
-        VStack(spacing: 0) {
-            ZStack {
-                Circle()
-                    .fill(color)
-                    .frame(width: 38, height: 38)
-                    .overlay(Circle().stroke(.white, lineWidth: 2.5))
-                    .liiveShadow(.pin)
-                Image(systemName: icon)
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.white)
-            }
-            Triangle()
+        ZStack(alignment: .bottom) {
+            PointerTail(color: color)
+                .frame(width: 12, height: 12)
+                .offset(y: 5)
+            Circle()
                 .fill(color)
-                .frame(width: 12, height: 8)
-                .overlay(Triangle().stroke(.white, lineWidth: 2.5))
-                .offset(y: -1)
+                .frame(width: 38, height: 38)
+                .overlay(Circle().stroke(.white, lineWidth: 2.5))
+                .liiveShadow(.pin)
+            Image(systemName: icon)
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(.white)
         }
+        .frame(width: 38, height: 38)
     }
 
     private func labelTag(_ label: String) -> some View {
@@ -89,13 +86,22 @@ public struct LiiveMapMarker: View {
     }
 }
 
-private struct Triangle: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-        path.closeSubpath()
-        return path
+private struct PointerTail: View {
+    let color: Color
+
+    var body: some View {
+        Rectangle()
+            .fill(color)
+            .overlay(alignment: .trailing) {
+                Rectangle()
+                    .fill(.white)
+                    .frame(width: 2.5)
+            }
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(.white)
+                    .frame(height: 2.5)
+            }
+            .rotationEffect(.degrees(45))
     }
 }
