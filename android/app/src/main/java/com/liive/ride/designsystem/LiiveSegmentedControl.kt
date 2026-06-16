@@ -10,7 +10,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -27,11 +26,18 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 data class LiiveSegment<T>(
     val value: T,
     val label: String,
 )
+
+private val SegmentFontSize = 14.sp
+private val SegmentLineHeight = 17.sp
+private val SegmentLetterSpacing = 0.sp
+private val SegmentVerticalPadding = 7.dp
 
 @Composable
 fun <T> LiiveSegmentedControl(
@@ -83,7 +89,10 @@ fun <T> LiiveSegmentedControl(
                         text = option.label,
                         color = if (isSelected) c.text else c.textSecondary,
                         style = MaterialTheme.typography.titleMedium.copy(
+                            fontSize = SegmentFontSize,
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                            lineHeight = SegmentLineHeight,
+                            letterSpacing = SegmentLetterSpacing,
                         ),
                         textAlign = TextAlign.Center,
                         maxLines = 1,
@@ -95,8 +104,7 @@ fun <T> LiiveSegmentedControl(
                                 interactionSource = interactionSource,
                                 indication = null,
                             ) { onSelected(option.value) }
-                            .defaultMinSize(minHeight = LiiveControl.sm)
-                            .padding(horizontal = LiiveSpacing.m, vertical = LiiveSpacing.s),
+                            .padding(horizontal = LiiveSpacing.m, vertical = SegmentVerticalPadding),
                     )
                 }
             }

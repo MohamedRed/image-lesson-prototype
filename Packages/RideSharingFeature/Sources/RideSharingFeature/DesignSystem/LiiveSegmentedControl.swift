@@ -3,6 +3,11 @@
 
 import SwiftUI
 
+private enum LiiveSegmentedMetrics {
+    static let fontSize: CGFloat = 14
+    static let verticalPadding: CGFloat = 7
+}
+
 public struct LiiveSegmentedOption<Value: Hashable>: Identifiable, Hashable {
     public let id: Value
     public let title: String
@@ -52,14 +57,14 @@ public struct LiiveSegmentedControl<Value: Hashable>: View {
             }
         } label: {
             Text(option.title)
-                .liiveStyle(.subhead)
+                .font(Font.custom(LiiveFont.family, size: LiiveSegmentedMetrics.fontSize))
                 .fontWeight(isSelected ? .semibold : .medium)
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
                 .foregroundColor(isSelected ? LiiveColor.text : LiiveColor.textSecondary)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, LiiveSpacing.m)
-                .padding(.vertical, LiiveSpacing.s)
+                .padding(.vertical, LiiveSegmentedMetrics.verticalPadding)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
