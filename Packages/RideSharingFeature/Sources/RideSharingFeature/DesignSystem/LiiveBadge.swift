@@ -55,6 +55,7 @@ public struct LiiveBadge: View {
             }
             Text(text)
                 .font(LiiveFont.caption1.weight(.semibold))
+                .tracking(0.1)
         }
         .padding(.horizontal, 9).padding(.vertical, 3)
         .foregroundColor(solid ? onSolid : fg)

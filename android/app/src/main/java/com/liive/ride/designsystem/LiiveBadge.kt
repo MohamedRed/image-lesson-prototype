@@ -11,7 +11,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 enum class BadgeColor { Neutral, Accent, Success, Warning, Danger, Info }
 
@@ -43,6 +45,14 @@ fun LiiveBadge(text: String, color: BadgeColor = BadgeColor.Neutral, solid: Bool
             .padding(horizontal = 9.dp, vertical = 3.dp)
     ) {
         if (dot) Box(Modifier.size(7.dp).clip(CircleShape).background(content))
-        Text(text, color = content, style = MaterialTheme.typography.labelMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold))
+        Text(
+            text,
+            color = content,
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.1.sp,
+                lineHeight = 15.6.sp
+            )
+        )
     }
 }
