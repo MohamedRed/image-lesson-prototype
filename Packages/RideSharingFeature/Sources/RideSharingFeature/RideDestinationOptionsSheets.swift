@@ -11,7 +11,7 @@ struct RideDestinationSheetView: View {
                     .foregroundColor(LiiveColor.text)
                 Spacer()
                 Text("Now ▾")
-                    .font(LiiveFont.footnote.weight(.semibold))
+                    .font(Font.custom(LiiveFont.family, size: 14).weight(.semibold))
                     .foregroundColor(LiiveColor.accent)
             }
             .padding(.bottom, 12)
@@ -179,6 +179,7 @@ private struct RideTierRow: View {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(tier.price.ridePrice)
                         .font(LiiveFont.headline.monospacedDigit())
+                        .fontWeight(.bold)
                         .foregroundColor(LiiveColor.text)
                     Text(tier.eta)
                         .font(LiiveFont.caption1.monospacedDigit())

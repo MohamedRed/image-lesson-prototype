@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.liive.ride.*
 import com.liive.ride.designsystem.*
 
@@ -24,7 +25,12 @@ fun RideDestinationSheet(onEvent: (RideEvent) -> Unit) {
         Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Where to?", color = c.text, style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.weight(1f))
-            Text("Now ▾", color = c.accent, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+            Text(
+                "Now ▾",
+                color = c.accent,
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
+                fontWeight = FontWeight.SemiBold
+            )
         }
 
         Row(
@@ -135,7 +141,12 @@ private fun RideTierRow(tier: RideTier, selected: Boolean, onClick: () -> Unit) 
             Text(tier.detail, color = c.textSecondary, style = MaterialTheme.typography.bodySmall)
         }
         Column(horizontalAlignment = Alignment.End) {
-            Text(tier.price.ridePrice(), color = c.text, style = MaterialTheme.typography.titleLarge.tabularNumbers())
+            Text(
+                tier.price.ridePrice(),
+                color = c.text,
+                style = MaterialTheme.typography.titleLarge.tabularNumbers(),
+                fontWeight = FontWeight.Bold
+            )
             Text(tier.eta, color = c.textSecondary, style = MaterialTheme.typography.labelMedium.tabularNumbers())
         }
     }
