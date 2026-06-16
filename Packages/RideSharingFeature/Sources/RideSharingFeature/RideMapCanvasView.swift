@@ -12,26 +12,27 @@ struct RideMapCanvasView: View {
     var body: some View {
         GeometryReader { proxy in
             let size = proxy.size
+            let mapViewport = MapSvgViewport(size: size)
             ZStack {
                 LiiveColor.mapBackground
-                mapBlocks
-                streetGrid(size: size)
+                mapBlocks(viewport: mapViewport)
+                streetGrid(viewport: mapViewport)
                 if showsRoute {
-                    routePath(size: size)
-                        .stroke(LiiveColor.mapRoute, style: StrokeStyle(lineWidth: 7, lineCap: .round))
-                        .shadow(color: .black.opacity(0.35), radius: 3, x: 0, y: 2)
+                    routePath(viewport: mapViewport)
+                        .stroke(LiiveColor.mapRoute, style: StrokeStyle(lineWidth: mapViewport.length(7), lineCap: .round))
+                        .shadow(color: .black.opacity(0.35), radius: mapViewport.length(3), x: 0, y: mapViewport.length(2))
                     if isMultiLeg {
                         Circle()
                             .fill(.white)
-                            .frame(width: 10, height: 10)
-                            .overlay(Circle().stroke(LiiveColor.warning, lineWidth: 3))
-                            .position(scale(transfer, in: size))
+                            .frame(width: mapViewport.length(10), height: mapViewport.length(10))
+                            .overlay(Circle().stroke(LiiveColor.warning, lineWidth: mapViewport.length(3)))
+                            .position(mapViewport.point(transfer))
                     }
                 }
                 mapMarkers(size: size)
                 if phase == .matching {
                     RadarSweep()
-                        .position(scale(origin, in: size))
+                        .position(markerPoint(origin, in: size))
                 }
             }
             .ignoresSafeArea()
@@ -50,58 +51,59 @@ struct RideMapCanvasView: View {
         effectivePhase == .enroute
     }
 
-    private var mapBlocks: some View {
+    private func mapBlocks(viewport: MapSvgViewport) -> some View {
         ZStack {
             Rectangle()
                 .fill(LiiveColor.mapWater)
-                .frame(width: 220, height: 260)
+                .frame(width: viewport.length(220), height: viewport.length(260))
                 .rotationEffect(.degrees(-8))
-                .offset(x: -145, y: 285)
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .position(viewport.point(MapPoint(x: 70, y: 670)))
+            RoundedRectangle(cornerRadius: viewport.length(10), style: .continuous)
                 .fill(LiiveColor.mapPark.opacity(0.55))
-                .frame(width: 240, height: 180)
-                .offset(x: 230, y: -260)
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .frame(width: viewport.length(240), height: viewport.length(180))
+                .position(viewport.point(MapPoint(x: 370, y: 130)))
+            RoundedRectangle(cornerRadius: viewport.length(8), style: .continuous)
                 .fill(LiiveColor.mapDistrict.opacity(0.50))
-                .frame(width: 150, height: 150)
-                .offset(x: -150, y: -210)
+                .frame(width: viewport.length(150), height: viewport.length(150))
+                .position(viewport.point(MapPoint(x: 55, y: 195)))
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func streetGrid(size: CGSize) -> some View {
+    private func streetGrid(viewport: MapSvgViewport) -> some View {
         ZStack {
             ForEach(MapStreet.major, id: \.id) { street in
-                street.path(in: size)
-                    .stroke(LiiveColor.mapRoad, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                street.path(in: viewport)
+                    .stroke(LiiveColor.mapRoad, style: StrokeStyle(lineWidth: viewport.length(9), lineCap: .round))
                     .opacity(0.95)
             }
             ForEach(MapStreet.minor, id: \.id) { street in
-                street.path(in: size)
-                    .stroke(LiiveColor.mapRoad, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                street.path(in: viewport)
+                    .stroke(LiiveColor.mapRoad, style: StrokeStyle(lineWidth: viewport.length(4), lineCap: .round))
                     .opacity(0.60)
             }
         }
     }
 
-    private func routePath(size: CGSize) -> Path {
+    private func routePath(viewport: MapSvgViewport) -> Path {
         var path = Path()
-        path.move(to: scale(origin, in: size))
+        path.move(to: viewport.point(origin))
         if isMultiLeg {
             path.addCurve(
-                to: scale(transfer, in: size),
-                control1: scale(MapPoint(x: 150, y: 430), in: size),
-                control2: scale(MapPoint(x: 120, y: 380), in: size)
+                to: viewport.point(transfer),
+                control1: viewport.point(MapPoint(x: 150, y: 430)),
+                control2: viewport.point(MapPoint(x: 120, y: 380))
             )
             path.addCurve(
-                to: scale(destination, in: size),
-                control1: scale(MapPoint(x: 175, y: 285), in: size),
-                control2: scale(MapPoint(x: 230, y: 230), in: size)
+                to: viewport.point(destination),
+                control1: viewport.point(MapPoint(x: 175, y: 285)),
+                control2: viewport.point(MapPoint(x: 230, y: 230))
             )
         } else {
             path.addCurve(
-                to: scale(destination, in: size),
-                control1: scale(MapPoint(x: 170, y: 400), in: size),
-                control2: scale(MapPoint(x: 300, y: 330), in: size)
+                to: viewport.point(destination),
+                control1: viewport.point(MapPoint(x: 170, y: 400)),
+                control2: viewport.point(MapPoint(x: 300, y: 330))
             )
         }
         return path
@@ -111,23 +113,23 @@ struct RideMapCanvasView: View {
     private func mapMarkers(size: CGSize) -> some View {
         if effectivePhase == .destination {
             CurrentLocationPulse()
-                .position(scale(origin, in: size))
+                .position(markerPoint(origin, in: size))
         }
         if showsRoute && !showsCar {
             LiiveMapMarker(kind: .origin, label: "Pickup")
-                .position(scale(origin, in: size))
+                .position(markerPoint(origin, in: size))
         }
         if showsCar {
             LiiveMapMarker(kind: .car, label: isMultiLeg ? "Leg 2 · 3 min" : "4 min")
-                .position(scale(carPosition(), in: size))
+                .position(markerPoint(carPosition(), in: size))
         }
         if isMultiLeg && showsRoute {
             LiiveMapMarker(kind: .transfer, label: "Transfer")
-                .position(scale(transfer, in: size))
+                .position(markerPoint(transfer, in: size))
         }
         if effectivePhase != .destination {
             LiiveMapMarker(kind: .destination, label: "Union Square")
-                .position(scale(destination, in: size))
+                .position(markerPoint(destination, in: size))
         }
     }
 
@@ -144,7 +146,7 @@ struct RideMapCanvasView: View {
         return MapPoint(x: start.x + (end.x - start.x) * local, y: start.y + (end.y - start.y) * local)
     }
 
-    private func scale(_ point: MapPoint, in size: CGSize) -> CGPoint {
+    private func markerPoint(_ point: MapPoint, in size: CGSize) -> CGPoint {
         CGPoint(x: point.x / 402 * size.width, y: point.y / 740 * size.height)
     }
 }
@@ -152,6 +154,29 @@ struct RideMapCanvasView: View {
 private struct MapPoint {
     let x: Double
     let y: Double
+}
+
+private struct MapSvgViewport {
+    private static let width = 402.0
+    private static let height = 740.0
+
+    let scale: Double
+    let offsetX: Double
+    let offsetY: Double
+
+    init(size: CGSize) {
+        scale = max(Double(size.width) / Self.width, Double(size.height) / Self.height)
+        offsetX = (Double(size.width) - Self.width * scale) / 2
+        offsetY = (Double(size.height) - Self.height * scale) / 2
+    }
+
+    func point(_ point: MapPoint) -> CGPoint {
+        CGPoint(x: offsetX + point.x * scale, y: offsetY + point.y * scale)
+    }
+
+    func length(_ value: Double) -> CGFloat {
+        CGFloat(value * scale)
+    }
 }
 
 private struct MapStreet {
@@ -176,10 +201,10 @@ private struct MapStreet {
         MapStreet(id: "n4", start: MapPoint(x: 280, y: -20), end: MapPoint(x: 305, y: 780))
     ]
 
-    func path(in size: CGSize) -> Path {
+    func path(in viewport: MapSvgViewport) -> Path {
         var path = Path()
-        path.move(to: CGPoint(x: start.x / 402 * size.width, y: start.y / 740 * size.height))
-        path.addLine(to: CGPoint(x: end.x / 402 * size.width, y: end.y / 740 * size.height))
+        path.move(to: viewport.point(start))
+        path.addLine(to: viewport.point(end))
         return path
     }
 }

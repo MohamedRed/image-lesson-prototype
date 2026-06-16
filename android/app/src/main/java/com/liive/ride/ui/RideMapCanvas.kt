@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -25,6 +27,7 @@ import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -45,16 +48,36 @@ fun RideMapCanvas(phase: RidePhase, isMultiLeg: Boolean, carProgress: Float) {
 
     BoxWithConstraints(Modifier.fillMaxSize().background(c.mapBackground)) {
         Canvas(Modifier.fillMaxSize()) {
-            drawRect(c.mapWater, topLeft = Offset(-40f, size.height * 0.73f), size = androidx.compose.ui.geometry.Size(size.width * 0.55f, size.height * 0.35f), alpha = 0.9f)
-            drawRect(c.mapPark, topLeft = Offset(size.width * 0.62f, size.height * 0.05f), size = androidx.compose.ui.geometry.Size(size.width * 0.60f, size.height * 0.24f), alpha = 0.55f)
-            drawRect(c.mapDistrict, topLeft = Offset(-20f, size.height * 0.16f), size = androidx.compose.ui.geometry.Size(size.width * 0.38f, size.height * 0.20f), alpha = 0.50f)
-            drawStreets(c.mapRoad)
+            val viewport = MapSvgViewport(size.width, size.height)
+            rotate(degrees = -8f, pivot = viewport.point(70f, 670f)) {
+                drawRect(
+                    c.mapWater,
+                    topLeft = viewport.point(-40f, 540f),
+                    size = Size(viewport.length(220f), viewport.length(260f)),
+                    alpha = 0.9f
+                )
+            }
+            drawRoundRect(
+                c.mapPark,
+                topLeft = viewport.point(250f, 40f),
+                size = Size(viewport.length(240f), viewport.length(180f)),
+                cornerRadius = CornerRadius(viewport.length(10f)),
+                alpha = 0.55f
+            )
+            drawRoundRect(
+                c.mapDistrict,
+                topLeft = viewport.point(-20f, 120f),
+                size = Size(viewport.length(150f), viewport.length(150f)),
+                cornerRadius = CornerRadius(viewport.length(8f)),
+                alpha = 0.50f
+            )
+            drawStreets(c.mapRoad, viewport)
             if (showRoute) {
-                drawShadowedRoute(routePath(size.width, size.height, isMultiLeg), c.mapRoute)
+                drawShadowedRoute(routePath(viewport, isMultiLeg), c.mapRoute, viewport)
                 if (isMultiLeg) {
-                    val t = point(150f, 320f, size.width, size.height)
-                    drawCircle(androidx.compose.ui.graphics.Color.White, radius = 5.dp.toPx(), center = t)
-                    drawCircle(c.warning, radius = 5.dp.toPx(), center = t, style = Stroke(width = 3.dp.toPx()))
+                    val t = viewport.point(150f, 320f)
+                    drawCircle(androidx.compose.ui.graphics.Color.White, radius = viewport.length(5f), center = t)
+                    drawCircle(c.warning, radius = viewport.length(5f), center = t, style = Stroke(width = viewport.length(3f)))
                 }
             }
         }
@@ -78,25 +101,25 @@ fun RideMapCanvas(phase: RidePhase, isMultiLeg: Boolean, carProgress: Float) {
     }
 }
 
-private fun DrawScope.drawShadowedRoute(path: Path, routeColor: Color) {
+private fun DrawScope.drawShadowedRoute(path: Path, routeColor: Color, viewport: MapSvgViewport) {
     drawIntoCanvas { canvas ->
         val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = android.graphics.Color.BLACK
             alpha = (255 * RouteShadowAlpha).roundToInt()
             style = Paint.Style.STROKE
-            strokeWidth = RouteStrokeWidth.toPx()
+            strokeWidth = viewport.length(RouteStrokeWidth)
             strokeCap = Paint.Cap.ROUND
-            maskFilter = BlurMaskFilter(RouteShadowBlur.toPx(), BlurMaskFilter.Blur.NORMAL)
+            maskFilter = BlurMaskFilter(viewport.length(RouteShadowBlur), BlurMaskFilter.Blur.NORMAL)
         }
         canvas.nativeCanvas.save()
-        canvas.nativeCanvas.translate(0f, RouteShadowYOffset.toPx())
+        canvas.nativeCanvas.translate(0f, viewport.length(RouteShadowYOffset))
         canvas.nativeCanvas.drawPath(path.asAndroidPath(), shadowPaint)
         canvas.nativeCanvas.restore()
     }
-    drawPath(path, routeColor, style = Stroke(width = RouteStrokeWidth.toPx(), cap = StrokeCap.Round))
+    drawPath(path, routeColor, style = Stroke(width = viewport.length(RouteStrokeWidth), cap = StrokeCap.Round))
 }
 
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawStreets(roadColor: Color) {
+private fun DrawScope.drawStreets(roadColor: Color, viewport: MapSvgViewport) {
     val major = listOf(
         MapLine(-20f, 250f, 430f, 225f), MapLine(-20f, 370f, 430f, 350f),
         MapLine(-20f, 500f, 430f, 520f), MapLine(-20f, 630f, 430f, 650f),
@@ -107,25 +130,49 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawStreets(roadCol
         MapLine(-20f, 180f, 430f, 165f), MapLine(-20f, 430f, 430f, 445f),
         MapLine(140f, -20f, 170f, 780f), MapLine(280f, -20f, 305f, 780f)
     )
-    major.forEach { drawLine(roadColor, point(it.x1, it.y1, size.width, size.height), point(it.x2, it.y2, size.width, size.height), strokeWidth = 9.dp.toPx(), cap = StrokeCap.Round, alpha = 0.95f) }
-    minor.forEach { drawLine(roadColor, point(it.x1, it.y1, size.width, size.height), point(it.x2, it.y2, size.width, size.height), strokeWidth = 4.dp.toPx(), cap = StrokeCap.Round, alpha = 0.60f) }
-}
-
-private fun routePath(width: Float, height: Float, multiLeg: Boolean) = Path().apply {
-    moveToPoint(MapPoint(196f, 470f), width, height)
-    if (multiLeg) {
-        cubicToPoint(MapPoint(150f, 430f), MapPoint(120f, 380f), MapPoint(150f, 320f), width, height)
-        cubicToPoint(MapPoint(175f, 285f), MapPoint(230f, 230f), MapPoint(250f, 165f), width, height)
-    } else {
-        cubicToPoint(MapPoint(170f, 400f), MapPoint(300f, 330f), MapPoint(250f, 165f), width, height)
+    major.forEach {
+        drawLine(
+            roadColor,
+            viewport.point(it.x1, it.y1),
+            viewport.point(it.x2, it.y2),
+            strokeWidth = viewport.length(9f),
+            cap = StrokeCap.Round,
+            alpha = 0.95f
+        )
+    }
+    minor.forEach {
+        drawLine(
+            roadColor,
+            viewport.point(it.x1, it.y1),
+            viewport.point(it.x2, it.y2),
+            strokeWidth = viewport.length(4f),
+            cap = StrokeCap.Round,
+            alpha = 0.60f
+        )
     }
 }
 
-private fun Path.moveToPoint(p: MapPoint, width: Float, height: Float) = moveTo(p.x / 402f * width, p.y / 740f * height)
-private fun Path.cubicToPoint(c1: MapPoint, c2: MapPoint, end: MapPoint, width: Float, height: Float) =
-    cubicTo(c1.x / 402f * width, c1.y / 740f * height, c2.x / 402f * width, c2.y / 740f * height, end.x / 402f * width, end.y / 740f * height)
+private fun routePath(viewport: MapSvgViewport, multiLeg: Boolean) = Path().apply {
+    moveToPoint(MapPoint(196f, 470f), viewport)
+    if (multiLeg) {
+        cubicToPoint(MapPoint(150f, 430f), MapPoint(120f, 380f), MapPoint(150f, 320f), viewport)
+        cubicToPoint(MapPoint(175f, 285f), MapPoint(230f, 230f), MapPoint(250f, 165f), viewport)
+    } else {
+        cubicToPoint(MapPoint(170f, 400f), MapPoint(300f, 330f), MapPoint(250f, 165f), viewport)
+    }
+}
 
-private fun point(x: Float, y: Float, width: Float, height: Float) = Offset(x / 402f * width, y / 740f * height)
+private fun Path.moveToPoint(p: MapPoint, viewport: MapSvgViewport) {
+    val point = viewport.point(p)
+    moveTo(point.x, point.y)
+}
+
+private fun Path.cubicToPoint(c1: MapPoint, c2: MapPoint, end: MapPoint, viewport: MapSvgViewport) {
+    val first = viewport.point(c1)
+    val second = viewport.point(c2)
+    val destination = viewport.point(end)
+    cubicTo(first.x, first.y, second.x, second.y, destination.x, destination.y)
+}
 
 @Composable
 private fun MarkerAt(point: MapPoint, maxWidth: Dp, maxHeight: Dp, content: @Composable () -> Unit) {
@@ -188,8 +235,21 @@ private fun carPoint(multiLeg: Boolean, progress: Float): MapPoint {
 
 private data class MapPoint(val x: Float, val y: Float)
 private data class MapLine(val x1: Float, val y1: Float, val x2: Float, val y2: Float)
+private data class MapSvgViewport(val width: Float, val height: Float) {
+    private val scale = maxOf(width / MapWidth, height / MapHeight)
+    private val offsetX = (width - MapWidth * scale) / 2f
+    private val offsetY = (height - MapHeight * scale) / 2f
 
-private val RouteStrokeWidth = 7.dp
-private val RouteShadowBlur = 3.dp
-private val RouteShadowYOffset = 2.dp
+    fun point(point: MapPoint) = point(point.x, point.y)
+
+    fun point(x: Float, y: Float) = Offset(offsetX + x * scale, offsetY + y * scale)
+
+    fun length(value: Float) = value * scale
+}
+
+private const val MapWidth = 402f
+private const val MapHeight = 740f
+private const val RouteStrokeWidth = 7f
+private const val RouteShadowBlur = 3f
+private const val RouteShadowYOffset = 2f
 private const val RouteShadowAlpha = 0.35f
