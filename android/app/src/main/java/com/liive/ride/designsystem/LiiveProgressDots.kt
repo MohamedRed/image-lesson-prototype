@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,7 +28,7 @@ fun LiiveProgressDots(legs: Int, current: Int, modifier: Modifier = Modifier) {
     val boundedLegs = legs.coerceIn(1, 3)
     val boundedCurrent = current.coerceAtLeast(1)
 
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         for (index in 1..boundedLegs) {
             ProgressLeg(index = index, current = boundedCurrent)
             if (index < boundedLegs) {
@@ -71,8 +72,8 @@ private fun ProgressTransfer(passed: Boolean, modifier: Modifier = Modifier) {
 
     Column(
         modifier
-            .padding(horizontal = 8.dp)
-            .padding(top = 11.dp),
+            .defaultMinSize(minWidth = 28.dp)
+            .padding(bottom = 15.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {

@@ -10,7 +10,7 @@ public struct LiiveProgressDots: View {
     }
 
     public var body: some View {
-        HStack(alignment: .top, spacing: 0) {
+        HStack(alignment: .center, spacing: 0) {
             ForEach(1...legs, id: \.self) { index in
                 leg(index)
                 if index < legs {
@@ -51,9 +51,8 @@ public struct LiiveProgressDots: View {
                 .font(.system(size: 13, weight: .bold))
                 .foregroundColor(passed ? LiiveColor.success : LiiveColor.warning)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 8)
-        .padding(.top, 11)
+        .frame(minWidth: 28, maxWidth: .infinity)
+        .padding(.bottom, 15)
     }
 
     private func legColor(completed: Bool, active: Bool) -> Color {
