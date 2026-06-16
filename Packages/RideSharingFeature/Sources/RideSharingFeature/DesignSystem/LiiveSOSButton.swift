@@ -29,6 +29,7 @@ public struct LiiveSOSButton: View {
                     if showLabel {
                         Text("HELP").font(.system(size: size * 0.15, weight: .semibold, design: .rounded))
                             .foregroundColor(.white.opacity(0.9))
+                            .tracking(0.5)
                     }
                 }
                 .foregroundColor(.white)
@@ -38,6 +39,7 @@ public struct LiiveSOSButton: View {
             .animation(.easeOut(duration: LiiveMotion.fast), value: pressed)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(Text("Emergency SOS"))
         .simultaneousGesture(DragGesture(minimumDistance: 0)
             .onChanged { _ in pressed = true }.onEnded { _ in pressed = false })
         .onAppear {

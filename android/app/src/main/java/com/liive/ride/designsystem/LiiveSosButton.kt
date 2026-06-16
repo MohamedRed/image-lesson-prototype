@@ -19,6 +19,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -40,7 +42,12 @@ fun LiiveSosButton(
         animationSpec = infiniteRepeatable(tween(1500, easing = LinearOutSlowInEasing), RepeatMode.Restart),
         label = "pulse"
     )
-    Box(modifier.size(size), contentAlignment = Alignment.Center) {
+    Box(
+        modifier
+            .size(size)
+            .semantics { contentDescription = "Emergency SOS" },
+        contentAlignment = Alignment.Center
+    ) {
         Box(
             Modifier.matchParentSize().graphicsLayer {
                 scaleX = 1f + pulse * 0.5f; scaleY = 1f + pulse * 0.5f; alpha = (1f - pulse) * 0.35f
@@ -64,7 +71,8 @@ fun LiiveSosButton(
                 Text("SOS", color = Color.White, fontWeight = FontWeight.Bold,
                     fontSize = (size.value * 0.28f).sp, fontFamily = SchibstedGrotesk)
                 if (showLabel) Text("HELP", color = Color.White.copy(alpha = 0.9f),
-                    fontWeight = FontWeight.SemiBold, fontSize = (size.value * 0.15f).sp, fontFamily = SchibstedGrotesk)
+                    fontWeight = FontWeight.SemiBold, fontSize = (size.value * 0.15f).sp,
+                    fontFamily = SchibstedGrotesk, letterSpacing = 0.5.sp)
             }
         }
     }
