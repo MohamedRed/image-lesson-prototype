@@ -114,9 +114,14 @@ private fun MarkerLabel(label: String, color: Color) {
             .shadow(LiiveElevation.card, LiiveRadius.full)
             .clip(LiiveRadius.full)
             .background(c.surface)
-            .padding(horizontal = 8.dp, vertical = 2.dp)
     ) {
-        Text(label, color = c.text, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+        Text(
+            label,
+            color = c.text,
+            style = MaterialTheme.typography.labelMedium,
+            maxLines = 1,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+        )
         Box(
             Modifier
                 .align(Alignment.BottomCenter)
