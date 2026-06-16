@@ -43,26 +43,27 @@ fun LiiveDriverCard(
                 if (rating != null) LiiveRatingStars(value = rating, size = 13.dp)
             }
             if (vehicle != null || plate != null) {
-                Row(Modifier.fillMaxWidth()) {
+                val vehicleStyle = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp)
+                Row(Modifier.fillMaxWidth().padding(top = 2.dp)) {
                     if (vehicle != null) {
                         Text(
                             vehicle,
                             color = c.textSecondary,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = vehicleStyle,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false)
                         )
                     }
                     if (vehicle != null && plate != null) {
-                        Text(" · ", color = c.textSecondary, style = MaterialTheme.typography.titleMedium)
+                        Text(" · ", color = c.textSecondary, style = vehicleStyle)
                     }
                     if (plate != null) {
                         Text(
                             plate,
                             color = c.text,
                             fontWeight = FontWeight.SemiBold,
-                            style = MaterialTheme.typography.titleMedium.copy(letterSpacing = 0.5.sp),
+                            style = vehicleStyle.copy(letterSpacing = 0.5.sp),
                             maxLines = 1
                         )
                     }

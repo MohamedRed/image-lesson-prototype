@@ -34,8 +34,9 @@ public struct LiiveDriverCard<Trailing: View>: View {
                         if vehicle != nil && plate != nil { Text(" · ").foregroundColor(LiiveColor.textSecondary) }
                         if let plate { Text(plate).fontWeight(.semibold).tracking(0.5).foregroundColor(LiiveColor.text) }
                     }
-                    .font(LiiveFont.subhead)
+                    .font(Font.custom(LiiveFont.family, size: 14))
                     .lineLimit(1)
+                    .padding(.top, 2)
                 }
             }
             Spacer(minLength: 8)
