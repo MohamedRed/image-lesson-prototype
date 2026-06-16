@@ -98,9 +98,14 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             eta = if (config.tier.multiLeg) "3 min" else "4 min",
             speaking = true
         ) {
-            Box(Modifier.size(44.dp).clip(LiiveRadius.md).background(c.accentTint), contentAlignment = Alignment.Center) {
-                Icon(painterResource(RideIcons.Phone), null, tint = c.accent, modifier = Modifier.size(18.dp))
-            }
+            LiiveButton(
+                title = "",
+                onClick = {},
+                variant = LiiveButtonVariant.Tinted,
+                icon = RideIcons.Phone,
+                iconOnly = true,
+                contentDescription = "Call driver"
+            )
         }
         if (config.tier.multiLeg) MultiLegPanel()
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {

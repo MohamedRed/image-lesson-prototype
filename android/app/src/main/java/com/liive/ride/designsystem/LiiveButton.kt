@@ -44,6 +44,8 @@ fun LiiveButton(
     tabularNumbers: Boolean = false,
     @DrawableRes icon: Int? = null,
     @DrawableRes iconRight: Int? = null,
+    iconOnly: Boolean = false,
+    contentDescription: String? = null,
     disabled: Boolean = false,
     loading: Boolean = false,
 ) {
@@ -108,14 +110,20 @@ fun LiiveButton(
 
     Box(
         modifier = modifier
-            .then(if (fullWidth) Modifier.fillMaxWidth() else Modifier)
+            .then(
+                when {
+                    fullWidth -> Modifier.fillMaxWidth()
+                    iconOnly -> Modifier.width(height)
+                    else -> Modifier
+                }
+            )
             .height(height)
             .scale(animatedScale)
             .alpha(animatedOpacity)
             .clip(shape)
             .background(animatedBackground)
             .clickable(interactionSource = interaction, indication = null, enabled = enabled) { onClick() }
-            .padding(horizontal = if (size == LiiveButtonSize.Lg) 22.dp else 18.dp),
+            .padding(horizontal = if (iconOnly) 0.dp else if (size == LiiveButtonSize.Lg) 22.dp else 18.dp),
         contentAlignment = Alignment.Center,
     ) {
         if (loading) {
@@ -124,6 +132,8 @@ fun LiiveButton(
                 strokeWidth = 2.dp,
                 modifier = Modifier.size(18.dp)
             )
+        } else if (iconOnly && icon != null) {
+            Icon(painterResource(icon), contentDescription, tint = fg, modifier = Modifier.size(18.dp))
         } else {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (icon != null) Icon(painterResource(icon), null, tint = fg, modifier = Modifier.size(18.dp))

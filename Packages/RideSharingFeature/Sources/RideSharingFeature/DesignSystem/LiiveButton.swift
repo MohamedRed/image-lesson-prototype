@@ -16,6 +16,8 @@ public struct LiiveButton: View {
     var fullWidth: Bool = false
     var icon: Image? = nil
     var iconRight: Image? = nil
+    var iconOnly: Bool = false
+    var accessibilityLabel: String? = nil
     var tabularNumbers: Bool = false
     var disabled: Bool = false
     var loading: Bool = false
@@ -25,12 +27,13 @@ public struct LiiveButton: View {
 
     public init(_ title: String, variant: Variant = .primary, size: Size = .md,
                 shape: Shape = .rounded, fullWidth: Bool = false, icon: Image? = nil,
-                iconRight: Image? = nil,
+                iconRight: Image? = nil, iconOnly: Bool = false, accessibilityLabel: String? = nil,
                 tabularNumbers: Bool = false, disabled: Bool = false, loading: Bool = false,
                 action: @escaping () -> Void) {
         self.title = title; self.variant = variant; self.size = size
         self.shape = shape; self.fullWidth = fullWidth; self.icon = icon
-        self.iconRight = iconRight; self.tabularNumbers = tabularNumbers
+        self.iconRight = iconRight; self.iconOnly = iconOnly
+        self.accessibilityLabel = accessibilityLabel; self.tabularNumbers = tabularNumbers
         self.disabled = disabled; self.loading = loading; self.action = action
     }
 
@@ -85,6 +88,9 @@ public struct LiiveButton: View {
                         .progressViewStyle(.circular)
                         .tint(fg)
                         .frame(width: 18, height: 18)
+                } else if iconOnly, let icon {
+                    icon
+                        .font(.system(size: 18, weight: .semibold))
                 } else {
                     if let icon { icon }
                     Text(title)
@@ -94,8 +100,9 @@ public struct LiiveButton: View {
                 }
             }
             .frame(maxWidth: fullWidth ? .infinity : nil)
+            .frame(width: iconOnly && !fullWidth ? height : nil)
             .frame(height: height)
-            .padding(.horizontal, size == .lg ? 22 : 18)
+            .padding(.horizontal, iconOnly ? 0 : size == .lg ? 22 : 18)
             .foregroundColor(fg)
             .background(bg)
             .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
@@ -105,6 +112,7 @@ public struct LiiveButton: View {
         }
         .buttonStyle(.plain)
         .disabled(disabled || loading)
+        .accessibilityLabel(Text(accessibilityLabel ?? title))
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .updating($pressed) { _, state, _ in

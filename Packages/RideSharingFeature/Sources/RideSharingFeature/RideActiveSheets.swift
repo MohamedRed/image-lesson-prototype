@@ -82,15 +82,13 @@ struct RideEnrouteSheetView: View {
                 eta: config.isMultiLeg ? "3 min" : "4 min",
                 speaking: true
             ) {
-                Button(action: {}) {
-                    Image(systemName: "phone.fill")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(LiiveColor.accent)
-                        .frame(width: 44, height: 44)
-                        .background(LiiveColor.accentTint)
-                        .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.md, style: .continuous))
-                }
-                .buttonStyle(.plain)
+                LiiveButton(
+                    "",
+                    variant: .tinted,
+                    icon: Image(systemName: "phone.fill"),
+                    iconOnly: true,
+                    accessibilityLabel: "Call driver"
+                ) {}
             }
 
             if config.isMultiLeg {
