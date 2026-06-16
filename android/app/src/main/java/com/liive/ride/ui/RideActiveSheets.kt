@@ -19,8 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.liive.ride.*
 import com.liive.ride.designsystem.*
 
@@ -60,7 +62,7 @@ fun RideMatchingSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             Text(
                 "Matching you with a nearby${if (state.config.femaleOnly) " female-only" else ""} ${state.config.tier.name.lowercase()} driver and reserving a legal curb.",
                 color = c.textSecondary,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.widthIn(max = 280.dp).padding(top = 6.dp)
             )
@@ -85,10 +87,20 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
     val c = LiiveTheme.colors
     val config = state.config
     LiiveBottomSheet {
-        Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), verticalAlignment = Alignment.Bottom) {
-            Text(if (config.tier.multiLeg) "On leg 2 of 2" else "Your driver is arriving", color = c.text, style = MaterialTheme.typography.headlineSmall)
+        Row(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+            Text(
+                if (config.tier.multiLeg) "On leg 2 of 2" else "Your driver is arriving",
+                color = c.text,
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.alignByBaseline()
+            )
             Spacer(Modifier.weight(1f))
-            Text("to ${config.destinationName}", color = c.textSecondary, style = MaterialTheme.typography.bodySmall)
+            Text(
+                "to ${config.destinationName}",
+                color = c.textSecondary,
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
+                modifier = Modifier.alignByBaseline()
+            )
         }
         LiiveDriverCard(
             name = "John Driver",
@@ -137,7 +149,12 @@ private fun MultiLegPanel() {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(painterResource(RideIcons.Map), null, tint = c.accent, modifier = Modifier.size(16.dp))
-            Text("Multi-leg journey", color = c.text, style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Multi-leg journey",
+                color = c.text,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
         }
         LiiveProgressDots(legs = 2, current = 2)
         Box(Modifier.fillMaxWidth().height(0.5.dp).background(c.separator))
@@ -217,7 +234,11 @@ private fun PaymentSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
 private fun RatingControl(rating: Int, onEvent: (RideEvent) -> Unit) {
     val c = LiiveTheme.colors
     Column(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Rate your driver", color = c.textSecondary, style = MaterialTheme.typography.bodySmall)
+        Text(
+            "Rate your driver",
+            color = c.textSecondary,
+            style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp)
+        )
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 8.dp)) {
             (1..5).forEach { value ->
                 Icon(

@@ -30,7 +30,7 @@ struct RideMatchingSheetView: View {
                     .liiveStyle(.title3)
                     .foregroundColor(LiiveColor.text)
                 Text("Matching you with a nearby\(config.femaleOnly ? " female-only" : "") \(config.tier.rawValue) driver and reserving a legal curb.")
-                    .font(LiiveFont.footnote)
+                    .font(Font.custom(LiiveFont.family, size: 14))
                     .foregroundColor(LiiveColor.textSecondary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 280)
@@ -69,7 +69,7 @@ struct RideEnrouteSheetView: View {
                     .foregroundColor(LiiveColor.text)
                 Spacer()
                 Text("to \(config.destinationName)")
-                    .font(LiiveFont.footnote)
+                    .font(Font.custom(LiiveFont.family, size: 14))
                     .foregroundColor(LiiveColor.textSecondary)
             }
             .padding(.bottom, 12)
@@ -232,7 +232,7 @@ struct RideCompleteSheetView: View {
     private var ratingControl: some View {
         VStack(spacing: 8) {
             Text("Rate your driver")
-                .font(LiiveFont.footnote)
+                .font(Font.custom(LiiveFont.family, size: 14))
                 .foregroundColor(LiiveColor.textSecondary)
             HStack(spacing: 6) {
                 ForEach(1...5, id: \.self) { value in
