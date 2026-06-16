@@ -271,7 +271,7 @@ private fun RatingControl(rating: Int, onEvent: (RideEvent) -> Unit) {
 @Composable
 fun RideSOSConfirmation(onEmergency: () -> Unit, onCancel: () -> Unit) {
     val c = LiiveTheme.colors
-    Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxSize().background(c.scrimStrong), contentAlignment = Alignment.Center) {
         Column(
             Modifier.widthIn(max = 300.dp).clip(LiiveRadius.xl).background(c.surface).padding(22.dp),
             horizontalAlignment = Alignment.CenterHorizontally

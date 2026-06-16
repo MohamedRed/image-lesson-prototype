@@ -77,6 +77,10 @@ public enum LiiveColor {
     public static let separator     = dyn(Color(hex: "07121A", opacity: 0.12), Color(hex: "78AAB9", opacity: 0.18))
     public static let borderStrong  = dyn(Color(hex: "07121A", opacity: 0.10), Color(hex: "FFFFFF", opacity: 0.10))
 
+    // MARK: Scrims
+    public static let scrimSubtle = Color.black.opacity(0.35)
+    public static let scrimStrong = Color.black.opacity(0.55)
+
     // MARK: Materials
     public static let materialThin    = dyn(Color(hex: "F4F8F8", opacity: 0.70), Color(hex: "0E1E2A", opacity: 0.55))
     public static let materialRegular = dyn(Color(hex: "FFFFFF", opacity: 0.80), Color(hex: "0A1822", opacity: 0.70))

@@ -35,7 +35,7 @@ fun RideApp(viewModel: RideViewModel, darkTheme: Boolean = true) {
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)))
+                Box(Modifier.fillMaxSize().background(LiiveTheme.colors.scrimSubtle))
             }
 
             RideTopChrome(

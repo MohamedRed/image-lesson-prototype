@@ -23,7 +23,7 @@ public struct RideSharingView: View {
             .ignoresSafeArea()
 
             if viewModel.state.phase == .complete {
-                Color.black.opacity(0.35)
+                LiiveColor.scrimSubtle
                     .ignoresSafeArea()
                     .transition(.opacity)
             }

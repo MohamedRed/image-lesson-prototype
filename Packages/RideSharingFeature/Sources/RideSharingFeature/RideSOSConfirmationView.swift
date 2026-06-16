@@ -6,7 +6,7 @@ struct RideSOSConfirmationView: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.55)
+            LiiveColor.scrimStrong
                 .ignoresSafeArea()
             VStack(spacing: 0) {
                 Text("Emergency Alert")
