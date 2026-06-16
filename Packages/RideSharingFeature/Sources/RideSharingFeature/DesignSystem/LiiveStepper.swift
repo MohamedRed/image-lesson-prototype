@@ -12,28 +12,28 @@ public struct LiiveStepper: View {
     }
 
     public var body: some View {
-        HStack(spacing: 10) {
-            control(systemName: "minus", enabled: value > range.lowerBound) {
+        HStack(spacing: 0) {
+            control(label: "-", enabled: value > range.lowerBound) {
                 onChange(max(range.lowerBound, value - 1))
             }
-            Text("\(value)")
-                .font(LiiveFont.headline.monospacedDigit())
-                .foregroundColor(LiiveColor.text)
-                .frame(width: 20)
-            control(systemName: "plus", enabled: value < range.upperBound) {
+            Rectangle()
+                .fill(LiiveColor.separator)
+                .frame(width: 1, height: 18)
+            control(label: "+", enabled: value < range.upperBound) {
                 onChange(min(range.upperBound, value + 1))
             }
         }
+        .background(LiiveColor.fillTertiary)
+        .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.sm, style: .continuous))
     }
 
-    private func control(systemName: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+    private func control(label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: systemName)
-                .font(.system(size: 13, weight: .bold))
+            Text(label)
+                .font(.system(size: 20, weight: .regular))
                 .foregroundColor(enabled ? LiiveColor.text : LiiveColor.textQuaternary)
-                .frame(width: 30, height: 30)
-                .background(enabled ? LiiveColor.fill : LiiveColor.fillTertiary)
-                .clipShape(Circle())
+                .frame(width: 44, height: 32)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
