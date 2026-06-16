@@ -1,2 +1,7 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
+import SwiftUI
+
+public enum LiiveRideFeature {
+    public static func demoView(preferredColorScheme: ColorScheme? = .dark) -> some View {
+        RideMapContainerView(mode: .demo, preferredColorScheme: preferredColorScheme)
+    }
+}

@@ -13,15 +13,14 @@ public enum ServiceMode {
 
 /// Root view that shows a full-screen live map with an overlay HUD.
 public struct RideMapContainerView: View {
-    private let serviceMode: ServiceMode
     private let service: RideSharingServicing
+    private let preferredColorScheme: ColorScheme?
 
     // MARK: - Initializers
 
     /// Initialize with a specific service mode
-    public init(mode: ServiceMode = .demo) {
-        self.serviceMode = mode
-
+    public init(mode: ServiceMode = .demo, preferredColorScheme: ColorScheme? = .dark) {
+        self.preferredColorScheme = preferredColorScheme
         switch mode {
         case .demo:
             self.service = MockRideSharingService()
@@ -37,23 +36,22 @@ public struct RideMapContainerView: View {
     /// Legacy initializer for backward compatibility
     @available(*, deprecated, message: "Use init(mode:) instead")
     public init(service: RideSharingServicing) {
-        self.serviceMode = .demo
         self.service = service
+        self.preferredColorScheme = .dark
     }
 
     /// Legacy initializer for backward compatibility
     @available(*, deprecated, message: "Use init(mode:) instead")
     public init(useRealService: Bool) {
+        self.preferredColorScheme = .dark
         if useRealService {
-            self.serviceMode = .localDev(.default)
             self.service = MockRideSharingService()
         } else {
-            self.serviceMode = .demo
             self.service = MockRideSharingService()
         }
     }
 
     public var body: some View {
-        RideSharingView(service: service)
+        RideSharingView(service: service, preferredColorScheme: preferredColorScheme)
     }
 }
