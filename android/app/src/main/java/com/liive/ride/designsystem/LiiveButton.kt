@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -55,6 +56,11 @@ fun LiiveButton(
     val enabled = !disabled && !loading
 
     val height = when (size) { LiiveButtonSize.Sm -> 32.dp; LiiveButtonSize.Lg -> 50.dp; else -> 44.dp }
+    val horizontalPadding = when (size) {
+        LiiveButtonSize.Sm -> 14.dp
+        LiiveButtonSize.Md -> 18.dp
+        LiiveButtonSize.Lg -> 22.dp
+    }
     val bgPressed = when (variant) {
         LiiveButtonVariant.Primary -> c.accentPressed
         LiiveButtonVariant.Secondary -> c.fillSecondary
@@ -79,6 +85,20 @@ fun LiiveButton(
         LiiveButtonVariant.Tinted, LiiveButtonVariant.Plain -> c.accent
         LiiveButtonVariant.Destructive -> Color.White
         LiiveButtonVariant.DestructivePlain -> c.danger
+    }
+    val labelWeight = when (variant) {
+        LiiveButtonVariant.Plain, LiiveButtonVariant.DestructivePlain -> FontWeight.Normal
+        else -> FontWeight.SemiBold
+    }
+    val labelStyle = (if (size == LiiveButtonSize.Sm) {
+        MaterialTheme.typography.titleMedium
+    } else {
+        MaterialTheme.typography.titleLarge
+    }).copy(
+        fontWeight = labelWeight,
+        letterSpacing = MaterialTheme.typography.headlineSmall.letterSpacing
+    ).let { style ->
+        if (tabularNumbers) style.tabularNumbers() else style
     }
     val shape: RoundedCornerShape = if (capsule) LiiveRadius.full else LiiveRadius.md
     val targetOpacity = when {
@@ -123,7 +143,7 @@ fun LiiveButton(
             .clip(shape)
             .background(animatedBackground)
             .clickable(interactionSource = interaction, indication = null, enabled = enabled) { onClick() }
-            .padding(horizontal = if (iconOnly) 0.dp else if (size == LiiveButtonSize.Lg) 22.dp else 18.dp),
+            .padding(horizontal = if (iconOnly) 0.dp else horizontalPadding),
         contentAlignment = Alignment.Center,
     ) {
         if (loading) {
@@ -140,7 +160,7 @@ fun LiiveButton(
                 Text(
                     text = title,
                     color = fg,
-                    style = if (tabularNumbers) MaterialTheme.typography.titleLarge.tabularNumbers() else MaterialTheme.typography.titleLarge,
+                    style = labelStyle,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

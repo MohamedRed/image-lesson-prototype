@@ -38,6 +38,22 @@ public struct LiiveButton: View {
     }
 
     private var height: CGFloat { size == .sm ? 32 : size == .lg ? 50 : 44 }
+    private var horizontalPadding: CGFloat {
+        switch size {
+        case .sm: return 14
+        case .md: return 18
+        case .lg: return 22
+        }
+    }
+    private var titleFont: Font {
+        size == .sm ? LiiveFont.subhead : LiiveFont.headline
+    }
+    private var titleWeight: Font.Weight {
+        switch variant {
+        case .plain, .destructivePlain: return .regular
+        default: return .semibold
+        }
+    }
     private var bg: Color {
         if pressed { return bgPressed }
         switch variant {
@@ -94,15 +110,15 @@ public struct LiiveButton: View {
                 } else {
                     if let icon { icon }
                     Text(title)
-                        .font(tabularNumbers ? LiiveFont.headline.monospacedDigit() : LiiveFont.headline)
-                        .tracking(LiiveFont.Tracking.headline)
+                        .font((tabularNumbers ? titleFont.monospacedDigit() : titleFont).weight(titleWeight))
+                        .tracking(LiiveFont.Tracking.title3)
                     if let iconRight { iconRight }
                 }
             }
             .frame(maxWidth: fullWidth ? .infinity : nil)
             .frame(width: iconOnly && !fullWidth ? height : nil)
             .frame(height: height)
-            .padding(.horizontal, iconOnly ? 0 : size == .lg ? 22 : 18)
+            .padding(.horizontal, iconOnly ? 0 : horizontalPadding)
             .foregroundColor(fg)
             .background(bg)
             .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
