@@ -19,10 +19,10 @@ import com.liive.ride.designsystem.*
 import com.liive.ride.ui.*
 
 @Composable
-fun RideApp(viewModel: RideViewModel) {
+fun RideApp(viewModel: RideViewModel, darkTheme: Boolean = true) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LiiveTheme(darkTheme = true) {
+    LiiveTheme(darkTheme = darkTheme) {
         Box(Modifier.fillMaxSize().background(LiiveTheme.colors.bg)) {
             RideMapCanvas(
                 phase = state.phase,

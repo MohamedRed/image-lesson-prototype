@@ -2,9 +2,14 @@ import SwiftUI
 
 public struct RideSharingView: View {
     @StateObject private var viewModel: RideSharingViewModel
+    private let preferredColorScheme: ColorScheme?
 
-    public init(service: RideSharingServicing = MockRideSharingService()) {
+    public init(
+        service: RideSharingServicing = MockRideSharingService(),
+        preferredColorScheme: ColorScheme? = .dark
+    ) {
         LiiveFontRegistrar.registerBundledFonts()
+        self.preferredColorScheme = preferredColorScheme
         _viewModel = StateObject(wrappedValue: RideSharingViewModel(service: service))
     }
 
@@ -57,7 +62,7 @@ public struct RideSharingView: View {
             }
         }
         .background(LiiveColor.bg)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(preferredColorScheme)
         .animation(.easeInOut(duration: LiiveMotion.base), value: viewModel.state.phase)
     }
 
