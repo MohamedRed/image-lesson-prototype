@@ -2,6 +2,7 @@ package com.liive.ride.ui
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -15,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -26,7 +28,6 @@ import com.liive.ride.designsystem.*
 fun RideMatchingSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
     val c = LiiveTheme.colors
     val transition = rememberInfiniteTransition(label = "matching")
-    val bounce by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "bounce")
 
     LiiveBottomSheet {
         Column(
@@ -35,8 +36,22 @@ fun RideMatchingSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 16.dp)) {
                 repeat(3) { index ->
+                    val dotProgress by transition.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 1f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(
+                                durationMillis = 600,
+                                delayMillis = index * 160,
+                                easing = FastOutSlowInEasing
+                            ),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "matchingDot$index"
+                    )
                     Box(
-                        Modifier.offset(y = if (bounce > index * 0.22f) (-7).dp else 0.dp)
+                        Modifier.offset(y = (-7).dp * dotProgress)
+                            .alpha(0.5f + dotProgress * 0.5f)
                             .size(9.dp).clip(CircleShape).background(c.accent)
                     )
                 }
