@@ -204,7 +204,13 @@ private fun PaymentSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
                 Text("${state.config.destinationName} · 18 min · 5.2 km", color = c.textSecondary, style = MaterialTheme.typography.bodySmall.tabularNumbers())
             }
         }
-        Column(Modifier.fillMaxWidth().clip(LiiveRadius.lg).background(c.surfaceRaised).padding(horizontal = 14.dp, vertical = 8.dp)) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clip(LiiveRadius.lg)
+                .background(c.surfaceRaised)
+                .padding(start = 14.dp, top = 8.dp, end = 14.dp, bottom = 14.dp)
+        ) {
             LiiveFareRow("Ride fare", base.ridePrice())
             LiiveFareRow("Tax & fees", tax.ridePrice())
             if (state.config.tier.multiLeg) LiiveFareRow("Cost-share credit", "–$2.00", muted = true)

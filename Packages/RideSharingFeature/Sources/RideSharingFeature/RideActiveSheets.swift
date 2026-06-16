@@ -203,7 +203,8 @@ struct RideCompleteSheetView: View {
                 LiiveFareRow(label: "Total", amount: fare.ridePrice, total: true)
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.top, 8)
+            .padding(.bottom, 14)
             .background(LiiveColor.surfaceRaised)
             .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.lg, style: .continuous))
             .padding(.bottom, 12)
