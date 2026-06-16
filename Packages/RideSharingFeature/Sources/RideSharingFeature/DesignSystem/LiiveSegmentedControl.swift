@@ -23,14 +23,24 @@ public struct LiiveSegmentedControl<Value: Hashable>: View {
     }
 
     public var body: some View {
-        HStack(spacing: LiiveSpacing.xs) {
-            ForEach(options) { option in
-                segment(option)
+        Group {
+            if !options.isEmpty {
+                HStack(spacing: 0) {
+                    ForEach(options) { option in
+                        segment(option)
+                    }
+                }
+                .background(alignment: .leading) {
+                    GeometryReader { proxy in
+                        selectedPill(in: proxy.size)
+                    }
+                    .allowsHitTesting(false)
+                }
+                .padding(LiiveSpacing.xs2)
+                .background(LiiveColor.fillTertiary)
+                .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.sm, style: .continuous))
             }
         }
-        .padding(LiiveSpacing.xs)
-        .background(LiiveColor.fillTertiary)
-        .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.full, style: .continuous))
     }
 
     private func segment(_ option: LiiveSegmentedOption<Value>) -> some View {
@@ -43,16 +53,32 @@ public struct LiiveSegmentedControl<Value: Hashable>: View {
         } label: {
             Text(option.title)
                 .liiveStyle(.subhead)
+                .fontWeight(isSelected ? .semibold : .medium)
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
                 .foregroundColor(isSelected ? LiiveColor.text : LiiveColor.textSecondary)
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: LiiveControl.md - LiiveSpacing.s)
                 .padding(.horizontal, LiiveSpacing.m)
-                .background(isSelected ? LiiveColor.surfaceRaised : Color.clear)
-                .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.full, style: .continuous))
+                .padding(.vertical, LiiveSpacing.s)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+    }
+
+    private func selectedPill(in size: CGSize) -> some View {
+        let segmentWidth = size.width / CGFloat(options.count)
+        let selectedOffset = segmentWidth * CGFloat(selectedIndex)
+
+        return RoundedRectangle(cornerRadius: LiiveRadius.sm, style: .continuous)
+            .fill(LiiveColor.surfaceRaised)
+            .frame(width: segmentWidth)
+            .liiveShadow(.small)
+            .offset(x: selectedOffset)
+            .animation(.easeOut(duration: LiiveMotion.base), value: selectedIndex)
+    }
+
+    private var selectedIndex: Int {
+        options.firstIndex { $0.id == selection } ?? 0
     }
 }

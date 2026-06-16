@@ -45,6 +45,7 @@ public struct LiiveShadow {
     public let x: CGFloat
     public let y: CGFloat
 
+    public static let small  = LiiveShadow(color: .black.opacity(0.12), radius: 2, x: 0, y: 1)
     public static let card   = LiiveShadow(color: .black.opacity(0.10), radius: 8, x: 0, y: 4)
     public static let hud    = LiiveShadow(color: .black.opacity(0.28), radius: 20, x: 0, y: 6)
     public static let pin    = LiiveShadow(color: .black.opacity(0.35), radius: 10, x: 0, y: 4)

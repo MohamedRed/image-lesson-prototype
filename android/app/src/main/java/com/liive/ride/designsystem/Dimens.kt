@@ -2,6 +2,7 @@
 //  Liive Ride — "TIDE" spacing, radii, sizing (Jetpack Compose)
 package com.liive.ride.designsystem
 
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 
@@ -40,12 +41,14 @@ object LiiveControl {
 }
 
 object LiiveElevation {
+    val small = 2.dp
     val card = 4.dp
     val hud = 12.dp
     val sheet = 16.dp
 }
 
 object LiiveMotion {
+    val easeOut = CubicBezierEasing(0.16f, 1f, 0.3f, 1f)
     const val fastMs = 150
     const val baseMs = 250
     const val slowMs = 400
