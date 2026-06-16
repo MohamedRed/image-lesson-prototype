@@ -24,13 +24,23 @@ public struct LiiveGlassPanel<Content: View>: View {
         }
     }
 
+    private var materialFill: Color {
+        switch material {
+        case .thin: return LiiveColor.materialThin
+        case .regular: return LiiveColor.materialRegular
+        case .thick: return LiiveColor.materialThick
+        }
+    }
+
     public var body: some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+
         content
             .padding(padding)
-            .background(blur, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .background(materialFill, in: shape)
+            .background(blur, in: shape)
             .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(LiiveColor.separator, lineWidth: 0.5)
+                shape.strokeBorder(LiiveColor.borderStrong, lineWidth: 0.5)
             )
             .liiveShadow(.hud)
     }

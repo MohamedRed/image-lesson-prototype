@@ -74,6 +74,12 @@ public enum LiiveColor {
 
     // MARK: Lines
     public static let separator     = dyn(Color(hex: "07121A", opacity: 0.12), Color(hex: "78AAB9", opacity: 0.18))
+    public static let borderStrong  = dyn(Color(hex: "07121A", opacity: 0.10), Color(hex: "FFFFFF", opacity: 0.10))
+
+    // MARK: Materials
+    public static let materialThin    = dyn(Color(hex: "F4F8F8", opacity: 0.70), Color(hex: "0E1E2A", opacity: 0.55))
+    public static let materialRegular = dyn(Color(hex: "FFFFFF", opacity: 0.80), Color(hex: "0A1822", opacity: 0.70))
+    public static let materialThick   = dyn(Color(hex: "FFFFFF", opacity: 0.92), Color(hex: "08121A", opacity: 0.86))
 
     // MARK: Map
     public static let mapBackground = dyn(Color(hex: "DCE7E8"), Color(hex: "0A1822"))

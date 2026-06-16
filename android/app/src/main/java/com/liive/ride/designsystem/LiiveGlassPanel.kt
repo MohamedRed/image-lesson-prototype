@@ -1,7 +1,5 @@
 //  LiiveGlassPanel.kt  ·  Liive Ride DS (Compose)  ·  mirrors components/ride/GlassPanel
-//  Frosted-glass panel over the map. True backdrop blur needs RenderEffect
-//  (API 31+); this stub uses a translucent material color + hairline, which
-//  reads correctly over a map. Add a blurred backdrop layer where supported.
+//  Frosted material panel over the live map for HUD chips and voice controls.
 package com.liive.ride.designsystem
 
 import androidx.compose.foundation.background
@@ -12,7 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -27,13 +25,18 @@ fun LiiveGlassPanel(
     content: @Composable () -> Unit
 ) {
     val c = LiiveTheme.colors
-    val base = if (c.isDark) Color(0xFF0E1E2A) else Color.White
-    val alpha = when (material) { GlassMaterial.Thin -> 0.62f; GlassMaterial.Regular -> 0.78f; GlassMaterial.Thick -> 0.9f }
+    val materialColor = when (material) {
+        GlassMaterial.Thin -> c.materialThin
+        GlassMaterial.Regular -> c.materialRegular
+        GlassMaterial.Thick -> c.materialThick
+    }
+
     Box(
         modifier
+            .shadow(LiiveElevation.hud, shape, clip = false)
             .clip(shape)
-            .background(base.copy(alpha = alpha))
-            .border(0.5.dp, c.separator, shape)
+            .background(materialColor)
+            .border(0.5.dp, c.borderStrong, shape)
             .padding(padding)
     ) { content() }
 }
