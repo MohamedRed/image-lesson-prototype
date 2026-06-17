@@ -1,6 +1,6 @@
 //
-//  image_lesson_prototypeApp.swift
-//  image-lesson-prototype
+//  LiiveRideApp.swift
+//  Liive Ride
 //
 //  Created by MRR on 2025-06-12.
 //
@@ -9,7 +9,7 @@ import SwiftUI
 import RideSharingFeature
 
 @main
-struct image_lesson_prototypeApp: App {
+struct LiiveRideApp: App {
     var body: some Scene {
         WindowGroup {
             LiiveRideFeature.mockAppView()
