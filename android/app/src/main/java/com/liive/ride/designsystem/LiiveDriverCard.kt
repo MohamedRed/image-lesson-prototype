@@ -47,29 +47,26 @@ fun LiiveDriverCard(
                 if (rating != null) LiiveRatingStars(value = rating, size = LiiveDriverCardLayout.RatingStarSize)
             }
             if (vehicle != null || plate != null) {
-                val vehicleStyle = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = LiiveDriverCardLayout.VehicleFontSize
-                )
                 Row(Modifier.fillMaxWidth().padding(top = LiiveDriverCardLayout.SecondaryLineTopPadding)) {
                     if (vehicle != null) {
                         Text(
                             vehicle,
                             color = c.textSecondary,
-                            style = vehicleStyle,
+                            style = LiiveSheetMeta,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false)
                         )
                     }
                     if (vehicle != null && plate != null) {
-                        Text(" · ", color = c.textSecondary, style = vehicleStyle)
+                        Text(" · ", color = c.textSecondary, style = LiiveSheetMeta)
                     }
                     if (plate != null) {
                         Text(
                             plate,
                             color = c.text,
                             fontWeight = FontWeight.SemiBold,
-                            style = vehicleStyle.copy(letterSpacing = LiiveDriverCardLayout.PlateLetterSpacing),
+                            style = LiiveSheetMeta.copy(letterSpacing = LiiveDriverCardLayout.PlateLetterSpacing),
                             maxLines = 1
                         )
                     }
@@ -96,7 +93,6 @@ private object LiiveDriverCardLayout {
     val AvatarSize = LiiveControl.xl - LiiveSpacing.xs2
     val RatingStarSize = LiiveSpacing.m + LiiveSpacing.xs2 / 2
     val SecondaryLineTopPadding = LiiveSpacing.xs2
-    val VehicleFontSize = (LiiveSpacing.m + LiiveSpacing.xs2).value.sp
     val PlateLetterSpacing = (LiiveSpacing.xs2.value / 4).sp
     val CardPadding = RowSpacing
 }
