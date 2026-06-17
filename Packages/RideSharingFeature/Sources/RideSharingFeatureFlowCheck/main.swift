@@ -20,7 +20,10 @@ struct RideSharingFeatureFlowCheck {
             subtitle: "Geary & Powell"
         )
 
-        let viewModel = RideSharingViewModel(service: MockRideSharingService(), storage: storage)
+        let recordingService = RecordingRideService()
+        _ = RideMapContainerView(mode: .service(recordingService), preferredColorScheme: nil)
+
+        let viewModel = RideSharingViewModel(service: recordingService, storage: storage)
         viewModel.handle(.selectDestination(destination))
         try require(viewModel.state.phase == .options, "Destination selection should open ride options.")
         try require(viewModel.state.config.destinationName == "Union Square", "Destination name should persist into config.")
@@ -37,6 +40,10 @@ struct RideSharingFeatureFlowCheck {
 
         viewModel.handle(.confirmPickup)
         try require(viewModel.state.phase == .matching, "Confirm pickup should enter matching.")
+        try await waitUntil(
+            recordingService.requestedDestinationName == "Union Square",
+            message: "Injected service should receive ride requests."
+        )
 
         viewModel.handle(.matchingComplete)
         try require(viewModel.state.phase == .enroute, "Matching completion should enter live ride.")
@@ -50,6 +57,10 @@ struct RideSharingFeatureFlowCheck {
 
         viewModel.handle(.pay)
         try await waitUntil(viewModel.state.paid, message: "Payment should mark the ride paid.")
+        try require(
+            recordingService.capturedDestinationName == "Union Square",
+            "Injected service should receive payment capture requests."
+        )
     }
 
     @MainActor
@@ -71,6 +82,27 @@ struct RideSharingFeatureFlowCheck {
             throw FlowCheckError.failed(message)
         }
     }
+}
+
+private final class RecordingRideService: RideSharingServicing {
+    private(set) var requestedDestinationName: String?
+    private(set) var capturedDestinationName: String?
+
+    func requestRide(with config: RideConfiguration) async throws -> RideSession {
+        requestedDestinationName = config.destinationName
+        return try await MockRideSharingService().requestRide(with: config)
+    }
+
+    func cancelRide(_ session: RideSession?) {}
+
+    func setMicrophoneEnabled(_ enabled: Bool) async {}
+
+    func capturePayment(amount: Double, destinationName: String) async throws -> RidePaymentReceipt {
+        capturedDestinationName = destinationName
+        return try await MockRideSharingService().capturePayment(amount: amount, destinationName: destinationName)
+    }
+
+    func submitRating(_ rating: Int, session: RideSession?) async {}
 }
 
 private enum FlowCheckError: Error, CustomStringConvertible {

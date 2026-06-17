@@ -4,7 +4,7 @@ import RideSharingFeature
 /// Standalone Liive Ride entry point for preview/testing.
 struct RideSharingDemoView: View {
     var body: some View {
-        RideSharingView()
+        LiiveRideFeature.mockAppView()
     }
 }
 

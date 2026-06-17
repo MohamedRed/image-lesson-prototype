@@ -5,7 +5,7 @@ public struct RideSharingView: View {
     private let preferredColorScheme: ColorScheme?
 
     public init(
-        service: RideSharingServicing = MockRideSharingService(),
+        service: RideSharingServicing,
         preferredColorScheme: ColorScheme? = .dark,
         initialState: RideUIState? = nil
     ) {
@@ -108,7 +108,7 @@ struct RideSharingView_Previews: PreviewProvider {
     }
 
     private static func preview(_ name: String, state: RideUIState, scheme: ColorScheme) -> some View {
-        RideSharingView(preferredColorScheme: scheme, initialState: state)
+        RideSharingView(service: MockRideSharingService(), preferredColorScheme: scheme, initialState: state)
             .previewDisplayName(name)
     }
 }

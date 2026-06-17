@@ -78,25 +78,3 @@ public final class MockRideSharingService: RideSharingServicing {
 
     public func submitRating(_ rating: Int, session: RideSession?) async {}
 }
-
-public struct RideLocalDevConfig: Equatable {
-    public let useEmulators: Bool
-    public let enablePayments: Bool
-    public let enableRealLocation: Bool
-    public let enableLiveAudio: Bool
-
-    public init(
-        useEmulators: Bool = true,
-        enablePayments: Bool = false,
-        enableRealLocation: Bool = false,
-        enableLiveAudio: Bool = false
-    ) {
-        self.useEmulators = useEmulators
-        self.enablePayments = enablePayments
-        self.enableRealLocation = enableRealLocation
-        self.enableLiveAudio = enableLiveAudio
-    }
-
-    public static let `default` = RideLocalDevConfig()
-    public static let minimal = RideLocalDevConfig()
-}

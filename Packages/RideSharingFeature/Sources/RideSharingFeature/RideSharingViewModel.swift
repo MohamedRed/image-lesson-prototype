@@ -33,7 +33,7 @@ public final class RideSharingViewModel: ObservableObject {
     private var activeSession: RideSession?
 
     public init(
-        service: RideSharingServicing = MockRideSharingService(),
+        service: RideSharingServicing,
         storage: UserDefaults = .standard,
         initialState: RideUIState? = nil
     ) {
