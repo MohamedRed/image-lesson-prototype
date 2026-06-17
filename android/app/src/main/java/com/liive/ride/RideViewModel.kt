@@ -3,6 +3,7 @@ package com.liive.ride
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -89,7 +90,11 @@ class RideViewModel @Inject constructor(
             )
         }
         matchingJob = viewModelScope.launch {
-            val session = runCatching { service.requestRide(config) }.getOrElse {
+            val session = try {
+                service.requestRide(config)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
                 activeSession = null
                 matchingJob = null
                 updateState { it.copy(phase = RidePhase.Options) }
@@ -165,7 +170,13 @@ class RideViewModel @Inject constructor(
     private fun capturePayment() {
         val config = mutableState.value.config
         viewModelScope.launch {
-            service.capturePayment(config.tier.price, config.destinationName)
+            try {
+                service.capturePayment(config.tier.price, config.destinationName)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                return@launch
+            }
             updateState { it.copy(paid = true) }
         }
     }

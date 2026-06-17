@@ -74,6 +74,22 @@ struct RideSharingFeatureFlowCheck {
             failingViewModel.state.phase == .options,
             message: "Failed request should return to options instead of entering a live ride."
         )
+
+        var paymentFailureState = RideUIState()
+        paymentFailureState.phase = .complete
+        paymentFailureState.config.destinationName = "Union Square"
+        let paymentFailingService = PaymentFailingRideService()
+        let paymentFailureViewModel = RideSharingViewModel(
+            service: paymentFailingService,
+            storage: storage,
+            initialState: paymentFailureState
+        )
+        paymentFailureViewModel.handle(.pay)
+        try await waitUntil(
+            paymentFailingService.didAttemptPayment,
+            message: "Failed payment service should still be invoked."
+        )
+        try require(!paymentFailureViewModel.state.paid, "Failed payment should not mark the ride paid.")
     }
 
     @MainActor
@@ -128,6 +144,25 @@ private struct FailingRideService: RideSharingServicing {
     func setMicrophoneEnabled(_ enabled: Bool) async {}
 
     func capturePayment(amount: Double, destinationName: String) async throws -> RidePaymentReceipt {
+        throw FlowCheckError.failed("Synthetic payment failure.")
+    }
+
+    func submitRating(_ rating: Int, session: RideSession?) async {}
+}
+
+private final class PaymentFailingRideService: RideSharingServicing {
+    private(set) var didAttemptPayment = false
+
+    func requestRide(with config: RideConfiguration) async throws -> RideSession {
+        try await MockRideSharingService().requestRide(with: config)
+    }
+
+    func cancelRide(_ session: RideSession?) {}
+
+    func setMicrophoneEnabled(_ enabled: Bool) async {}
+
+    func capturePayment(amount: Double, destinationName: String) async throws -> RidePaymentReceipt {
+        didAttemptPayment = true
         throw FlowCheckError.failed("Synthetic payment failure.")
     }
 

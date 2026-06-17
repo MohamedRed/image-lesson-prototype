@@ -209,7 +209,11 @@ public final class RideSharingViewModel: ObservableObject {
         let destinationName = state.config.destinationName
         Task { [weak self] in
             guard let self else { return }
-            _ = try? await service.capturePayment(amount: amount, destinationName: destinationName)
+            do {
+                _ = try await service.capturePayment(amount: amount, destinationName: destinationName)
+            } catch {
+                return
+            }
             await MainActor.run {
                 self.mutate { $0.paid = true }
             }

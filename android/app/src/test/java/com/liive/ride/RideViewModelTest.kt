@@ -98,6 +98,19 @@ class RideViewModelTest {
         runCurrent()
         assertEquals(RidePhase.Options, viewModel.state.value.phase)
     }
+
+    @Test
+    fun paymentFailureLeavesCompletedRideUnpaid() = runTest(dispatcher) {
+        val store = FakeRideStateStore(RideUiState(phase = RidePhase.Complete))
+        val service = PaymentFailingRideService()
+        val viewModel = RideViewModel(store, service)
+
+        viewModel.onEvent(RideEvent.Pay)
+        runCurrent()
+
+        assertEquals(1, service.paymentAttempts)
+        assertEquals(false, viewModel.state.value.paid)
+    }
 }
 
 private class FakeRideStateStore(initialState: RideUiState = RideUiState()) : RideStateStoring {
@@ -164,6 +177,35 @@ private class FailingRideService : RideService {
     override suspend fun setMicrophoneEnabled(enabled: Boolean) = Unit
 
     override suspend fun capturePayment(amount: Double, destinationName: String): RidePaymentReceipt {
+        error("Synthetic payment failure.")
+    }
+
+    override suspend fun submitRating(rating: Int, session: RideSession?) = Unit
+}
+
+private class PaymentFailingRideService : RideService {
+    var paymentAttempts = 0
+        private set
+
+    override suspend fun requestRide(config: RideConfig): RideSession {
+        val driver = RideFixtures.driver
+        return RideSession(
+            id = "test_ride",
+            voiceRoomName = "ride_test",
+            driverName = driver.name,
+            driverRating = driver.rating,
+            vehicle = driver.vehicle,
+            plate = driver.plate,
+            tripSummary = config.tripSummary(),
+        )
+    }
+
+    override fun cancelRide(session: RideSession?) = Unit
+
+    override suspend fun setMicrophoneEnabled(enabled: Boolean) = Unit
+
+    override suspend fun capturePayment(amount: Double, destinationName: String): RidePaymentReceipt {
+        paymentAttempts += 1
         error("Synthetic payment failure.")
     }
 
