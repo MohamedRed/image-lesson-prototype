@@ -23,13 +23,16 @@ fun LiiveRatingStars(
     showValue: Boolean = true
 ) {
     val c = LiiveTheme.colors
+    val starCount = max.coerceAtLeast(LiiveRatingStarsLayout.MinStarCount)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(LiiveRatingStarsLayout.ValueSpacing)
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(LiiveRatingStarsLayout.StarSpacing)) {
-            for (i in 0 until max) {
-                val fraction = (value - i).coerceIn(0.0, 1.0).toFloat()
+            for (i in 0 until starCount) {
+                val fraction = (value - i)
+                    .coerceIn(LiiveRatingStarsLayout.FractionLowerBound, LiiveRatingStarsLayout.FractionUpperBound)
+                    .toFloat()
                 Box(Modifier.size(size)) {
                     Icon(painterResource(RideIcons.Star), null, tint = c.fill, modifier = Modifier.size(size))
                     Icon(painterResource(RideIcons.Star), null, tint = c.star,
@@ -41,7 +44,7 @@ fun LiiveRatingStars(
         }
         if (showValue) {
             Text(
-                String.format("%.1f", value),
+                String.format(LiiveRatingStarsLayout.ValueFormat, value),
                 color = c.text,
                 style = MaterialTheme.typography.labelMedium.tabularNumbers().copy(
                     fontSize = (size.value - LiiveRatingStarsLayout.ValueFontDelta.value).sp,
@@ -56,4 +59,8 @@ private object LiiveRatingStarsLayout {
     val StarSpacing = LiiveSpacing.xs2 / 2
     val ValueSpacing = LiiveSpacing.xs + LiiveSpacing.xs2 / 2
     val ValueFontDelta = LiiveSpacing.xs2 / 2
+    const val MinStarCount = 0
+    const val FractionLowerBound = 0.0
+    const val FractionUpperBound = 1.0
+    const val ValueFormat = "%.1f"
 }

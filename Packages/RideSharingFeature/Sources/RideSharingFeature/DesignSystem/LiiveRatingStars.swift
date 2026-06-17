@@ -23,9 +23,14 @@ public struct LiiveRatingStars: View {
     }
 
     private var fillFraction: CGFloat {
-        guard starCount > 0 else { return 0 }
+        guard starCount > 0 else { return LiiveRatingStarsLayout.fractionLowerBound }
         let rawFraction = value / Double(starCount)
-        return CGFloat(Swift.min(1, Swift.max(0, rawFraction)))
+        return CGFloat(
+            Swift.min(
+                LiiveRatingStarsLayout.fractionUpperBound,
+                Swift.max(LiiveRatingStarsLayout.fractionLowerBound, rawFraction)
+            )
+        )
     }
 
     private func row(_ color: Color) -> some View {
@@ -50,7 +55,7 @@ public struct LiiveRatingStars: View {
                     }
             }
             if showValue {
-                Text(String(format: "%.1f", value))
+                Text(String(format: LiiveRatingStarsLayout.valueFormat, value))
                     .font(
                         Font.custom(LiiveFont.family, size: size - LiiveRatingStarsLayout.valueFontDelta)
                             .weight(.semibold)
@@ -66,6 +71,9 @@ private enum LiiveRatingStarsLayout {
     static let starSpacing = LiiveSpacing.xs2 / 2
     static let valueSpacing = LiiveSpacing.xs + LiiveSpacing.xs2 / 2
     static let valueFontDelta = LiiveSpacing.xs2 / 2
+    static let fractionLowerBound = 0.0
+    static let fractionUpperBound = 1.0
+    static let valueFormat = "%.1f"
 }
 
 private struct RatingStarShape: Shape {
