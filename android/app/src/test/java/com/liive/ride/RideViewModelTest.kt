@@ -111,6 +111,49 @@ class RideViewModelTest {
         assertEquals(1, service.paymentAttempts)
         assertEquals(false, viewModel.state.value.paid)
     }
+
+    @Test
+    fun restoredActiveSessionIsUsedWhenCancellingRide() = runTest(dispatcher) {
+        val session = RideSession(
+            id = "restored_ride",
+            voiceRoomName = "ride_restored",
+            driverName = RideFixtures.driver.name,
+            driverRating = RideFixtures.driver.rating,
+            vehicle = RideFixtures.driver.vehicle,
+            plate = RideFixtures.driver.plate,
+            tripSummary = RideConfig().tripSummary(),
+        )
+        val store = FakeRideStateStore(RideUiState(phase = RidePhase.Enroute, activeSession = session))
+        val service = RecordingRideService()
+        val viewModel = RideViewModel(store, service)
+
+        viewModel.onEvent(RideEvent.CancelRide)
+
+        assertEquals(listOf(session), service.cancelledSessions)
+    }
+
+    @Test
+    fun restoredMatchingSessionIsClearedWhenCancellingMatching() = runTest(dispatcher) {
+        val session = RideSession(
+            id = "restored_matching",
+            voiceRoomName = "ride_matching",
+            driverName = RideFixtures.driver.name,
+            driverRating = RideFixtures.driver.rating,
+            vehicle = RideFixtures.driver.vehicle,
+            plate = RideFixtures.driver.plate,
+            tripSummary = RideConfig().tripSummary(),
+        )
+        val store = FakeRideStateStore(RideUiState(phase = RidePhase.Matching, activeSession = session))
+        val service = RecordingRideService()
+        val viewModel = RideViewModel(store, service)
+
+        runCurrent()
+        assertEquals(emptyList<RideConfig>(), service.requestedConfigs)
+        viewModel.onEvent(RideEvent.CancelMatching)
+
+        assertEquals(listOf(session), service.cancelledSessions)
+        assertEquals(null, viewModel.state.value.activeSession)
+    }
 }
 
 private class FakeRideStateStore(initialState: RideUiState = RideUiState()) : RideStateStoring {

@@ -24,7 +24,7 @@ class RideViewModel @Inject constructor(
 
     private var matchingJob: Job? = null
     private var rideJob: Job? = null
-    private var activeSession: RideSession? = null
+    private var activeSession: RideSession? = mutableState.value.activeSession
 
     init {
         resumeTimelineIfNeeded()
@@ -86,6 +86,7 @@ class RideViewModel @Inject constructor(
                 paid = false,
                 rating = 0,
                 carProgress = 0f,
+                activeSession = null,
                 tripSummary = config.tripSummary()
             )
         }
@@ -101,7 +102,9 @@ class RideViewModel @Inject constructor(
                 return@launch
             }
             activeSession = session
-            updateState { it.copy(driver = session.driver(), tripSummary = session.tripSummary) }
+            updateState {
+                it.copy(activeSession = session, driver = session.driver(), tripSummary = session.tripSummary)
+            }
             delay(RideFlowTiming.MatchingDelayMs)
             onEvent(RideEvent.MatchingComplete)
         }
@@ -137,6 +140,7 @@ class RideViewModel @Inject constructor(
         cancelTimeline()
         service.cancelRide(activeSession)
         activeSession = null
+        updateState { it.copy(activeSession = null) }
     }
 
     private fun updateState(transform: (RideUiState) -> RideUiState) {
@@ -146,9 +150,23 @@ class RideViewModel @Inject constructor(
 
     private fun resumeTimelineIfNeeded() {
         when (mutableState.value.phase) {
-            RidePhase.Matching -> startMatching()
+            RidePhase.Matching -> {
+                if (activeSession == null) {
+                    startMatching()
+                } else {
+                    resumeMatchingCompletion()
+                }
+            }
             RidePhase.Enroute -> startEnrouteFrom(mutableState.value.carProgress)
             RidePhase.Destination, RidePhase.Options, RidePhase.Complete -> Unit
+        }
+    }
+
+    private fun resumeMatchingCompletion() {
+        matchingJob?.cancel()
+        matchingJob = viewModelScope.launch {
+            delay(RideFlowTiming.MatchingDelayMs)
+            onEvent(RideEvent.MatchingComplete)
         }
     }
 

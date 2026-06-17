@@ -197,6 +197,7 @@ public struct RideUIState: Codable, Equatable {
     public var config = RideConfiguration()
     public var tripSummary = RideTripSummary(configuration: RideConfiguration())
     public var driver = RideFixtures.driver
+    public var activeSession: RideSession?
     public var paid = false
     public var rating = 0
     public var micEnabled = true
@@ -211,6 +212,7 @@ public struct RideUIState: Codable, Equatable {
         case config
         case tripSummary
         case driver
+        case activeSession
         case paid
         case rating
         case micEnabled
@@ -226,6 +228,7 @@ public struct RideUIState: Codable, Equatable {
         tripSummary = try container.decodeIfPresent(RideTripSummary.self, forKey: .tripSummary)
             ?? RideTripSummary(configuration: config)
         driver = try container.decodeIfPresent(RideDriver.self, forKey: .driver) ?? RideFixtures.driver
+        activeSession = try container.decodeIfPresent(RideSession.self, forKey: .activeSession)
         paid = try container.decodeIfPresent(Bool.self, forKey: .paid) ?? false
         rating = try container.decodeIfPresent(Int.self, forKey: .rating) ?? 0
         micEnabled = try container.decodeIfPresent(Bool.self, forKey: .micEnabled) ?? true

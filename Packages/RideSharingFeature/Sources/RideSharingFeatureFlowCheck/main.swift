@@ -44,6 +44,10 @@ struct RideSharingFeatureFlowCheck {
             recordingService.requestedDestinationName == "Union Square",
             message: "Injected service should receive ride requests."
         )
+        try require(
+            viewModel.state.activeSession?.voiceRoomName == "ride_mock_001",
+            "Ride session should persist in UI state for restored service actions."
+        )
 
         viewModel.handle(.matchingComplete)
         try require(viewModel.state.phase == .enroute, "Matching completion should enter live ride.")
@@ -90,6 +94,70 @@ struct RideSharingFeatureFlowCheck {
             message: "Failed payment service should still be invoked."
         )
         try require(!paymentFailureViewModel.state.paid, "Failed payment should not mark the ride paid.")
+
+        let restoredSession = RideSession(
+            id: "restored_ride",
+            voiceRoomName: "ride_restored",
+            driverName: "John Driver",
+            driverRating: 4.8,
+            vehicle: "Toyota Camry · Blue",
+            plate: "ABC 123",
+            tripSummary: RideTripSummary(
+                enrouteTitle: "Your driver is arriving",
+                driverETA: "4 min",
+                mapMarkerLabel: "4 min",
+                transferStatus: nil,
+                completedDuration: "18 min",
+                completedDistance: "5.2 km"
+            )
+        )
+        var restoredRideState = RideUIState()
+        restoredRideState.phase = .enroute
+        restoredRideState.activeSession = restoredSession
+        let restoredRideService = RecordingRideService()
+        let restoredRideViewModel = RideSharingViewModel(
+            service: restoredRideService,
+            storage: storage,
+            initialState: restoredRideState
+        )
+        restoredRideViewModel.handle(.cancelRide)
+        try require(
+            restoredRideService.cancelledSessionId == restoredSession.id,
+            "Restored active rides should cancel with their persisted service session."
+        )
+
+        var restoredMatchingState = RideUIState()
+        restoredMatchingState.phase = .matching
+        restoredMatchingState.activeSession = restoredSession
+        let restoredMatchingSuiteName = "RideSharingFeatureFlowCheck-Matching-\(UUID().uuidString)"
+        guard let restoredMatchingStorage = UserDefaults(suiteName: restoredMatchingSuiteName) else {
+            throw FlowCheckError.failed("Could not create matching restore UserDefaults suite.")
+        }
+        restoredMatchingStorage.removePersistentDomain(forName: restoredMatchingSuiteName)
+        defer { restoredMatchingStorage.removePersistentDomain(forName: restoredMatchingSuiteName) }
+        restoredMatchingStorage.set(
+            try JSONEncoder().encode(restoredMatchingState),
+            forKey: "liive-ride-state"
+        )
+        let restoredMatchingService = RecordingRideService()
+        let restoredMatchingViewModel = RideSharingViewModel(
+            service: restoredMatchingService,
+            storage: restoredMatchingStorage
+        )
+        await Task.yield()
+        try require(
+            restoredMatchingService.requestCount == 0,
+            "Restored matching sessions should resume without requesting a replacement ride."
+        )
+        restoredMatchingViewModel.handle(.cancelMatching)
+        try require(
+            restoredMatchingService.cancelledSessionId == restoredSession.id,
+            "Restored matching sessions should cancel with their persisted service session."
+        )
+        try require(
+            restoredMatchingViewModel.state.activeSession == nil,
+            "Cancelled matching sessions should clear persisted active session state."
+        )
     }
 
     @MainActor
@@ -114,15 +182,20 @@ struct RideSharingFeatureFlowCheck {
 }
 
 private final class RecordingRideService: RideSharingServicing {
+    private(set) var requestCount = 0
     private(set) var requestedDestinationName: String?
     private(set) var capturedDestinationName: String?
+    private(set) var cancelledSessionId: String?
 
     func requestRide(with config: RideConfiguration) async throws -> RideSession {
+        requestCount += 1
         requestedDestinationName = config.destinationName
         return try await MockRideSharingService().requestRide(with: config)
     }
 
-    func cancelRide(_ session: RideSession?) {}
+    func cancelRide(_ session: RideSession?) {
+        cancelledSessionId = session?.id
+    }
 
     func setMicrophoneEnabled(_ enabled: Bool) async {}
 

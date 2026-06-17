@@ -65,6 +65,7 @@ data class RideUiState(
     val config: RideConfig = RideConfig(),
     val tripSummary: RideTripSummary = RideConfig().tripSummary(),
     val driver: RideDriver = RideFixtures.driver,
+    val activeSession: RideSession? = null,
     val paid: Boolean = false,
     val rating: Int = 0,
     val micEnabled: Boolean = true,

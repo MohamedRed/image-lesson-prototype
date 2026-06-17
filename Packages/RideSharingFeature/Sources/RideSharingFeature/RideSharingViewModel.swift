@@ -39,6 +39,7 @@ public final class RideSharingViewModel: ObservableObject {
         self.service = service
         self.storage = storage
         self.state = initialState ?? Self.restoreState(from: storage, key: RidePersistence.stateStorageKey)
+        self.activeSession = state.activeSession
         if initialState == nil {
             resumeTimelineIfNeeded()
         }
@@ -119,6 +120,7 @@ public final class RideSharingViewModel: ObservableObject {
             $0.carProgress = 0
             $0.paid = false
             $0.rating = 0
+            $0.activeSession = nil
             $0.tripSummary = RideTripSummary(configuration: config)
         }
         matchingTask = Task { [weak self] in
@@ -131,7 +133,10 @@ public final class RideSharingViewModel: ObservableObject {
                 await MainActor.run {
                     self.activeSession = nil
                     self.matchingTask = nil
-                    self.mutate { $0.phase = .options }
+                    self.mutate {
+                        $0.activeSession = nil
+                        $0.phase = .options
+                    }
                 }
                 return
             }
@@ -139,6 +144,7 @@ public final class RideSharingViewModel: ObservableObject {
             await MainActor.run {
                 self.activeSession = session
                 self.mutate {
+                    $0.activeSession = session
                     $0.driver = session.driver
                     $0.tripSummary = session.tripSummary
                 }
@@ -202,6 +208,7 @@ public final class RideSharingViewModel: ObservableObject {
         cancelTimeline()
         service.cancelRide(activeSession)
         activeSession = nil
+        mutate { $0.activeSession = nil }
     }
 
     private func capturePayment() {
@@ -223,11 +230,26 @@ public final class RideSharingViewModel: ObservableObject {
     private func resumeTimelineIfNeeded() {
         switch state.phase {
         case .matching:
-            startMatching()
+            if activeSession == nil {
+                startMatching()
+            } else {
+                resumeMatchingCompletion()
+            }
         case .enroute:
             startRideTimeline(from: state.carProgress)
         case .destination, .options, .complete:
             break
+        }
+    }
+
+    private func resumeMatchingCompletion() {
+        matchingTask?.cancel()
+        matchingTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: RideFlowTiming.matchingDelayNanoseconds)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                self?.handle(.matchingComplete)
+            }
         }
     }
 

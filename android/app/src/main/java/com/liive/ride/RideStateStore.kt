@@ -32,6 +32,7 @@ class RideStateStore @Inject constructor(
                 destinationName = json.optString("destinationName", "Union Square")
             )
             val tripSummary = json.tripSummary(config)
+            val activeSession = json.activeSession(tripSummary)
             RideUiState(
                 phase = json.enumValue("phase", RidePhase.Destination),
                 destination = destination,
@@ -43,6 +44,7 @@ class RideStateStore @Inject constructor(
                     vehicle = json.optString("driverVehicle", RideFixtures.driver.vehicle),
                     plate = json.optString("driverPlate", RideFixtures.driver.plate)
                 ),
+                activeSession = activeSession,
                 paid = json.optBoolean("paid", false),
                 rating = json.optInt("rating", 0).coerceIn(0, 5),
                 micEnabled = json.optBoolean("micEnabled", true),
@@ -75,6 +77,12 @@ class RideStateStore @Inject constructor(
             .put("tripTransferStatus", state.tripSummary.transferStatus.orEmpty())
             .put("tripCompletedDuration", state.tripSummary.completedDuration)
             .put("tripCompletedDistance", state.tripSummary.completedDistance)
+            .put("activeSessionId", state.activeSession?.id.orEmpty())
+            .put("activeSessionVoiceRoomName", state.activeSession?.voiceRoomName.orEmpty())
+            .put("activeSessionDriverName", state.activeSession?.driverName.orEmpty())
+            .put("activeSessionDriverRating", state.activeSession?.driverRating ?: 0.0)
+            .put("activeSessionVehicle", state.activeSession?.vehicle.orEmpty())
+            .put("activeSessionPlate", state.activeSession?.plate.orEmpty())
             .put("paid", state.paid)
             .put("rating", state.rating)
             .put("micEnabled", state.micEnabled)
@@ -102,6 +110,19 @@ class RideStateStore @Inject constructor(
                 .takeIf { it.isNotBlank() },
             completedDuration = optString("tripCompletedDuration", defaultTrip.completedDuration),
             completedDistance = optString("tripCompletedDistance", defaultTrip.completedDistance),
+        )
+    }
+
+    private fun JSONObject.activeSession(tripSummary: RideTripSummary): RideSession? {
+        val id = optString("activeSessionId").takeIf { it.isNotBlank() } ?: return null
+        return RideSession(
+            id = id,
+            voiceRoomName = optString("activeSessionVoiceRoomName", id),
+            driverName = optString("activeSessionDriverName", RideFixtures.driver.name),
+            driverRating = optDouble("activeSessionDriverRating", RideFixtures.driver.rating),
+            vehicle = optString("activeSessionVehicle", RideFixtures.driver.vehicle),
+            plate = optString("activeSessionPlate", RideFixtures.driver.plate),
+            tripSummary = tripSummary,
         )
     }
 
