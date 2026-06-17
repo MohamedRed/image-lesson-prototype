@@ -104,6 +104,22 @@ public struct RideConfiguration: Codable, Equatable {
     public var childSeat = false
     public var destinationName = "Union Square"
 
+    public init(
+        tier: RideTier = .premium,
+        passengers: Int = 1,
+        bags: Int = 1,
+        femaleOnly: Bool = false,
+        childSeat: Bool = false,
+        destinationName: String = "Union Square"
+    ) {
+        self.tier = tier
+        self.passengers = passengers
+        self.bags = bags
+        self.femaleOnly = femaleOnly
+        self.childSeat = childSeat
+        self.destinationName = destinationName
+    }
+
     public var price: Double { tier.price }
     public var eta: String { tier.eta }
     public var isMultiLeg: Bool { tier.isMultiLeg }

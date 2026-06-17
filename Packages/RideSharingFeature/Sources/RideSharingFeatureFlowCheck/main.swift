@@ -95,6 +95,7 @@ struct RideSharingFeatureFlowCheck {
         )
         try require(!paymentFailureViewModel.state.paid, "Failed payment should not mark the ride paid.")
 
+        let restoredConfiguration = RideConfiguration(destinationName: "Union Square")
         let restoredSession = RideSession(
             id: "restored_ride",
             voiceRoomName: "ride_restored",
@@ -102,14 +103,7 @@ struct RideSharingFeatureFlowCheck {
             driverRating: 4.8,
             vehicle: "Toyota Camry · Blue",
             plate: "ABC 123",
-            tripSummary: RideTripSummary(
-                enrouteTitle: "Your driver is arriving",
-                driverETA: "4 min",
-                mapMarkerLabel: "4 min",
-                transferStatus: nil,
-                completedDuration: "18 min",
-                completedDistance: "5.2 km"
-            )
+            tripSummary: RideTripSummary(configuration: restoredConfiguration)
         )
         var restoredRideState = RideUIState()
         restoredRideState.phase = .enroute
