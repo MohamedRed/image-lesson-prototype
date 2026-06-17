@@ -35,11 +35,16 @@ struct RideSharingFeatureSnapshot {
     @available(macOS 13.0, *)
     @MainActor
     private static func render(_ snapshot: SnapshotState, into directory: URL) throws {
+        let previousAppearance = NSApplication.shared.appearance
+        NSApplication.shared.appearance = snapshot.appearance
+        defer { NSApplication.shared.appearance = previousAppearance }
+
         let view = RideSharingView(
             service: MockRideSharingService(),
             preferredColorScheme: snapshot.colorScheme,
             initialState: snapshot.state
         )
+        .environment(\.colorScheme, snapshot.colorScheme)
         .frame(width: SnapshotMetrics.width, height: SnapshotMetrics.height)
 
         let renderer = ImageRenderer(content: view)
@@ -86,6 +91,17 @@ private struct SnapshotState {
         self.filename = filename
         self.colorScheme = colorScheme
         self.state = state
+    }
+
+    var appearance: NSAppearance? {
+        switch colorScheme {
+        case .dark:
+            return NSAppearance(named: .darkAqua)
+        case .light:
+            return NSAppearance(named: .aqua)
+        @unknown default:
+            return NSAppearance(named: .darkAqua)
+        }
     }
 
     static let all: [SnapshotState] = [
