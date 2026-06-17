@@ -4,8 +4,13 @@
 import SwiftUI
 
 private enum LiiveSegmentedMetrics {
-    static let fontSize: CGFloat = 14
-    static let verticalPadding: CGFloat = 7
+    static let fontSize = LiiveSpacing.m + LiiveSpacing.xs2
+    static let verticalPadding = LiiveSpacing.s - LiiveSpacing.xs2 / 2
+    static let horizontalPadding = LiiveSpacing.m
+    static let containerSpacing = CGFloat.zero
+    static let containerInset = LiiveSpacing.xs2
+    static let selectedPillRadius = LiiveSpacing.s - LiiveSpacing.xs2 / 2
+    static let minimumScaleFactor = 0.85
 }
 
 public struct LiiveSegmentedOption<Value: Hashable>: Identifiable, Hashable {
@@ -30,7 +35,7 @@ public struct LiiveSegmentedControl<Value: Hashable>: View {
     public var body: some View {
         Group {
             if !options.isEmpty {
-                HStack(spacing: 0) {
+                HStack(spacing: LiiveSegmentedMetrics.containerSpacing) {
                     ForEach(options) { option in
                         segment(option)
                     }
@@ -41,7 +46,7 @@ public struct LiiveSegmentedControl<Value: Hashable>: View {
                     }
                     .allowsHitTesting(false)
                 }
-                .padding(LiiveSpacing.xs2)
+                .padding(LiiveSegmentedMetrics.containerInset)
                 .background(LiiveColor.fillTertiary)
                 .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.sm, style: .continuous))
             }
@@ -60,10 +65,10 @@ public struct LiiveSegmentedControl<Value: Hashable>: View {
                 .font(Font.custom(LiiveFont.family, size: LiiveSegmentedMetrics.fontSize))
                 .fontWeight(isSelected ? .semibold : .medium)
                 .lineLimit(1)
-                .minimumScaleFactor(0.85)
+                .minimumScaleFactor(LiiveSegmentedMetrics.minimumScaleFactor)
                 .foregroundColor(isSelected ? LiiveColor.text : LiiveColor.textSecondary)
                 .frame(maxWidth: .infinity)
-                .padding(.horizontal, LiiveSpacing.m)
+                .padding(.horizontal, LiiveSegmentedMetrics.horizontalPadding)
                 .padding(.vertical, LiiveSegmentedMetrics.verticalPadding)
                 .contentShape(Rectangle())
         }
@@ -75,7 +80,7 @@ public struct LiiveSegmentedControl<Value: Hashable>: View {
         let segmentWidth = size.width / CGFloat(options.count)
         let selectedOffset = segmentWidth * CGFloat(selectedIndex)
 
-        return RoundedRectangle(cornerRadius: LiiveRadius.sm, style: .continuous)
+        return RoundedRectangle(cornerRadius: LiiveSegmentedMetrics.selectedPillRadius, style: .continuous)
             .fill(LiiveColor.surfaceRaised)
             .frame(width: segmentWidth)
             .liiveShadow(.small)

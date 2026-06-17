@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
@@ -26,18 +27,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 data class LiiveSegment<T>(
     val value: T,
     val label: String,
 )
-
-private val SegmentFontSize = 14.sp
-private val SegmentLineHeight = 17.sp
-private val SegmentLetterSpacing = 0.sp
-private val SegmentVerticalPadding = 7.dp
 
 @Composable
 fun <T> LiiveSegmentedControl(
@@ -56,7 +51,7 @@ fun <T> LiiveSegmentedControl(
                 .fillMaxWidth()
                 .clip(LiiveRadius.sm)
                 .background(c.fillTertiary)
-                .padding(LiiveSpacing.xs2),
+                .padding(LiiveSegmentedControlLayout.ContainerInset),
         ) {
             val segmentWidth = maxWidth / options.size.toFloat()
             val selectedOffset by animateDpAsState(
@@ -74,8 +69,12 @@ fun <T> LiiveSegmentedControl(
                         .offset(x = selectedOffset)
                         .width(segmentWidth)
                         .fillMaxHeight()
-                        .shadow(LiiveElevation.small, LiiveRadius.sm, clip = false)
-                        .clip(LiiveRadius.sm)
+                        .shadow(
+                            LiiveElevation.small,
+                            LiiveSegmentedControlLayout.SelectedPillShape,
+                            clip = false
+                        )
+                        .clip(LiiveSegmentedControlLayout.SelectedPillShape)
                         .background(c.surfaceRaised),
                 )
             }
@@ -89,10 +88,10 @@ fun <T> LiiveSegmentedControl(
                         text = option.label,
                         color = if (isSelected) c.text else c.textSecondary,
                         style = MaterialTheme.typography.titleMedium.copy(
-                            fontSize = SegmentFontSize,
+                            fontSize = LiiveSegmentedControlLayout.SegmentFontSize,
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                            lineHeight = SegmentLineHeight,
-                            letterSpacing = SegmentLetterSpacing,
+                            lineHeight = LiiveSegmentedControlLayout.SegmentLineHeight,
+                            letterSpacing = LiiveSegmentedControlLayout.SegmentLetterSpacing,
                         ),
                         textAlign = TextAlign.Center,
                         maxLines = 1,
@@ -104,10 +103,23 @@ fun <T> LiiveSegmentedControl(
                                 interactionSource = interactionSource,
                                 indication = null,
                             ) { onSelected(option.value) }
-                            .padding(horizontal = LiiveSpacing.m, vertical = SegmentVerticalPadding),
+                            .padding(
+                                horizontal = LiiveSegmentedControlLayout.SegmentHorizontalPadding,
+                                vertical = LiiveSegmentedControlLayout.SegmentVerticalPadding
+                            ),
                     )
                 }
             }
         }
     }
+}
+
+private object LiiveSegmentedControlLayout {
+    val SegmentFontSize = (LiiveSpacing.m + LiiveSpacing.xs2).value.sp
+    val SegmentLineHeight = (LiiveSpacing.l + LiiveSpacing.xs2 / 2).value.sp
+    val SegmentLetterSpacing = (LiiveSpacing.xs2 - LiiveSpacing.xs2).value.sp
+    val SegmentHorizontalPadding = LiiveSpacing.m
+    val SegmentVerticalPadding = LiiveSpacing.s - LiiveSpacing.xs2 / 2
+    val ContainerInset = LiiveSpacing.xs2
+    val SelectedPillShape = RoundedCornerShape(LiiveSpacing.s - LiiveSpacing.xs2 / 2)
 }
