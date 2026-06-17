@@ -10,8 +10,7 @@ public enum LiiveFontRegistrar {
 
         guard let fontURL = Bundle.module.url(
             forResource: "schibsted_grotesk_variable",
-            withExtension: "ttf",
-            subdirectory: "Fonts"
+            withExtension: "ttf"
         ) else {
             assertionFailure("Missing bundled Schibsted Grotesk font resource.")
             return

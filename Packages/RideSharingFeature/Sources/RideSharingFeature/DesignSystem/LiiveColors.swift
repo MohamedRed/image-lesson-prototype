@@ -6,6 +6,8 @@
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
 #endif
 
 public extension Color {
@@ -30,6 +32,11 @@ private func dyn(_ light: Color, _ dark: Color) -> Color {
     #if canImport(UIKit)
     Color(UIColor { tc in
         tc.userInterfaceStyle == .dark ? UIColor(dark) : UIColor(light)
+    })
+    #elseif canImport(AppKit)
+    Color(NSColor(name: nil) { appearance in
+        let match = appearance.bestMatch(from: [.darkAqua, .aqua])
+        return match == .darkAqua ? NSColor(dark) : NSColor(light)
     })
     #else
     dark

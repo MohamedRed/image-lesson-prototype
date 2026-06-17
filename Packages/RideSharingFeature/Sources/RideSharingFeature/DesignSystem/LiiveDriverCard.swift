@@ -26,18 +26,33 @@ public struct LiiveDriverCard<Trailing: View>: View {
             LiiveAvatar(name: name, image: avatarImage, size: LiiveDriverCardLayout.avatarSize, ring: speaking)
             VStack(alignment: .leading, spacing: LiiveDriverCardLayout.textSpacing) {
                 HStack(spacing: LiiveDriverCardLayout.titleRatingSpacing) {
-                    Text(name).font(LiiveFont.headline).foregroundColor(LiiveColor.text)
-                    if let rating { LiiveRatingStars(value: rating, size: LiiveDriverCardLayout.ratingStarSize) }
+                    Text(name)
+                        .font(LiiveFont.headline)
+                        .foregroundColor(LiiveColor.text)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .layoutPriority(1)
+                    if let rating {
+                        LiiveRatingStars(value: rating, size: LiiveDriverCardLayout.ratingStarSize)
+                            .fixedSize(horizontal: true, vertical: false)
+                    }
                 }
                 if vehicle != nil || plate != nil {
                     HStack(spacing: 0) {
-                        if let vehicle { Text(vehicle).foregroundColor(LiiveColor.textSecondary) }
+                        if let vehicle {
+                            Text(vehicle)
+                                .foregroundColor(LiiveColor.textSecondary)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                        }
                         if vehicle != nil && plate != nil { Text(" · ").foregroundColor(LiiveColor.textSecondary) }
                         if let plate {
                             Text(plate)
                                 .fontWeight(.semibold)
                                 .tracking(LiiveDriverCardLayout.plateTracking)
                                 .foregroundColor(LiiveColor.text)
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
                         }
                     }
                     .font(LiiveFont.sheetMeta)
@@ -45,7 +60,7 @@ public struct LiiveDriverCard<Trailing: View>: View {
                     .padding(.top, LiiveDriverCardLayout.secondaryLineTopPadding)
                 }
             }
-            Spacer(minLength: LiiveDriverCardLayout.spacerMinLength)
+            .frame(maxWidth: .infinity, alignment: .leading)
             if let eta {
                 VStack(alignment: .trailing, spacing: LiiveDriverCardLayout.textSpacing) {
                     Text(eta).font(LiiveFont.title2.monospacedDigit()).foregroundColor(LiiveColor.accent)
@@ -68,7 +83,6 @@ private enum LiiveDriverCardLayout {
     static let avatarSize = LiiveControl.xl - LiiveSpacing.xs2
     static let ratingStarSize = LiiveSpacing.m + LiiveSpacing.xs2 / 2
     static let secondaryLineTopPadding = LiiveSpacing.xs2
-    static let spacerMinLength = LiiveSpacing.s
     static let plateTracking = LiiveSpacing.xs2 / 4
     static let cardPadding = rowSpacing
 }

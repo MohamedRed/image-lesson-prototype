@@ -28,5 +28,9 @@ let package = Package(
             name: "RideSharingFeatureFlowCheck",
             dependencies: ["RideSharingFeature"]
         ),
+        .executableTarget(
+            name: "RideSharingFeatureSnapshot",
+            dependencies: ["RideSharingFeature"]
+        ),
     ]
 )

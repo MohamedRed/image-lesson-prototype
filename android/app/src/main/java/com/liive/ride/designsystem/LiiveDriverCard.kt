@@ -43,7 +43,14 @@ fun LiiveDriverCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(LiiveDriverCardLayout.TitleRatingSpacing)
             ) {
-                Text(name, color = c.text, style = MaterialTheme.typography.titleLarge)
+                Text(
+                    name,
+                    color = c.text,
+                    style = MaterialTheme.typography.titleLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
                 if (rating != null) LiiveRatingStars(value = rating, size = LiiveDriverCardLayout.RatingStarSize)
             }
             if (vehicle != null || plate != null) {
