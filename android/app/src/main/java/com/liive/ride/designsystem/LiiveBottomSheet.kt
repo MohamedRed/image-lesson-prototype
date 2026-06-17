@@ -13,32 +13,48 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun LiiveBottomSheet(
     modifier: Modifier = Modifier,
     grabber: Boolean = true,
-    padding: Dp = 16.dp,
+    padding: Dp? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val c = LiiveTheme.colors
+    val sheetPadding = padding ?: LiiveBottomSheetLayout.ContentPadding
     Column(
         modifier
             .fillMaxWidth()
             .shadow(LiiveElevation.sheet, LiiveRadius.sheetTop, clip = false)
             .clip(LiiveRadius.sheetTop)
             .background(c.surfaceSheet)
-            .padding(horizontal = padding)
-            .padding(top = if (grabber) 8.dp else padding)
-            .padding(bottom = padding)
+            .padding(horizontal = sheetPadding)
+            .padding(top = if (grabber) LiiveBottomSheetLayout.GrabberTopPadding else sheetPadding)
+            .padding(bottom = sheetPadding)
             .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (grabber) {
-            Box(Modifier.padding(bottom = 14.dp).size(width = 36.dp, height = 5.dp)
-                .clip(CircleShape).background(c.fill))
+            Box(
+                Modifier
+                    .padding(bottom = LiiveBottomSheetLayout.GrabberBottomPadding)
+                    .size(
+                        width = LiiveBottomSheetLayout.GrabberWidth,
+                        height = LiiveBottomSheetLayout.GrabberHeight
+                    )
+                    .clip(CircleShape)
+                    .background(c.fill)
+            )
         }
         Column(Modifier.fillMaxWidth(), content = content)
     }
+}
+
+private object LiiveBottomSheetLayout {
+    val ContentPadding = LiiveSpacing.screenGutter
+    val GrabberWidth = LiiveControl.sm + LiiveSpacing.xs
+    val GrabberHeight = LiiveSpacing.xs + LiiveSpacing.xs2 / 2
+    val GrabberTopPadding = LiiveSpacing.s
+    val GrabberBottomPadding = LiiveSpacing.m + LiiveSpacing.xs2
 }

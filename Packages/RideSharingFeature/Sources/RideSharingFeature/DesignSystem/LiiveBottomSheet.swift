@@ -6,19 +6,29 @@ import SwiftUI
 
 public struct LiiveBottomSheet<Content: View>: View {
     var grabber: Bool = true
-    var padding: CGFloat = 16
+    var padding: CGFloat = LiiveBottomSheetLayout.contentPadding
     let content: Content
 
-    public init(grabber: Bool = true, padding: CGFloat = 16, @ViewBuilder content: () -> Content) {
-        self.grabber = grabber; self.padding = padding; self.content = content()
+    public init(
+        grabber: Bool = true,
+        padding: CGFloat? = nil,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.grabber = grabber
+        self.padding = padding ?? LiiveBottomSheetLayout.contentPadding
+        self.content = content()
     }
 
     public var body: some View {
         VStack(spacing: 0) {
             if grabber {
                 Capsule().fill(LiiveColor.fill)
-                    .frame(width: 36, height: 5)
-                    .padding(.top, 8).padding(.bottom, 14)
+                    .frame(
+                        width: LiiveBottomSheetLayout.grabberWidth,
+                        height: LiiveBottomSheetLayout.grabberHeight
+                    )
+                    .padding(.top, LiiveBottomSheetLayout.grabberTopPadding)
+                    .padding(.bottom, LiiveBottomSheetLayout.grabberBottomPadding)
             }
             content
         }
@@ -30,6 +40,14 @@ public struct LiiveBottomSheet<Content: View>: View {
         .clipShape(TopRoundedRectangle(radius: LiiveRadius.xxxl))
         .liiveShadow(.sheet)
     }
+}
+
+private enum LiiveBottomSheetLayout {
+    static let contentPadding = LiiveSpacing.screenGutter
+    static let grabberWidth = LiiveControl.sm + LiiveSpacing.xs
+    static let grabberHeight = LiiveSpacing.xs + LiiveSpacing.xs2 / 2
+    static let grabberTopPadding = LiiveSpacing.s
+    static let grabberBottomPadding = LiiveSpacing.m + LiiveSpacing.xs2
 }
 
 /// Rounds only the top two corners.
