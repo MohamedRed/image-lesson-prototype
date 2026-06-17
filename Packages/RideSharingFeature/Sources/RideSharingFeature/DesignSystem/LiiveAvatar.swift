@@ -6,11 +6,17 @@ import SwiftUI
 public struct LiiveAvatar: View {
     let name: String
     var image: Image? = nil
-    var size: CGFloat = 48
+    var size: CGFloat = LiiveControl.md + LiiveSpacing.xs
     var ring: Bool = false
     var ringColor: Color = LiiveColor.accent
 
-    public init(name: String, image: Image? = nil, size: CGFloat = 48, ring: Bool = false, ringColor: Color = LiiveColor.accent) {
+    public init(
+        name: String,
+        image: Image? = nil,
+        size: CGFloat = LiiveControl.md + LiiveSpacing.xs,
+        ring: Bool = false,
+        ringColor: Color = LiiveColor.accent
+    ) {
         self.name = name; self.image = image; self.size = size
         self.ring = ring; self.ringColor = ringColor
     }
@@ -26,7 +32,7 @@ public struct LiiveAvatar: View {
             } else {
                 LiiveColor.fill
                 Text(initials.isEmpty ? "?" : initials)
-                    .font(.system(size: size * 0.4, weight: .semibold))
+                    .font(Font.custom(LiiveFont.family, size: size * LiiveAvatarLayout.initialsScale).weight(.semibold))
                     .foregroundColor(LiiveColor.text)
             }
         }
@@ -34,15 +40,20 @@ public struct LiiveAvatar: View {
         .clipShape(Circle())
         .overlay(
             Circle()
-                .stroke(LiiveColor.surface, lineWidth: ring ? 2.5 : 0)
-                .padding(-2.5)
+                .stroke(LiiveColor.surface, lineWidth: ring ? LiiveAvatarLayout.ringStrokeWidth : 0)
+                .padding(-LiiveAvatarLayout.ringStrokeWidth)
                 .opacity(ring ? 1 : 0)
         )
         .overlay(
             Circle()
-                .stroke(ringColor, lineWidth: ring ? 2.5 : 0)
-                .padding(-5)
+                .stroke(ringColor, lineWidth: ring ? LiiveAvatarLayout.ringStrokeWidth : 0)
+                .padding(-LiiveAvatarLayout.ringStrokeWidth * 2)
                 .opacity(ring ? 1 : 0)
         )
     }
+}
+
+private enum LiiveAvatarLayout {
+    static let initialsScale = 0.4
+    static let ringStrokeWidth = LiiveSpacing.xs2 + LiiveSpacing.xs2 / 4
 }

@@ -18,13 +18,12 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun LiiveAvatar(
     name: String,
-    size: Dp = 48.dp,
+    size: Dp = LiiveControl.md + LiiveSpacing.xs,
     ring: Boolean = false,
     ringColor: Color? = null,
     image: Painter? = null
@@ -39,8 +38,16 @@ fun LiiveAvatar(
         contentAlignment = Alignment.Center
     ) {
         if (ring) {
-            Box(Modifier.size(size + 10.dp).border(2.5.dp, activeRingColor, CircleShape))
-            Box(Modifier.size(size + 5.dp).border(2.5.dp, c.surface, CircleShape))
+            Box(
+                Modifier
+                    .size(size + LiiveAvatarLayout.RingStrokeWidth * 4)
+                    .border(LiiveAvatarLayout.RingStrokeWidth, activeRingColor, CircleShape)
+            )
+            Box(
+                Modifier
+                    .size(size + LiiveAvatarLayout.RingStrokeWidth * 2)
+                    .border(LiiveAvatarLayout.RingStrokeWidth, c.surface, CircleShape)
+            )
         }
         Box(
             Modifier
@@ -61,10 +68,15 @@ fun LiiveAvatar(
                     initials,
                     color = c.text,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = (size.value * 0.4f).sp,
+                    fontSize = (size.value * LiiveAvatarLayout.InitialsScale).sp,
                     fontFamily = SchibstedGrotesk
                 )
             }
         }
     }
+}
+
+private object LiiveAvatarLayout {
+    const val InitialsScale = 0.4f
+    val RingStrokeWidth = LiiveSpacing.xs2 + LiiveSpacing.xs2 / 4
 }
