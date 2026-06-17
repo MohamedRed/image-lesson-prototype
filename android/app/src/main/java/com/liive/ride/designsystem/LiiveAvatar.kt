@@ -30,8 +30,12 @@ fun LiiveAvatar(
 ) {
     val c = LiiveTheme.colors
     val activeRingColor = ringColor ?: c.accent
-    val initials = name.split(" ").take(2).mapNotNull { it.firstOrNull() }
-        .joinToString("").uppercase().ifEmpty { "?" }
+    val initials = name.split(" ")
+        .take(LiiveAvatarLayout.MaxInitialWords)
+        .mapNotNull { it.firstOrNull() }
+        .joinToString("")
+        .uppercase()
+        .ifEmpty { LiiveAvatarLayout.FallbackInitial }
     Box(
         Modifier
             .size(size),
@@ -40,12 +44,12 @@ fun LiiveAvatar(
         if (ring) {
             Box(
                 Modifier
-                    .size(size + LiiveAvatarLayout.RingStrokeWidth * 4)
+                    .size(size + LiiveAvatarLayout.RingStrokeWidth * LiiveAvatarLayout.OuterRingSizeMultiplier)
                     .border(LiiveAvatarLayout.RingStrokeWidth, activeRingColor, CircleShape)
             )
             Box(
                 Modifier
-                    .size(size + LiiveAvatarLayout.RingStrokeWidth * 2)
+                    .size(size + LiiveAvatarLayout.RingStrokeWidth * LiiveAvatarLayout.InnerRingSizeMultiplier)
                     .border(LiiveAvatarLayout.RingStrokeWidth, c.surface, CircleShape)
             )
         }
@@ -77,6 +81,10 @@ fun LiiveAvatar(
 }
 
 private object LiiveAvatarLayout {
+    const val MaxInitialWords = 2
+    const val FallbackInitial = "?"
     const val InitialsScale = 0.4f
     val RingStrokeWidth = LiiveSpacing.xs2 + LiiveSpacing.xs2 / 4
+    const val InnerRingSizeMultiplier = 2
+    const val OuterRingSizeMultiplier = 4
 }

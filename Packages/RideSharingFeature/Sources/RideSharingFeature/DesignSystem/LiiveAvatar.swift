@@ -22,7 +22,12 @@ public struct LiiveAvatar: View {
     }
 
     private var initials: String {
-        name.split(separator: " ").prefix(2).compactMap { $0.first }.map(String.init).joined().uppercased()
+        name.split(separator: " ")
+            .prefix(LiiveAvatarLayout.maxInitialWords)
+            .compactMap { $0.first }
+            .map(String.init)
+            .joined()
+            .uppercased()
     }
 
     public var body: some View {
@@ -31,7 +36,7 @@ public struct LiiveAvatar: View {
                 image.resizable().scaledToFill()
             } else {
                 LiiveColor.fill
-                Text(initials.isEmpty ? "?" : initials)
+                Text(initials.isEmpty ? LiiveAvatarLayout.fallbackInitial : initials)
                     .font(Font.custom(LiiveFont.family, size: size * LiiveAvatarLayout.initialsScale).weight(.semibold))
                     .foregroundColor(LiiveColor.text)
             }
@@ -40,20 +45,26 @@ public struct LiiveAvatar: View {
         .clipShape(Circle())
         .overlay(
             Circle()
-                .stroke(LiiveColor.surface, lineWidth: ring ? LiiveAvatarLayout.ringStrokeWidth : 0)
+                .stroke(LiiveColor.surface, lineWidth: ring ? LiiveAvatarLayout.ringStrokeWidth : LiiveAvatarLayout.hiddenRingStrokeWidth)
                 .padding(-LiiveAvatarLayout.ringStrokeWidth)
-                .opacity(ring ? 1 : 0)
+                .opacity(ring ? LiiveAvatarLayout.visibleRingOpacity : LiiveAvatarLayout.hiddenRingOpacity)
         )
         .overlay(
             Circle()
-                .stroke(ringColor, lineWidth: ring ? LiiveAvatarLayout.ringStrokeWidth : 0)
-                .padding(-LiiveAvatarLayout.ringStrokeWidth * 2)
-                .opacity(ring ? 1 : 0)
+                .stroke(ringColor, lineWidth: ring ? LiiveAvatarLayout.ringStrokeWidth : LiiveAvatarLayout.hiddenRingStrokeWidth)
+                .padding(-LiiveAvatarLayout.ringStrokeWidth * LiiveAvatarLayout.outerRingPaddingMultiplier)
+                .opacity(ring ? LiiveAvatarLayout.visibleRingOpacity : LiiveAvatarLayout.hiddenRingOpacity)
         )
     }
 }
 
 private enum LiiveAvatarLayout {
+    static let maxInitialWords = 2
+    static let fallbackInitial = "?"
     static let initialsScale = 0.4
     static let ringStrokeWidth = LiiveSpacing.xs2 + LiiveSpacing.xs2 / 4
+    static let hiddenRingStrokeWidth = LiiveSpacing.xs2 - LiiveSpacing.xs2
+    static let outerRingPaddingMultiplier = 2.0
+    static let hiddenRingOpacity = 0.0
+    static let visibleRingOpacity = 1.0
 }
