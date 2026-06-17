@@ -14,7 +14,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 enum class IconCircleColor { Accent, Success, Warning, Danger, Info, Neutral }
 
@@ -22,7 +21,7 @@ enum class IconCircleColor { Accent, Success, Warning, Danger, Info, Neutral }
 fun LiiveIconCircle(
     @DrawableRes icon: Int,
     color: IconCircleColor = IconCircleColor.Accent,
-    size: Dp = 44.dp,
+    size: Dp = LiiveControl.md,
     filled: Boolean = false,
 ) {
     val c = LiiveTheme.colors
@@ -45,7 +44,16 @@ fun LiiveIconCircle(
         Modifier.size(size).clip(CircleShape).background(if (filled) solid else tint),
         contentAlignment = Alignment.Center
     ) {
-        Icon(painterResource(icon), contentDescription = null, tint = if (filled) Color.White else fg,
-            modifier = Modifier.size(size * 0.45f))
+        Icon(
+            painterResource(icon),
+            contentDescription = null,
+            tint = if (filled) LiiveIconCircleLayout.FilledForegroundColor else fg,
+            modifier = Modifier.size(size * LiiveIconCircleLayout.IconScale)
+        )
     }
+}
+
+private object LiiveIconCircleLayout {
+    const val IconScale = 0.45f
+    val FilledForegroundColor = Color.White
 }

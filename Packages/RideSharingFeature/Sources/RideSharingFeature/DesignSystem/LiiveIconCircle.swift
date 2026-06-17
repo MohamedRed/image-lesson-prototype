@@ -7,10 +7,15 @@ public struct LiiveIconCircle: View {
     public enum Color { case accent, success, warning, danger, info, neutral }
     let systemName: String
     var color: Color = .accent
-    var size: CGFloat = 44
+    var size: CGFloat = LiiveControl.md
     var filled: Bool = false
 
-    public init(systemName: String, color: Color = .accent, size: CGFloat = 44, filled: Bool = false) {
+    public init(
+        systemName: String,
+        color: Color = .accent,
+        size: CGFloat = LiiveControl.md,
+        filled: Bool = false
+    ) {
         self.systemName = systemName; self.color = color; self.size = size; self.filled = filled
     }
 
@@ -47,10 +52,15 @@ public struct LiiveIconCircle: View {
 
     public var body: some View {
         Image(systemName: systemName)
-            .font(.system(size: size * 0.45, weight: .semibold))
-            .foregroundColor(filled ? .white : fg)
+            .font(.system(size: size * LiiveIconCircleLayout.iconScale, weight: .semibold))
+            .foregroundColor(filled ? LiiveIconCircleLayout.filledForegroundColor : fg)
             .frame(width: size, height: size)
             .background(filled ? solid : tint)
             .clipShape(Circle())
     }
+}
+
+private enum LiiveIconCircleLayout {
+    static let iconScale: CGFloat = 0.45
+    static let filledForegroundColor = SwiftUI.Color.white
 }
