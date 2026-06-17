@@ -27,7 +27,8 @@ fun RideApp(viewModel: RideViewModel, darkTheme: Boolean = true) {
             RideMapCanvas(
                 phase = state.phase,
                 isMultiLeg = state.config.tier.multiLeg,
-                carProgress = state.carProgress
+                carProgress = state.carProgress,
+                tripSummary = state.tripSummary
             )
 
             AnimatedVisibility(

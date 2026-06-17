@@ -30,13 +30,14 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.dp
 import com.liive.ride.RidePhase
+import com.liive.ride.RideTripSummary
 import com.liive.ride.designsystem.LiiveMapMarker
 import com.liive.ride.designsystem.LiiveTheme
 import com.liive.ride.designsystem.MapMarkerKind
 import kotlin.math.roundToInt
 
 @Composable
-fun RideMapCanvas(phase: RidePhase, isMultiLeg: Boolean, carProgress: Float) {
+fun RideMapCanvas(phase: RidePhase, isMultiLeg: Boolean, carProgress: Float, tripSummary: RideTripSummary) {
     val c = LiiveTheme.colors
     val effectivePhase = if (phase == RidePhase.Complete) RidePhase.Enroute else phase
     val showRoute = effectivePhase != RidePhase.Destination
@@ -87,7 +88,7 @@ fun RideMapCanvas(phase: RidePhase, isMultiLeg: Boolean, carProgress: Float) {
             LiiveMapMarker(MapMarkerKind.Origin, "Pickup")
         }
         if (showCar) OverlayAt(carPoint(isMultiLeg, carProgress), OverlayAnchor.Bottom) {
-            LiiveMapMarker(MapMarkerKind.Car, if (isMultiLeg) "Leg 2 · 3 min" else "4 min")
+            LiiveMapMarker(MapMarkerKind.Car, tripSummary.mapMarkerLabel)
         }
         if (isMultiLeg && showRoute) OverlayAt(MapPoint(150f, 320f), OverlayAnchor.Bottom) {
             LiiveMapMarker(MapMarkerKind.Transfer, "Transfer")

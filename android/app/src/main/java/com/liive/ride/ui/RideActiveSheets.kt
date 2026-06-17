@@ -90,7 +90,7 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
     LiiveBottomSheet {
         Row(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
             Text(
-                if (config.tier.multiLeg) "On leg 2 of 2" else "Your driver is arriving",
+                state.tripSummary.enrouteTitle,
                 color = c.text,
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.alignByBaseline()
@@ -108,7 +108,7 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             rating = driver.rating,
             vehicle = driver.vehicle,
             plate = driver.plate,
-            eta = if (config.tier.multiLeg) "3 min" else "4 min",
+            eta = state.tripSummary.driverEta,
             speaking = true
         ) {
             LiiveButton(
@@ -120,7 +120,7 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
                 contentDescription = "Call driver"
             )
         }
-        if (config.tier.multiLeg) MultiLegPanel()
+        state.tripSummary.transferStatus?.let { MultiLegPanel(it) }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             LiiveButton(
                 title = "Message",
@@ -142,7 +142,7 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
 }
 
 @Composable
-private fun MultiLegPanel() {
+private fun MultiLegPanel(transferStatus: String) {
     val c = LiiveTheme.colors
     Column(
         Modifier.fillMaxWidth().padding(top = 12.dp).clip(LiiveRadius.lg).background(c.surfaceRaised).padding(14.dp),
@@ -168,7 +168,7 @@ private fun MultiLegPanel() {
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Icon(painterResource(RideIcons.Walk), null, tint = c.warning, modifier = Modifier.size(15.dp))
-            Text("Transfer at Hayes St complete · 150m walk", color = c.textSecondary, style = MaterialTheme.typography.bodySmall)
+            Text(transferStatus, color = c.textSecondary, style = MaterialTheme.typography.bodySmall)
         }
     }
 }

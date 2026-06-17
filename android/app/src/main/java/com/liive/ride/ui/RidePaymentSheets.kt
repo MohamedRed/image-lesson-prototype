@@ -69,7 +69,7 @@ internal fun PaymentSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             LiiveIconCircle(RideIcons.Flag, IconCircleColor.Success, 36.dp, filled = true)
             Column(Modifier.weight(1f)) {
                 Text("You've arrived", color = c.text, style = MaterialTheme.typography.headlineSmall)
-                Text("${state.config.destinationName} · 18 min · 5.2 km", color = c.textSecondary, style = MaterialTheme.typography.bodySmall.tabularNumbers())
+                Text("${state.config.destinationName} · ${completedTripLine(state)}", color = c.textSecondary, style = MaterialTheme.typography.bodySmall.tabularNumbers())
             }
         }
         Column(
@@ -103,6 +103,9 @@ internal fun PaymentSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
         Text("Secured by Stripe", color = c.textTertiary, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
     }
 }
+
+private fun completedTripLine(state: RideUiState): String =
+    "${state.tripSummary.completedDuration} · ${state.tripSummary.completedDistance}"
 
 @Composable
 private fun RatingControl(rating: Int, onEvent: (RideEvent) -> Unit) {

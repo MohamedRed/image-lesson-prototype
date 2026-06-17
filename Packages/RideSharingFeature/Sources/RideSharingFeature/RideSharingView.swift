@@ -18,7 +18,8 @@ public struct RideSharingView: View {
             RideMapCanvasView(
                 phase: viewModel.state.phase,
                 isMultiLeg: viewModel.state.config.isMultiLeg,
-                carProgress: viewModel.state.carProgress
+                carProgress: viewModel.state.carProgress,
+                tripSummary: viewModel.state.tripSummary
             )
             .ignoresSafeArea()
 

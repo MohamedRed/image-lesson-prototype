@@ -38,7 +38,10 @@ class RideViewModel(
                 )
             }
             RideEvent.BackToDestination -> updateState { it.copy(phase = RidePhase.Destination) }
-            is RideEvent.SelectTier -> updateState { it.copy(config = it.config.copy(tier = event.tier)) }
+            is RideEvent.SelectTier -> updateState {
+                val config = it.config.copy(tier = event.tier)
+                it.copy(config = config, tripSummary = config.tripSummary())
+            }
             is RideEvent.SetPassengers -> updateState { it.copy(config = it.config.copy(passengers = event.count.coerceIn(1, 4))) }
             is RideEvent.SetBags -> updateState { it.copy(config = it.config.copy(bags = event.count.coerceIn(0, 4))) }
             is RideEvent.SetFemaleOnly -> updateState { it.copy(config = it.config.copy(femaleOnly = event.enabled)) }
@@ -75,11 +78,19 @@ class RideViewModel(
     private fun startMatching() {
         cancelActiveRide()
         val config = mutableState.value.config
-        updateState { it.copy(phase = RidePhase.Matching, paid = false, rating = 0, carProgress = 0f) }
+        updateState {
+            it.copy(
+                phase = RidePhase.Matching,
+                paid = false,
+                rating = 0,
+                carProgress = 0f,
+                tripSummary = config.tripSummary()
+            )
+        }
         matchingJob = viewModelScope.launch {
             val session = service.requestRide(config)
             activeSession = session
-            updateState { it.copy(driver = session.driver()) }
+            updateState { it.copy(driver = session.driver(), tripSummary = session.tripSummary) }
             delay(2_600)
             onEvent(RideEvent.MatchingComplete)
         }

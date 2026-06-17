@@ -134,6 +134,43 @@ public struct RideFareBreakdown: Codable, Equatable {
     }
 }
 
+public struct RideTripSummary: Codable, Equatable {
+    public let enrouteTitle: String
+    public let driverETA: String
+    public let mapMarkerLabel: String
+    public let transferStatus: String?
+    public let completedDuration: String
+    public let completedDistance: String
+
+    public init(
+        enrouteTitle: String,
+        driverETA: String,
+        mapMarkerLabel: String,
+        transferStatus: String?,
+        completedDuration: String,
+        completedDistance: String
+    ) {
+        self.enrouteTitle = enrouteTitle
+        self.driverETA = driverETA
+        self.mapMarkerLabel = mapMarkerLabel
+        self.transferStatus = transferStatus
+        self.completedDuration = completedDuration
+        self.completedDistance = completedDistance
+    }
+
+    public init(configuration: RideConfiguration) {
+        let isMultiLeg = configuration.isMultiLeg
+        self.init(
+            enrouteTitle: isMultiLeg ? RideTripDefaults.multiLegEnrouteTitle : RideTripDefaults.singleLegEnrouteTitle,
+            driverETA: isMultiLeg ? RideTripDefaults.multiLegETA : RideTripDefaults.singleLegETA,
+            mapMarkerLabel: isMultiLeg ? RideTripDefaults.multiLegMarkerLabel : RideTripDefaults.singleLegMarkerLabel,
+            transferStatus: isMultiLeg ? RideTripDefaults.transferStatus : nil,
+            completedDuration: RideTripDefaults.completedDuration,
+            completedDistance: RideTripDefaults.completedDistance
+        )
+    }
+}
+
 private extension Double {
     func roundedToCents() -> Double {
         (self * 100).rounded() / 100
@@ -158,6 +195,7 @@ public struct RideUIState: Codable, Equatable {
     public var phase: RidePhase = .destination
     public var destination: RideDestination?
     public var config = RideConfiguration()
+    public var tripSummary = RideTripSummary(configuration: RideConfiguration())
     public var driver = RideFixtures.driver
     public var paid = false
     public var rating = 0
@@ -171,6 +209,7 @@ public struct RideUIState: Codable, Equatable {
         case phase
         case destination
         case config
+        case tripSummary
         case driver
         case paid
         case rating
@@ -184,6 +223,8 @@ public struct RideUIState: Codable, Equatable {
         phase = try container.decodeIfPresent(RidePhase.self, forKey: .phase) ?? .destination
         destination = try container.decodeIfPresent(RideDestination.self, forKey: .destination)
         config = try container.decodeIfPresent(RideConfiguration.self, forKey: .config) ?? RideConfiguration()
+        tripSummary = try container.decodeIfPresent(RideTripSummary.self, forKey: .tripSummary)
+            ?? RideTripSummary(configuration: config)
         driver = try container.decodeIfPresent(RideDriver.self, forKey: .driver) ?? RideFixtures.driver
         paid = try container.decodeIfPresent(Bool.self, forKey: .paid) ?? false
         rating = try container.decodeIfPresent(Int.self, forKey: .rating) ?? 0
@@ -207,4 +248,16 @@ enum RideFixtures {
         RideDestination(id: "union-square", systemImage: "clock", color: "neutral", title: "Union Square", subtitle: "Geary & Powell"),
         RideDestination(id: "sfo-terminal-2", systemImage: "airplane", color: "neutral", title: "SFO — Terminal 2", subtitle: "Airport")
     ]
+}
+
+private enum RideTripDefaults {
+    static let singleLegEnrouteTitle = "Your driver is arriving"
+    static let multiLegEnrouteTitle = "On leg 2 of 2"
+    static let singleLegETA = "4 min"
+    static let multiLegETA = "3 min"
+    static let singleLegMarkerLabel = "4 min"
+    static let multiLegMarkerLabel = "Leg 2 · 3 min"
+    static let transferStatus = "Transfer at Hayes St complete · 150m walk"
+    static let completedDuration = "18 min"
+    static let completedDistance = "5.2 km"
 }

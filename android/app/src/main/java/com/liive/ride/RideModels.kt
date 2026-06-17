@@ -43,6 +43,15 @@ data class RideFareBreakdown(
     val total: Double,
 )
 
+data class RideTripSummary(
+    val enrouteTitle: String,
+    val driverEta: String,
+    val mapMarkerLabel: String,
+    val transferStatus: String?,
+    val completedDuration: String,
+    val completedDistance: String,
+)
+
 data class RideDriver(
     val name: String,
     val rating: Double,
@@ -54,6 +63,7 @@ data class RideUiState(
     val phase: RidePhase = RidePhase.Destination,
     val destination: RideDestination? = null,
     val config: RideConfig = RideConfig(),
+    val tripSummary: RideTripSummary = RideConfig().tripSummary(),
     val driver: RideDriver = RideFixtures.driver,
     val paid: Boolean = false,
     val rating: Int = 0,
@@ -118,8 +128,32 @@ fun RideConfig.fareBreakdown(): RideFareBreakdown {
     )
 }
 
+fun RideConfig.tripSummary(): RideTripSummary {
+    val multiLeg = tier.multiLeg
+    return RideTripSummary(
+        enrouteTitle = if (multiLeg) RideTripDefaults.MultiLegEnrouteTitle else RideTripDefaults.SingleLegEnrouteTitle,
+        driverEta = if (multiLeg) RideTripDefaults.MultiLegEta else RideTripDefaults.SingleLegEta,
+        mapMarkerLabel = if (multiLeg) RideTripDefaults.MultiLegMarkerLabel else RideTripDefaults.SingleLegMarkerLabel,
+        transferStatus = if (multiLeg) RideTripDefaults.TransferStatus else null,
+        completedDuration = RideTripDefaults.CompletedDuration,
+        completedDistance = RideTripDefaults.CompletedDistance,
+    )
+}
+
 fun RideDriver.firstName(): String = name.substringBefore(" ")
 
 private const val TAX_MULTIPLIER = 1.0875
 
 private fun Double.roundedCurrency(): Double = kotlin.math.round(this * 100.0) / 100.0
+
+private object RideTripDefaults {
+    const val SingleLegEnrouteTitle = "Your driver is arriving"
+    const val MultiLegEnrouteTitle = "On leg 2 of 2"
+    const val SingleLegEta = "4 min"
+    const val MultiLegEta = "3 min"
+    const val SingleLegMarkerLabel = "4 min"
+    const val MultiLegMarkerLabel = "Leg 2 · 3 min"
+    const val TransferStatus = "Transfer at Hayes St complete · 150m walk"
+    const val CompletedDuration = "18 min"
+    const val CompletedDistance = "5.2 km"
+}

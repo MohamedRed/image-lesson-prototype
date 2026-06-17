@@ -7,6 +7,7 @@ public struct RideSession: Codable, Equatable, Identifiable {
     public let driverRating: Double
     public let vehicle: String
     public let plate: String
+    public let tripSummary: RideTripSummary
 
     public init(
         id: String,
@@ -14,7 +15,8 @@ public struct RideSession: Codable, Equatable, Identifiable {
         driverName: String,
         driverRating: Double,
         vehicle: String,
-        plate: String
+        plate: String,
+        tripSummary: RideTripSummary
     ) {
         self.id = id
         self.voiceRoomName = voiceRoomName
@@ -22,6 +24,7 @@ public struct RideSession: Codable, Equatable, Identifiable {
         self.driverRating = driverRating
         self.vehicle = vehicle
         self.plate = plate
+        self.tripSummary = tripSummary
     }
 
     public var driver: RideDriver {
@@ -60,7 +63,8 @@ public final class MockRideSharingService: RideSharingServicing {
             driverName: driver.name,
             driverRating: driver.rating,
             vehicle: driver.vehicle,
-            plate: driver.plate
+            plate: driver.plate,
+            tripSummary: RideTripSummary(configuration: config)
         )
     }
 

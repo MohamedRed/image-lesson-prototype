@@ -61,11 +61,12 @@ struct RideEnrouteSheetView: View {
 
     private var config: RideConfiguration { viewModel.state.config }
     private var driver: RideDriver { viewModel.state.driver }
+    private var trip: RideTripSummary { viewModel.state.tripSummary }
 
     var body: some View {
         LiiveBottomSheet {
             HStack(alignment: .firstTextBaseline) {
-                Text(config.isMultiLeg ? "On leg 2 of 2" : "Your driver is arriving")
+                Text(trip.enrouteTitle)
                     .liiveStyle(.title3)
                     .foregroundColor(LiiveColor.text)
                 Spacer()
@@ -80,7 +81,7 @@ struct RideEnrouteSheetView: View {
                 rating: driver.rating,
                 vehicle: driver.vehicle,
                 plate: driver.plate,
-                eta: config.isMultiLeg ? "3 min" : "4 min",
+                eta: trip.driverETA,
                 speaking: true
             ) {
                 LiiveButton(
@@ -92,8 +93,8 @@ struct RideEnrouteSheetView: View {
                 ) {}
             }
 
-            if config.isMultiLeg {
-                multiLegPanel
+            if let transferStatus = trip.transferStatus {
+                multiLegPanel(transferStatus: transferStatus)
             }
 
             HStack(spacing: 10) {
@@ -106,7 +107,7 @@ struct RideEnrouteSheetView: View {
         }
     }
 
-    private var multiLegPanel: some View {
+    private func multiLegPanel(transferStatus: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Image(systemName: "map.fill")
@@ -125,7 +126,7 @@ struct RideEnrouteSheetView: View {
                 Image(systemName: "figure.walk")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(LiiveColor.warning)
-                Text("Transfer at Hayes St complete · 150m walk")
+                Text(transferStatus)
                     .font(LiiveFont.footnote)
                     .foregroundColor(LiiveColor.textSecondary)
             }
@@ -143,6 +144,7 @@ struct RideCompleteSheetView: View {
     private var config: RideConfiguration { viewModel.state.config }
     private var driver: RideDriver { viewModel.state.driver }
     private var fare: RideFareBreakdown { config.fareBreakdown }
+    private var trip: RideTripSummary { viewModel.state.tripSummary }
 
     var body: some View {
         if viewModel.state.paid {
@@ -183,7 +185,7 @@ struct RideCompleteSheetView: View {
                     Text("You've arrived")
                         .liiveStyle(.title3)
                         .foregroundColor(LiiveColor.text)
-                    Text("\(config.destinationName) · 18 min · 5.2 km")
+                    Text("\(config.destinationName) · \(trip.completedDuration) · \(trip.completedDistance)")
                         .font(LiiveFont.footnote.monospacedDigit())
                         .foregroundColor(LiiveColor.textSecondary)
                 }

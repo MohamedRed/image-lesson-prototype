@@ -4,6 +4,7 @@ struct RideMapCanvasView: View {
     let phase: RidePhase
     let isMultiLeg: Bool
     let carProgress: Double
+    let tripSummary: RideTripSummary
 
     private let origin = MapPoint(x: 196, y: 470)
     private let destination = MapPoint(x: 250, y: 165)
@@ -121,7 +122,7 @@ struct RideMapCanvasView: View {
         if showsCar {
             bottomAnchoredMarker(
                 kind: .car,
-                label: isMultiLeg ? "Leg 2 · 3 min" : "4 min",
+                label: tripSummary.mapMarkerLabel,
                 at: carPosition(),
                 size: size
             )

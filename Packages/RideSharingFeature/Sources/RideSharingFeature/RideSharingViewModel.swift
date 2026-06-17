@@ -55,7 +55,10 @@ public final class RideSharingViewModel: ObservableObject {
         case .backToDestination:
             mutate { $0.phase = .destination }
         case .selectTier(let tier):
-            mutate { $0.config.tier = tier }
+            mutate {
+                $0.config.tier = tier
+                $0.tripSummary = RideTripSummary(configuration: $0.config)
+            }
         case .setPassengers(let count):
             mutate { $0.config.passengers = min(max(count, 1), 4) }
         case .setBags(let count):
@@ -111,6 +114,7 @@ public final class RideSharingViewModel: ObservableObject {
             $0.carProgress = 0
             $0.paid = false
             $0.rating = 0
+            $0.tripSummary = RideTripSummary(configuration: config)
         }
         matchingTask = Task { [weak self] in
             guard let self else { return }
@@ -119,7 +123,10 @@ public final class RideSharingViewModel: ObservableObject {
             await MainActor.run {
                 self.activeSession = session
                 if let session {
-                    self.mutate { $0.driver = session.driver }
+                    self.mutate {
+                        $0.driver = session.driver
+                        $0.tripSummary = session.tripSummary
+                    }
                 }
             }
             try? await Task.sleep(nanoseconds: 2_600_000_000)

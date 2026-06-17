@@ -7,6 +7,7 @@ data class RideSession(
     val driverRating: Double,
     val vehicle: String,
     val plate: String,
+    val tripSummary: RideTripSummary,
 )
 
 data class RidePaymentReceipt(
@@ -33,6 +34,7 @@ class MockRideService : RideService {
             driverRating = driver.rating,
             vehicle = driver.vehicle,
             plate = driver.plate,
+            tripSummary = config.tripSummary(),
         )
     }
 
