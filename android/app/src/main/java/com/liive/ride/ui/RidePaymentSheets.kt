@@ -20,8 +20,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.liive.ride.RideEvent
 import com.liive.ride.RideTestTags
 import com.liive.ride.RideUiState
@@ -46,12 +44,25 @@ internal fun PaidReceiptSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) 
     val c = LiiveTheme.colors
     val fare = state.config.fareBreakdown()
     LiiveBottomSheet(modifier = Modifier.testTag(RideTestTags.ReceiptSheet)) {
-        Column(Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            LiiveIconCircle(RideIcons.Check, IconCircleColor.Success, 56.dp, filled = true)
-            Text("Thanks for riding", color = c.text, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 14.dp))
-            Text("${fare.total.ridePrice()} paid to ${state.driver.firstName()} · receipt sent", color = c.textSecondary, style = MaterialTheme.typography.titleMedium.tabularNumbers(), modifier = Modifier.padding(top = 6.dp))
+        Column(
+            Modifier.fillMaxWidth().padding(vertical = RideSheetLayout.receiptContentVerticalPadding),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            LiiveIconCircle(RideIcons.Check, IconCircleColor.Success, RideSheetLayout.receiptIconSize, filled = true)
+            Text(
+                "Thanks for riding",
+                color = c.text,
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(top = RideSheetLayout.sectionGap)
+            )
+            Text(
+                "${fare.total.ridePrice()} paid to ${state.driver.firstName()} · receipt sent",
+                color = c.textSecondary,
+                style = MaterialTheme.typography.titleMedium.tabularNumbers(),
+                modifier = Modifier.padding(top = RideSheetLayout.inlineGap)
+            )
         }
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(RideSheetLayout.receiptButtonTopPadding))
         LiiveButton(
             title = "Done",
             onClick = { onEvent(RideEvent.Reset) },
@@ -67,8 +78,12 @@ internal fun PaymentSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
     val c = LiiveTheme.colors
     val fare = state.config.fareBreakdown()
     LiiveBottomSheet(modifier = Modifier.testTag(RideTestTags.PaymentSheet)) {
-        Row(Modifier.fillMaxWidth().padding(bottom = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            LiiveIconCircle(RideIcons.Flag, IconCircleColor.Success, 36.dp, filled = true)
+        Row(
+            Modifier.fillMaxWidth().padding(bottom = RideSheetLayout.sectionGap),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(RideSheetLayout.rowGap)
+        ) {
+            LiiveIconCircle(RideIcons.Flag, IconCircleColor.Success, RideSheetLayout.paymentStatusIconSize, filled = true)
             Column(Modifier.weight(1f)) {
                 Text("You've arrived", color = c.text, style = MaterialTheme.typography.headlineSmall)
                 Text("${state.config.destinationName} · ${completedTripLine(state)}", color = c.textSecondary, style = MaterialTheme.typography.bodySmall.tabularNumbers())
@@ -79,18 +94,23 @@ internal fun PaymentSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
                 .fillMaxWidth()
                 .clip(LiiveRadius.lg)
                 .background(c.surfaceRaised)
-                .padding(start = 14.dp, top = 8.dp, end = 14.dp, bottom = 14.dp)
+                .padding(
+                    start = RideSheetLayout.fareCardHorizontalPadding,
+                    top = RideSheetLayout.fareCardTopPadding,
+                    end = RideSheetLayout.fareCardHorizontalPadding,
+                    bottom = RideSheetLayout.fareCardBottomPadding
+                )
         ) {
             LiiveFareRow("Ride fare", fare.rideFare.ridePrice())
             LiiveFareRow("Tax & fees", fare.taxAndFees.ridePrice())
             fare.costShareCredit?.let { LiiveFareRow("Cost-share credit", it.rideCreditPrice(), muted = true) }
-            Box(Modifier.fillMaxWidth().height(0.5.dp).background(c.separator))
+            Box(Modifier.fillMaxWidth().height(RideSheetLayout.hairlineHeight).background(c.separator))
             LiiveFareRow("Total", fare.total.ridePrice(), total = true)
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(RideSheetLayout.paymentSectionGap))
         Column(Modifier.fillMaxWidth().clip(LiiveRadius.lg).background(c.surfaceRaised)) {
             LiiveListRow("Google Pay", value = "default", divider = false, chevron = true, leading = {
-                LiiveIconCircle(RideIcons.CreditCard, IconCircleColor.Neutral, 32.dp)
+                LiiveIconCircle(RideIcons.CreditCard, IconCircleColor.Neutral, RideSheetLayout.optionIconSize)
             })
         }
         RatingControl(state.rating, onEvent)
@@ -102,7 +122,13 @@ internal fun PaymentSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             capsule = true,
             tabularNumbers = true
         )
-        Text("Secured by Stripe", color = c.textTertiary, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
+        Text(
+            "Secured by Stripe",
+            color = c.textTertiary,
+            style = MaterialTheme.typography.labelMedium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(top = RideSheetLayout.securityCopyTopPadding)
+        )
     }
 }
 
@@ -112,21 +138,32 @@ private fun completedTripLine(state: RideUiState): String =
 @Composable
 private fun RatingControl(rating: Int, onEvent: (RideEvent) -> Unit) {
     val c = LiiveTheme.colors
-    Column(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(
+                top = RideSheetLayout.ratingTopPadding,
+                bottom = RideSheetLayout.ratingBottomPadding
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text(
             "Rate your driver",
             color = c.textSecondary,
-            style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp)
+            style = MaterialTheme.typography.titleMedium.copy(fontSize = RideSheetLayout.matchingMetaFontSize)
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 8.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(RideSheetLayout.inlineGap),
+            modifier = Modifier.padding(top = RideSheetLayout.controlGap)
+        ) {
             (1..5).forEach { value ->
                 Icon(
                     painterResource(RideIcons.Star),
                     null,
                     tint = if (value <= rating) c.star else c.fill,
                     modifier = Modifier
-                        .padding(2.dp)
-                        .size(28.dp)
+                        .padding(RideSheetLayout.ratingStarPadding)
+                        .size(RideSheetLayout.ratingStarSize)
                         .clickableNoRipple { onEvent(RideEvent.Rate(value)) }
                 )
             }

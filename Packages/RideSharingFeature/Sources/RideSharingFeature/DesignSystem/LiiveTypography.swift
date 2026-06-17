@@ -21,6 +21,8 @@ public enum LiiveFont {
     public static let body       = sg(17, .regular)   // line 22, tracking -0.2
     public static let callout    = sg(16, .regular)
     public static let subhead    = sg(15, .regular)
+    public static let sheetMeta  = sg(14, .regular)
+    public static let sheetMetaSemibold = sg(14, .semibold)
     public static let footnote   = sg(13, .regular)
     public static let caption1   = sg(12, .regular)
     public static let caption2   = sg(11, .regular)

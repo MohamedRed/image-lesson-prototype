@@ -8,45 +8,45 @@ struct RideMatchingSheetView: View {
 
     var body: some View {
         LiiveBottomSheet {
-            VStack(spacing: 0) {
-                HStack(spacing: 6) {
-                    ForEach(0..<3, id: \.self) { index in
+            VStack(spacing: RideSheetLayout.stackedSpacing) {
+                HStack(spacing: RideSheetLayout.inlineGap) {
+                    ForEach(0..<RideSheetLayout.matchingDotCount, id: \.self) { index in
                         Circle()
                             .fill(LiiveColor.accent)
-                            .frame(width: 9, height: 9)
-                            .offset(y: animate ? -7 : 0)
+                            .frame(width: RideSheetLayout.matchingDotSize, height: RideSheetLayout.matchingDotSize)
+                            .offset(y: animate ? RideSheetLayout.matchingDotLift : 0)
                             .opacity(animate ? 1 : 0.5)
                             .animation(
-                                .easeInOut(duration: 0.6)
+                                .easeInOut(duration: RideSheetLayout.matchingDotDuration)
                                     .repeatForever(autoreverses: true)
-                                    .delay(Double(index) * 0.16),
+                                    .delay(Double(index) * RideSheetLayout.matchingDotDelay),
                                 value: animate
                             )
                     }
                 }
-                .padding(.bottom, 16)
+                .padding(.bottom, LiiveSpacing.l)
 
                 Text("Finding your driver…")
                     .liiveStyle(.title3)
                     .foregroundColor(LiiveColor.text)
                 Text("Matching you with a nearby\(config.femaleOnly ? " female-only" : "") \(config.tier.rawValue) driver and reserving a legal curb.")
-                    .font(Font.custom(LiiveFont.family, size: 14))
+                    .font(LiiveFont.sheetMeta)
                     .foregroundColor(LiiveColor.textSecondary)
                     .multilineTextAlignment(.center)
-                    .frame(maxWidth: 280)
-                    .padding(.top, 6)
+                    .frame(maxWidth: RideSheetLayout.matchingDescriptionMaxWidth)
+                    .padding(.top, RideSheetLayout.inlineGap)
 
-                HStack(spacing: 8) {
+                HStack(spacing: RideSheetLayout.controlGap) {
                     LiiveBadge("Curb reserved", color: .success, dot: true)
                     if config.femaleOnly {
                         LiiveBadge("Female-only pool", color: .accent)
                     }
                 }
-                .padding(.top, 16)
+                .padding(.top, LiiveSpacing.l)
             }
             .frame(maxWidth: .infinity)
-            .padding(.top, 8)
-            .padding(.bottom, 22)
+            .padding(.top, RideSheetLayout.matchingContentTopPadding)
+            .padding(.bottom, RideSheetLayout.matchingContentBottomPadding)
 
             LiiveButton("Cancel", variant: .secondary, size: .lg, shape: .capsule, fullWidth: true) {
                 viewModel.handle(.cancelMatching)
@@ -72,10 +72,10 @@ struct RideEnrouteSheetView: View {
                     .foregroundColor(LiiveColor.text)
                 Spacer()
                 Text("to \(config.destinationName)")
-                    .font(Font.custom(LiiveFont.family, size: 14))
+                    .font(LiiveFont.sheetMeta)
                     .foregroundColor(LiiveColor.textSecondary)
             }
-            .padding(.bottom, 12)
+            .padding(.bottom, RideSheetLayout.headerBottomPadding)
 
             LiiveDriverCard(
                 name: driver.name,
@@ -98,22 +98,22 @@ struct RideEnrouteSheetView: View {
                 multiLegPanel(transferStatus: transferStatus)
             }
 
-            HStack(spacing: 10) {
+            HStack(spacing: RideSheetLayout.rowGap) {
                 LiiveButton("Message", variant: .secondary, size: .lg, fullWidth: true, icon: Image(systemName: "message.fill")) {}
                 LiiveButton("Cancel Ride", variant: .destructivePlain, size: .lg, fullWidth: true) {
                     viewModel.handle(.cancelRide)
                 }
             }
-            .padding(.top, 14)
+            .padding(.top, RideSheetLayout.sectionGap)
         }
         .accessibilityIdentifier(RideAccessibilityIdentifier.enrouteSheet)
     }
 
     private func multiLegPanel(transferStatus: String) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: RideSheetLayout.rowGap) {
+            HStack(spacing: RideSheetLayout.controlGap) {
                 Image(systemName: "map.fill")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: RideSheetLayout.multiLegIconSize, weight: .semibold))
                     .foregroundColor(LiiveColor.accent)
                 Text("Multi-leg journey")
                     .font(LiiveFont.subhead.weight(.semibold))
@@ -122,21 +122,21 @@ struct RideEnrouteSheetView: View {
             LiiveProgressDots(legs: 2, current: 2)
             Rectangle()
                 .fill(LiiveColor.separator)
-                .frame(height: 0.5)
-                .padding(.top, 2)
-            HStack(spacing: 6) {
+                .frame(height: RideSheetLayout.hairlineHeight)
+                .padding(.top, RideSheetLayout.transferSeparatorTopPadding)
+            HStack(spacing: RideSheetLayout.inlineGap) {
                 Image(systemName: "figure.walk")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: RideSheetLayout.transferIconSize, weight: .semibold))
                     .foregroundColor(LiiveColor.warning)
                 Text(transferStatus)
                     .font(LiiveFont.footnote)
                     .foregroundColor(LiiveColor.textSecondary)
             }
         }
-        .padding(14)
+        .padding(RideSheetLayout.multiLegPanelPadding)
         .background(LiiveColor.surfaceRaised)
         .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.lg, style: .continuous))
-        .padding(.top, 12)
+        .padding(.top, RideSheetLayout.multiLegPanelTopPadding)
     }
 }
 
@@ -158,33 +158,33 @@ struct RideCompleteSheetView: View {
 
     private var paidReceipt: some View {
         LiiveBottomSheet {
-            VStack(spacing: 0) {
-                LiiveIconCircle(systemName: "checkmark", color: .success, size: 56, filled: true)
+            VStack(spacing: RideSheetLayout.stackedSpacing) {
+                LiiveIconCircle(systemName: "checkmark", color: .success, size: RideSheetLayout.receiptIconSize, filled: true)
                 Text("Thanks for riding")
                     .liiveStyle(.title2)
                     .foregroundColor(LiiveColor.text)
-                    .padding(.top, 14)
+                    .padding(.top, RideSheetLayout.sectionGap)
                 Text("\(fare.total.ridePrice) paid to \(driver.firstName) · receipt sent")
                     .font(LiiveFont.subhead.monospacedDigit())
                     .foregroundColor(LiiveColor.textSecondary)
-                    .padding(.top, 6)
+                    .padding(.top, RideSheetLayout.inlineGap)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
+            .padding(.vertical, RideSheetLayout.receiptContentVerticalPadding)
 
             LiiveButton("Done", variant: .primary, size: .lg, shape: .capsule, fullWidth: true) {
                 viewModel.handle(.reset)
             }
-            .padding(.top, 20)
+            .padding(.top, RideSheetLayout.receiptButtonTopPadding)
         }
         .accessibilityIdentifier(RideAccessibilityIdentifier.receiptSheet)
     }
 
     private var paymentSheet: some View {
         LiiveBottomSheet {
-            HStack(spacing: 10) {
-                LiiveIconCircle(systemName: "flag.fill", color: .success, size: 36, filled: true)
-                VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: RideSheetLayout.rowGap) {
+                LiiveIconCircle(systemName: "flag.fill", color: .success, size: RideSheetLayout.paymentStatusIconSize, filled: true)
+                VStack(alignment: .leading, spacing: RideSheetLayout.compactGap) {
                     Text("You've arrived")
                         .liiveStyle(.title3)
                         .foregroundColor(LiiveColor.text)
@@ -194,9 +194,9 @@ struct RideCompleteSheetView: View {
                 }
                 Spacer()
             }
-            .padding(.bottom, 14)
+            .padding(.bottom, RideSheetLayout.sectionGap)
 
-            VStack(spacing: 0) {
+            VStack(spacing: RideSheetLayout.stackedSpacing) {
                 LiiveFareRow(label: "Ride fare", amount: fare.rideFare.ridePrice)
                 LiiveFareRow(label: "Tax & fees", amount: fare.taxAndFees.ridePrice)
                 if let credit = fare.costShareCredit {
@@ -204,24 +204,24 @@ struct RideCompleteSheetView: View {
                 }
                 Rectangle()
                     .fill(LiiveColor.separator)
-                    .frame(height: 0.5)
+                    .frame(height: RideSheetLayout.hairlineHeight)
                 LiiveFareRow(label: "Total", amount: fare.total.ridePrice, total: true)
             }
-            .padding(.horizontal, 14)
-            .padding(.top, 8)
-            .padding(.bottom, 14)
+            .padding(.horizontal, RideSheetLayout.fareCardHorizontalPadding)
+            .padding(.top, RideSheetLayout.fareCardTopPadding)
+            .padding(.bottom, RideSheetLayout.fareCardBottomPadding)
             .background(LiiveColor.surfaceRaised)
             .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.lg, style: .continuous))
-            .padding(.bottom, 12)
+            .padding(.bottom, RideSheetLayout.paymentSectionGap)
 
-            VStack(spacing: 0) {
+            VStack(spacing: RideSheetLayout.stackedSpacing) {
                 LiiveListRow(title: "Apple Pay", value: "default", divider: false, chevron: true) {
-                    LiiveIconCircle(systemName: "applelogo", color: .neutral, size: 32)
+                    LiiveIconCircle(systemName: "applelogo", color: .neutral, size: RideSheetLayout.optionIconSize)
                 }
             }
             .background(LiiveColor.surfaceRaised)
             .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.lg, style: .continuous))
-            .padding(.bottom, 12)
+            .padding(.bottom, RideSheetLayout.paymentSectionGap)
 
             ratingControl
             LiiveButton("Pay \(fare.total.ridePrice)", variant: .primary, size: .lg, shape: .capsule, fullWidth: true, tabularNumbers: true) {
@@ -231,29 +231,29 @@ struct RideCompleteSheetView: View {
                 .font(LiiveFont.caption1)
                 .foregroundColor(LiiveColor.textTertiary)
                 .frame(maxWidth: .infinity)
-                .padding(.top, 10)
+                .padding(.top, RideSheetLayout.securityCopyTopPadding)
         }
         .accessibilityIdentifier(RideAccessibilityIdentifier.paymentSheet)
     }
 
     private var ratingControl: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: RideSheetLayout.controlGap) {
             Text("Rate your driver")
-                .font(Font.custom(LiiveFont.family, size: 14))
+                .font(LiiveFont.sheetMeta)
                 .foregroundColor(LiiveColor.textSecondary)
-            HStack(spacing: 6) {
+            HStack(spacing: RideSheetLayout.inlineGap) {
                 ForEach(1...5, id: \.self) { value in
                     Button(action: { viewModel.handle(.rate(value)) }) {
                         Image(systemName: "star.fill")
-                            .font(.system(size: 28))
+                            .font(.system(size: RideSheetLayout.ratingStarSize))
                             .foregroundColor(value <= viewModel.state.rating ? LiiveColor.star : LiiveColor.fill)
-                            .padding(2)
+                            .padding(RideSheetLayout.ratingStarPadding)
                     }
                     .buttonStyle(.plain)
                 }
             }
         }
-        .padding(.bottom, 16)
+        .padding(.bottom, RideSheetLayout.ratingBottomPadding)
     }
 }
 

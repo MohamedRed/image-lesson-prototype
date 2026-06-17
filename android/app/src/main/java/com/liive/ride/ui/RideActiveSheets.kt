@@ -22,8 +22,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.liive.ride.*
 import com.liive.ride.designsystem.*
 
@@ -34,18 +32,26 @@ fun RideMatchingSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
 
     LiiveBottomSheet(modifier = Modifier.testTag(RideTestTags.MatchingSheet)) {
         Column(
-            Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 22.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(
+                    top = RideSheetLayout.matchingContentTopPadding,
+                    bottom = RideSheetLayout.matchingContentBottomPadding
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 16.dp)) {
-                repeat(3) { index ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(RideSheetLayout.inlineGap),
+                modifier = Modifier.padding(bottom = LiiveSpacing.l)
+            ) {
+                repeat(RideSheetLayout.matchingDotCount) { index ->
                     val dotProgress by transition.animateFloat(
                         initialValue = 0f,
                         targetValue = 1f,
                         animationSpec = infiniteRepeatable(
                             animation = tween(
-                                durationMillis = 600,
-                                delayMillis = index * 160,
+                                durationMillis = RideSheetLayout.matchingDotDurationMs,
+                                delayMillis = index * RideSheetLayout.matchingDotDelayMs,
                                 easing = FastOutSlowInEasing
                             ),
                             repeatMode = RepeatMode.Reverse
@@ -53,9 +59,9 @@ fun RideMatchingSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
                         label = "matchingDot$index"
                     )
                     Box(
-                        Modifier.offset(y = (-7).dp * dotProgress)
+                        Modifier.offset(y = RideSheetLayout.matchingDotLift * dotProgress)
                             .alpha(0.5f + dotProgress * 0.5f)
-                            .size(9.dp).clip(CircleShape).background(c.accent)
+                            .size(RideSheetLayout.matchingDotSize).clip(CircleShape).background(c.accent)
                     )
                 }
             }
@@ -63,11 +69,16 @@ fun RideMatchingSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             Text(
                 "Matching you with a nearby${if (state.config.femaleOnly) " female-only" else ""} ${state.config.tier.name.lowercase()} driver and reserving a legal curb.",
                 color = c.textSecondary,
-                style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = RideSheetLayout.matchingMetaFontSize),
                 textAlign = TextAlign.Center,
-                modifier = Modifier.widthIn(max = 280.dp).padding(top = 6.dp)
+                modifier = Modifier
+                    .widthIn(max = RideSheetLayout.matchingDescriptionMaxWidth)
+                    .padding(top = RideSheetLayout.inlineGap)
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 16.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(RideSheetLayout.controlGap),
+                modifier = Modifier.padding(top = LiiveSpacing.l)
+            ) {
                 LiiveBadge("Curb reserved", BadgeColor.Success, dot = true)
                 if (state.config.femaleOnly) LiiveBadge("Female-only pool", BadgeColor.Accent)
             }
@@ -89,7 +100,7 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
     val config = state.config
     val driver = state.driver
     LiiveBottomSheet(modifier = Modifier.testTag(RideTestTags.EnrouteSheet)) {
-        Row(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+        Row(Modifier.fillMaxWidth().padding(bottom = RideSheetLayout.headerBottomPadding)) {
             Text(
                 state.tripSummary.enrouteTitle,
                 color = c.text,
@@ -100,7 +111,7 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             Text(
                 "to ${config.destinationName}",
                 color = c.textSecondary,
-                style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = RideSheetLayout.matchingMetaFontSize),
                 modifier = Modifier.alignByBaseline()
             )
         }
@@ -122,7 +133,10 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             )
         }
         state.tripSummary.transferStatus?.let { MultiLegPanel(it) }
-        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            Modifier.fillMaxWidth().padding(top = RideSheetLayout.sectionGap),
+            horizontalArrangement = Arrangement.spacedBy(RideSheetLayout.rowGap)
+        ) {
             LiiveButton(
                 title = "Message",
                 onClick = {},
@@ -146,11 +160,16 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
 private fun MultiLegPanel(transferStatus: String) {
     val c = LiiveTheme.colors
     Column(
-        Modifier.fillMaxWidth().padding(top = 12.dp).clip(LiiveRadius.lg).background(c.surfaceRaised).padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        Modifier
+            .fillMaxWidth()
+            .padding(top = RideSheetLayout.multiLegPanelTopPadding)
+            .clip(LiiveRadius.lg)
+            .background(c.surfaceRaised)
+            .padding(RideSheetLayout.multiLegPanelPadding),
+        verticalArrangement = Arrangement.spacedBy(RideSheetLayout.rowGap)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Icon(painterResource(RideIcons.Map), null, tint = c.accent, modifier = Modifier.size(16.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(RideSheetLayout.controlGap)) {
+            Icon(painterResource(RideIcons.Map), null, tint = c.accent, modifier = Modifier.size(RideSheetLayout.multiLegIconSize))
             Text(
                 "Multi-leg journey",
                 color = c.text,
@@ -159,16 +178,16 @@ private fun MultiLegPanel(transferStatus: String) {
             )
         }
         LiiveProgressDots(legs = 2, current = 2)
-        Box(Modifier.fillMaxWidth().height(2.5.dp)) {
+        Box(Modifier.fillMaxWidth().height(RideSheetLayout.progressSeparatorTrackHeight)) {
             Box(
                 Modifier.align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .height(0.5.dp)
+                    .height(RideSheetLayout.hairlineHeight)
                     .background(c.separator)
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Icon(painterResource(RideIcons.Walk), null, tint = c.warning, modifier = Modifier.size(15.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(RideSheetLayout.inlineGap)) {
+            Icon(painterResource(RideIcons.Walk), null, tint = c.warning, modifier = Modifier.size(RideSheetLayout.transferIconSize))
             Text(transferStatus, color = c.textSecondary, style = MaterialTheme.typography.bodySmall)
         }
     }
@@ -190,7 +209,11 @@ fun RideSOSConfirmation(onEmergency: () -> Unit, onCancel: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Column(
-            Modifier.widthIn(max = 300.dp).clip(LiiveRadius.xl).background(c.surface).padding(22.dp),
+            Modifier
+                .widthIn(max = RideSheetLayout.sosPanelMaxWidth)
+                .clip(LiiveRadius.xl)
+                .background(c.surface)
+                .padding(RideSheetLayout.sosPanelPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text("Emergency Alert", color = c.text, style = MaterialTheme.typography.headlineSmall)
@@ -199,10 +222,13 @@ fun RideSOSConfirmation(onEmergency: () -> Unit, onCancel: () -> Unit) {
                 color = c.textSecondary,
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 10.dp, bottom = 18.dp)
+                modifier = Modifier.padding(
+                    top = RideSheetLayout.sosMessageTopPadding,
+                    bottom = RideSheetLayout.sosMessageBottomPadding
+                )
             )
             LiiveButton("Call Emergency Services", fullWidth = true, variant = LiiveButtonVariant.Destructive, size = LiiveButtonSize.Lg, capsule = true, onClick = onEmergency)
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(RideSheetLayout.sosButtonGap))
             LiiveButton("Cancel", fullWidth = true, variant = LiiveButtonVariant.Plain, onClick = onCancel)
         }
     }

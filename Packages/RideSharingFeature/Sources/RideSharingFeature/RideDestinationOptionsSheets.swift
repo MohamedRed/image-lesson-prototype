@@ -11,27 +11,27 @@ struct RideDestinationSheetView: View {
                     .foregroundColor(LiiveColor.text)
                 Spacer()
                 Text("Now ▾")
-                    .font(Font.custom(LiiveFont.family, size: 14).weight(.semibold))
+                    .font(LiiveFont.sheetMetaSemibold)
                     .foregroundColor(LiiveColor.accent)
             }
-            .padding(.bottom, 12)
+            .padding(.bottom, RideSheetLayout.headerBottomPadding)
 
-            HStack(spacing: 10) {
+            HStack(spacing: RideSheetLayout.rowGap) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: RideSheetLayout.searchIconSize, weight: .semibold))
                     .foregroundColor(LiiveColor.textSecondary)
                 Text("Search a place or address")
                     .font(LiiveFont.callout)
                     .foregroundColor(LiiveColor.textTertiary)
                 Spacer()
             }
-            .frame(height: 46)
-            .padding(.horizontal, 14)
+            .frame(height: RideSheetLayout.searchHeight)
+            .padding(.horizontal, RideSheetLayout.searchHorizontalPadding)
             .background(LiiveColor.fillTertiary)
             .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.md, style: .continuous))
-            .padding(.bottom, 14)
+            .padding(.bottom, RideSheetLayout.sectionGap)
 
-            VStack(spacing: 0) {
+            VStack(spacing: RideSheetLayout.stackedSpacing) {
                 ForEach(Array(RideFixtures.destinations.enumerated()), id: \.element.id) { index, place in
                     LiiveListRow(
                         title: place.title,
@@ -43,7 +43,7 @@ struct RideDestinationSheetView: View {
                         LiiveIconCircle(
                             systemName: place.systemImage,
                             color: place.semanticColor.iconColor,
-                            size: 36
+                            size: RideSheetLayout.savedPlaceIconSize
                         )
                     }
                 }
@@ -81,18 +81,18 @@ struct RideOptionsSheetView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: RideSheetLayout.rowGap) {
             Button(action: { viewModel.handle(.backToDestination) }) {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.system(size: RideSheetLayout.backIconSize, weight: .semibold))
                     .foregroundColor(LiiveColor.text)
-                    .frame(width: 32, height: 32)
+                    .frame(width: RideSheetLayout.backButtonSize, height: RideSheetLayout.backButtonSize)
                     .background(LiiveColor.fillTertiary)
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: RideSheetLayout.compactGap) {
                 Text("Choose your ride")
                     .liiveStyle(.title3)
                     .foregroundColor(LiiveColor.text)
@@ -102,38 +102,38 @@ struct RideOptionsSheetView: View {
             }
             Spacer()
         }
-        .padding(.bottom, 12)
+        .padding(.bottom, RideSheetLayout.headerBottomPadding)
     }
 
     private var tierPicker: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: RideSheetLayout.tierSpacing) {
             ForEach(RideTier.allCases) { tier in
                 RideTierRow(tier: tier, isSelected: tier == selectedTier) {
                     viewModel.handle(.selectTier(tier))
                 }
             }
         }
-        .padding(.bottom, 14)
+        .padding(.bottom, RideSheetLayout.sectionGap)
     }
 
     private var rideDetails: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: RideSheetLayout.stackedSpacing) {
             LiiveListRow(title: "Passengers") {
-                LiiveIconCircle(systemName: "person.2.fill", color: .neutral, size: 32)
+                LiiveIconCircle(systemName: "person.2.fill", color: .neutral, size: RideSheetLayout.optionIconSize)
             } trailing: {
                 LiiveStepper(value: state.config.passengers, range: 1...4) {
                     viewModel.handle(.setPassengers($0))
                 }
             }
             LiiveListRow(title: "Bags") {
-                LiiveIconCircle(systemName: "suitcase.fill", color: .neutral, size: 32)
+                LiiveIconCircle(systemName: "suitcase.fill", color: .neutral, size: RideSheetLayout.optionIconSize)
             } trailing: {
                 LiiveStepper(value: state.config.bags, range: 0...4) {
                     viewModel.handle(.setBags($0))
                 }
             }
             LiiveListRow(title: "Female-only pool", subtitle: "Match same-gender drivers & riders") {
-                LiiveIconCircle(systemName: "shield.lefthalf.filled", color: .success, size: 32)
+                LiiveIconCircle(systemName: "shield.lefthalf.filled", color: .success, size: RideSheetLayout.optionIconSize)
             } trailing: {
                 LiiveSwitch(isOn: Binding(
                     get: { state.config.femaleOnly },
@@ -141,7 +141,7 @@ struct RideOptionsSheetView: View {
                 ))
             }
             LiiveListRow(title: "Child seat", divider: false) {
-                LiiveIconCircle(systemName: "figure.child", color: .neutral, size: 32)
+                LiiveIconCircle(systemName: "figure.child", color: .neutral, size: RideSheetLayout.optionIconSize)
             } trailing: {
                 LiiveSwitch(isOn: Binding(
                     get: { state.config.childSeat },
@@ -151,7 +151,7 @@ struct RideOptionsSheetView: View {
         }
         .background(LiiveColor.surfaceRaised)
         .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.lg, style: .continuous))
-        .padding(.bottom, 14)
+        .padding(.bottom, RideSheetLayout.sectionGap)
     }
 }
 
@@ -162,10 +162,10 @@ private struct RideTierRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: RideSheetLayout.headerBottomPadding) {
                 LiiveIconCircle(systemName: tier.systemImage, color: isSelected ? .accent : .neutral)
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
+                VStack(alignment: .leading, spacing: RideSheetLayout.compactGap + RideSheetLayout.compactGap / 2) {
+                    HStack(spacing: RideSheetLayout.inlineGap) {
                         Text(tier.name)
                             .font(LiiveFont.headline)
                             .foregroundColor(LiiveColor.text)
@@ -178,7 +178,7 @@ private struct RideTierRow: View {
                         .foregroundColor(LiiveColor.textSecondary)
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
+                VStack(alignment: .trailing, spacing: RideSheetLayout.compactGap) {
                     Text(tier.price.ridePrice)
                         .font(LiiveFont.headline.monospacedDigit())
                         .fontWeight(.bold)
@@ -188,11 +188,11 @@ private struct RideTierRow: View {
                         .foregroundColor(LiiveColor.textSecondary)
                 }
             }
-            .padding(12)
+            .padding(RideSheetLayout.tierRowPadding)
             .background(LiiveColor.surfaceRaised)
             .overlay(
                 RoundedRectangle(cornerRadius: LiiveRadius.lg, style: .continuous)
-                    .strokeBorder(isSelected ? LiiveColor.accent : .clear, lineWidth: 1.5)
+                    .strokeBorder(isSelected ? LiiveColor.accent : .clear, lineWidth: RideSheetLayout.selectedBorderWidth)
             )
             .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.lg, style: .continuous))
         }

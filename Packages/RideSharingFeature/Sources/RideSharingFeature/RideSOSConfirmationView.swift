@@ -8,7 +8,7 @@ struct RideSOSConfirmationView: View {
         ZStack {
             LiiveColor.scrimStrong
                 .ignoresSafeArea()
-            VStack(spacing: 0) {
+            VStack(spacing: RideSheetLayout.stackedSpacing) {
                 Text("Emergency Alert")
                     .liiveStyle(.title3)
                     .foregroundColor(LiiveColor.text)
@@ -16,15 +16,15 @@ struct RideSOSConfirmationView: View {
                     .font(LiiveFont.footnote)
                     .foregroundColor(LiiveColor.textSecondary)
                     .multilineTextAlignment(.center)
-                    .padding(.top, 10)
-                    .padding(.bottom, 18)
-                VStack(spacing: 8) {
+                    .padding(.top, RideSheetLayout.sosMessageTopPadding)
+                    .padding(.bottom, RideSheetLayout.sosMessageBottomPadding)
+                VStack(spacing: RideSheetLayout.sosButtonGap) {
                     LiiveButton("Call Emergency Services", variant: .destructive, size: .lg, shape: .capsule, fullWidth: true, action: onEmergency)
                     LiiveButton("Cancel", variant: .plain, fullWidth: true, action: onCancel)
                 }
             }
-            .padding(22)
-            .frame(maxWidth: 300)
+            .padding(RideSheetLayout.sosPanelPadding)
+            .frame(maxWidth: RideSheetLayout.sosPanelMaxWidth)
             .background(LiiveColor.surface)
             .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.xl, style: .continuous))
         }
