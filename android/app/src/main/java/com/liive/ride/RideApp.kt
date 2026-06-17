@@ -22,6 +22,19 @@ import com.liive.ride.ui.*
 fun RideApp(viewModel: RideViewModel, darkTheme: Boolean = true) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    RideAppContent(
+        state = state,
+        onEvent = viewModel::onEvent,
+        darkTheme = darkTheme
+    )
+}
+
+@Composable
+internal fun RideAppContent(
+    state: RideUiState,
+    onEvent: (RideEvent) -> Unit,
+    darkTheme: Boolean = true
+) {
     LiiveTheme(darkTheme = darkTheme) {
         Box(Modifier.fillMaxSize().background(LiiveTheme.colors.bg)) {
             RideMapCanvas(
@@ -42,14 +55,14 @@ fun RideApp(viewModel: RideViewModel, darkTheme: Boolean = true) {
 
             RideTopChrome(
                 state = state,
-                onToggleMic = { viewModel.onEvent(RideEvent.ToggleMic) }
+                onToggleMic = { onEvent(RideEvent.ToggleMic) }
             )
 
             if (state.phase == RidePhase.Matching || state.phase == RidePhase.Enroute) {
                 LiiveSosButton(
                     size = RideChromeLayout.sosSize,
                     showLabel = false,
-                    onActivate = { viewModel.onEvent(RideEvent.PresentSOS(true)) },
+                    onActivate = { onEvent(RideEvent.PresentSOS(true)) },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(top = RideChromeLayout.sosTopInset, end = RideChromeLayout.sosEndPadding)
@@ -58,18 +71,18 @@ fun RideApp(viewModel: RideViewModel, darkTheme: Boolean = true) {
 
             Box(Modifier.align(Alignment.BottomCenter)) {
                 when (state.phase) {
-                    RidePhase.Destination -> RideDestinationSheet(viewModel::onEvent)
-                    RidePhase.Options -> RideOptionsSheet(state, viewModel::onEvent)
-                    RidePhase.Matching -> RideMatchingSheet(state, viewModel::onEvent)
-                    RidePhase.Enroute -> RideEnrouteSheet(state, viewModel::onEvent)
-                    RidePhase.Complete -> RideCompleteSheet(state, viewModel::onEvent)
+                    RidePhase.Destination -> RideDestinationSheet(onEvent)
+                    RidePhase.Options -> RideOptionsSheet(state, onEvent)
+                    RidePhase.Matching -> RideMatchingSheet(state, onEvent)
+                    RidePhase.Enroute -> RideEnrouteSheet(state, onEvent)
+                    RidePhase.Complete -> RideCompleteSheet(state, onEvent)
                 }
             }
 
             if (state.sosPresented) {
                 RideSOSConfirmation(
-                    onEmergency = { viewModel.onEvent(RideEvent.PresentSOS(false)) },
-                    onCancel = { viewModel.onEvent(RideEvent.PresentSOS(false)) }
+                    onEmergency = { onEvent(RideEvent.PresentSOS(false)) },
+                    onCancel = { onEvent(RideEvent.PresentSOS(false)) }
                 )
             }
         }

@@ -32,11 +32,17 @@ public final class RideSharingViewModel: ObservableObject {
     private var rideTask: Task<Void, Never>?
     private var activeSession: RideSession?
 
-    public init(service: RideSharingServicing = MockRideSharingService(), storage: UserDefaults = .standard) {
+    public init(
+        service: RideSharingServicing = MockRideSharingService(),
+        storage: UserDefaults = .standard,
+        initialState: RideUIState? = nil
+    ) {
         self.service = service
         self.storage = storage
-        self.state = Self.restoreState(from: storage, key: storageKey)
-        resumeTimelineIfNeeded()
+        self.state = initialState ?? Self.restoreState(from: storage, key: storageKey)
+        if initialState == nil {
+            resumeTimelineIfNeeded()
+        }
     }
 
     deinit {

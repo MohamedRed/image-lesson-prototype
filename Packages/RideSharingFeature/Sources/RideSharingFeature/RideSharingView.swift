@@ -6,11 +6,12 @@ public struct RideSharingView: View {
 
     public init(
         service: RideSharingServicing = MockRideSharingService(),
-        preferredColorScheme: ColorScheme? = .dark
+        preferredColorScheme: ColorScheme? = .dark,
+        initialState: RideUIState? = nil
     ) {
         LiiveFontRegistrar.registerBundledFonts()
         self.preferredColorScheme = preferredColorScheme
-        _viewModel = StateObject(wrappedValue: RideSharingViewModel(service: service))
+        _viewModel = StateObject(wrappedValue: RideSharingViewModel(service: service, initialState: initialState))
     }
 
     public var body: some View {
@@ -87,6 +88,18 @@ public struct RideSharingView: View {
 
 struct RideSharingView_Previews: PreviewProvider {
     static var previews: some View {
-        RideSharingView()
+        Group {
+            preview("1 Destination", state: RidePreviewStates.destination)
+            preview("2 Options", state: RidePreviewStates.options)
+            preview("3 Matching", state: RidePreviewStates.matching)
+            preview("4 Enroute", state: RidePreviewStates.enroute)
+            preview("5 Payment", state: RidePreviewStates.payment)
+            preview("6 Receipt", state: RidePreviewStates.receipt)
+        }
+    }
+
+    private static func preview(_ name: String, state: RideUIState) -> some View {
+        RideSharingView(initialState: state)
+            .previewDisplayName(name)
     }
 }
