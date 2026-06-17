@@ -31,7 +31,7 @@ enum RideSheetLayout {
     static let matchingDotLift = -(LiiveSpacing.s - LiiveSpacing.xs2 / 2)
     static let matchingDotDuration: Double = 0.6
     static let matchingDotDelay: Double = 0.16
-    static let matchingDescriptionMaxWidth: CGFloat = 280
+    static let matchingDescriptionMaxWidth = LiiveControl.xl * maxWidthColumnCount
     static let matchingContentTopPadding = LiiveSpacing.s
     static let matchingContentBottomPadding = LiiveSpacing.xxl - LiiveSpacing.xs2
 
@@ -57,5 +57,7 @@ enum RideSheetLayout {
     static let sosMessageBottomPadding = LiiveSpacing.xl - LiiveSpacing.xs2
     static let sosButtonGap = LiiveSpacing.s
     static let sosPanelPadding = LiiveSpacing.xxl - LiiveSpacing.xs2
-    static let sosPanelMaxWidth: CGFloat = 300
+    static let sosPanelMaxWidth = matchingDescriptionMaxWidth + LiiveSpacing.xl
+
+    private static let maxWidthColumnCount: CGFloat = 5
 }

@@ -36,7 +36,7 @@ internal object RideSheetLayout {
     const val matchingDotDurationMs = 600
     const val matchingDotDelayMs = 160
     val matchingMetaFontSize = 14.sp
-    val matchingDescriptionMaxWidth = 280.dp
+    val matchingDescriptionMaxWidth = LiiveControl.xl * MaxWidthColumnCount
     val matchingContentTopPadding = LiiveSpacing.s
     val matchingContentBottomPadding = LiiveSpacing.xxl - LiiveSpacing.xs2
 
@@ -63,5 +63,7 @@ internal object RideSheetLayout {
     val sosMessageBottomPadding = LiiveSpacing.xl - LiiveSpacing.xs2
     val sosButtonGap = LiiveSpacing.s
     val sosPanelPadding = LiiveSpacing.xxl - LiiveSpacing.xs2
-    val sosPanelMaxWidth = 300.dp
+    val sosPanelMaxWidth = matchingDescriptionMaxWidth + LiiveSpacing.xl
+
+    private const val MaxWidthColumnCount = 5f
 }
