@@ -89,17 +89,23 @@ public struct RideSharingView: View {
 struct RideSharingView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            preview("1 Destination", state: RidePreviewStates.destination)
-            preview("2 Options", state: RidePreviewStates.options)
-            preview("3 Matching", state: RidePreviewStates.matching)
-            preview("4 Enroute", state: RidePreviewStates.enroute)
-            preview("5 Payment", state: RidePreviewStates.payment)
-            preview("6 Receipt", state: RidePreviewStates.receipt)
+            preview("Dark 1 Destination", state: RidePreviewStates.destination, scheme: .dark)
+            preview("Dark 2 Options", state: RidePreviewStates.options, scheme: .dark)
+            preview("Dark 3 Matching", state: RidePreviewStates.matching, scheme: .dark)
+            preview("Dark 4 Enroute", state: RidePreviewStates.enroute, scheme: .dark)
+            preview("Dark 5 Payment", state: RidePreviewStates.payment, scheme: .dark)
+            preview("Dark 6 Receipt", state: RidePreviewStates.receipt, scheme: .dark)
+            preview("Light 1 Destination", state: RidePreviewStates.destination, scheme: .light)
+            preview("Light 2 Options", state: RidePreviewStates.options, scheme: .light)
+            preview("Light 3 Matching", state: RidePreviewStates.matching, scheme: .light)
+            preview("Light 4 Enroute", state: RidePreviewStates.enroute, scheme: .light)
+            preview("Light 5 Payment", state: RidePreviewStates.payment, scheme: .light)
+            preview("Light 6 Receipt", state: RidePreviewStates.receipt, scheme: .light)
         }
     }
 
-    private static func preview(_ name: String, state: RideUIState) -> some View {
-        RideSharingView(initialState: state)
+    private static func preview(_ name: String, state: RideUIState, scheme: ColorScheme) -> some View {
+        RideSharingView(preferredColorScheme: scheme, initialState: state)
             .previewDisplayName(name)
     }
 }
