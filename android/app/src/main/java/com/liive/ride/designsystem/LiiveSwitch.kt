@@ -20,7 +20,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun LiiveSwitch(
@@ -35,15 +34,15 @@ fun LiiveSwitch(
         label = "LiiveSwitchTrackColor"
     )
     val thumbOffset by animateDpAsState(
-        targetValue = if (checked) 20.dp else 0.dp,
+        targetValue = if (checked) LiiveSwitchLayout.ThumbTravel else LiiveSwitchLayout.ThumbRestOffset,
         animationSpec = tween(durationMillis = LiiveMotion.baseMs, easing = LiiveMotion.easeOut),
         label = "LiiveSwitchThumbOffset"
     )
 
     Box(
         Modifier
-            .size(width = 51.dp, height = 31.dp)
-            .alpha(if (disabled) 0.5f else 1f)
+            .size(width = LiiveSwitchLayout.TrackWidth, height = LiiveSwitchLayout.TrackHeight)
+            .alpha(if (disabled) LiiveSwitchLayout.DisabledOpacity else LiiveSwitchLayout.EnabledOpacity)
             .clip(LiiveRadius.full)
             .background(trackColor)
             .clickable(
@@ -51,16 +50,29 @@ fun LiiveSwitch(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) { onCheckedChange(!checked) }
-            .padding(2.dp),
+            .padding(LiiveSwitchLayout.TrackPadding),
         contentAlignment = Alignment.CenterStart
     ) {
         Box(
             Modifier
                 .offset(x = thumbOffset)
-                .size(27.dp)
-                .shadow(4.dp, CircleShape)
+                .size(LiiveSwitchLayout.ThumbSize)
+                .shadow(LiiveSwitchLayout.ThumbShadowRadius, CircleShape)
                 .clip(CircleShape)
-                .background(Color.White)
+                .background(LiiveSwitchLayout.ThumbColor)
         )
     }
+}
+
+private object LiiveSwitchLayout {
+    val TrackWidth = LiiveControl.lg + LiiveSpacing.xs2 / 2
+    val TrackHeight = LiiveSpacing.xxxl - LiiveSpacing.xs2 / 2
+    val TrackPadding = LiiveSpacing.xs2
+    val ThumbSize = TrackHeight - TrackPadding - TrackPadding
+    val ThumbRestOffset = LiiveSpacing.xs2 - LiiveSpacing.xs2
+    val ThumbTravel = TrackWidth - ThumbSize - TrackPadding - TrackPadding
+    val ThumbShadowRadius = LiiveSpacing.xs
+    val ThumbColor = Color.White
+    const val DisabledOpacity = 0.5f
+    const val EnabledOpacity = 1f
 }

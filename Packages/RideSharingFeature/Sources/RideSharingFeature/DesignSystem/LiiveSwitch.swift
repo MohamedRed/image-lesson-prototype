@@ -19,15 +19,20 @@ public struct LiiveSwitch: View {
             ZStack(alignment: .leading) {
                 Capsule()
                     .fill(isOn ? LiiveColor.success : LiiveColor.fill)
-                    .frame(width: 51, height: 31)
+                    .frame(width: LiiveSwitchLayout.trackWidth, height: LiiveSwitchLayout.trackHeight)
                 Circle()
-                    .fill(.white)
-                    .frame(width: 27, height: 27)
-                    .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 2)
-                    .offset(x: isOn ? 20 : 0)
-                    .padding(2)
+                    .fill(LiiveSwitchLayout.thumbColor)
+                    .frame(width: LiiveSwitchLayout.thumbSize, height: LiiveSwitchLayout.thumbSize)
+                    .shadow(
+                        color: LiiveSwitchLayout.thumbShadowColor,
+                        radius: LiiveSwitchLayout.thumbShadowRadius,
+                        x: LiiveSwitchLayout.thumbShadowX,
+                        y: LiiveSwitchLayout.thumbShadowY
+                    )
+                    .offset(x: isOn ? LiiveSwitchLayout.thumbTravel : LiiveSwitchLayout.thumbRestOffset)
+                    .padding(LiiveSwitchLayout.trackPadding)
             }
-            .opacity(disabled ? 0.5 : 1)
+            .opacity(disabled ? LiiveSwitchLayout.disabledOpacity : LiiveSwitchLayout.enabledOpacity)
         }
         .buttonStyle(.plain)
         .disabled(disabled)
@@ -35,4 +40,20 @@ public struct LiiveSwitch: View {
         .accessibilityValue(Text(isOn ? "On" : "Off"))
         .accessibilityAddTraits(isOn ? .isSelected : [])
     }
+}
+
+private enum LiiveSwitchLayout {
+    static let trackWidth = LiiveControl.lg + LiiveSpacing.xs2 / 2
+    static let trackHeight = LiiveSpacing.xxxl - LiiveSpacing.xs2 / 2
+    static let trackPadding = LiiveSpacing.xs2
+    static let thumbSize = trackHeight - trackPadding - trackPadding
+    static let thumbRestOffset = CGFloat.zero
+    static let thumbTravel = trackWidth - thumbSize - trackPadding - trackPadding
+    static let thumbShadowRadius = LiiveSpacing.xs
+    static let thumbShadowX = CGFloat.zero
+    static let thumbShadowY = LiiveSpacing.xs2
+    static let thumbShadowColor = Color.black.opacity(0.25)
+    static let thumbColor = Color.white
+    static let disabledOpacity = 0.5
+    static let enabledOpacity = 1.0
 }
