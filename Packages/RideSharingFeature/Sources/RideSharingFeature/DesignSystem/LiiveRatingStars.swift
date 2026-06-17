@@ -6,10 +6,15 @@ import SwiftUI
 public struct LiiveRatingStars: View {
     let value: Double
     var max: Int = 5
-    var size: CGFloat = 14
+    var size: CGFloat = LiiveSpacing.m + LiiveSpacing.xs2
     var showValue: Bool = true
 
-    public init(value: Double, max: Int = 5, size: CGFloat = 14, showValue: Bool = true) {
+    public init(
+        value: Double,
+        max: Int = 5,
+        size: CGFloat = LiiveSpacing.m + LiiveSpacing.xs2,
+        showValue: Bool = true
+    ) {
         self.value = value; self.max = max; self.size = size; self.showValue = showValue
     }
 
@@ -24,7 +29,7 @@ public struct LiiveRatingStars: View {
     }
 
     private func row(_ color: Color) -> some View {
-        HStack(spacing: 1) {
+        HStack(spacing: LiiveRatingStarsLayout.starSpacing) {
             ForEach(0..<starCount, id: \.self) { _ in
                 RatingStarShape()
                     .fill(color)
@@ -34,7 +39,7 @@ public struct LiiveRatingStars: View {
     }
 
     public var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: LiiveRatingStarsLayout.valueSpacing) {
             ZStack(alignment: .leading) {
                 row(LiiveColor.fill)
                 row(LiiveColor.star)
@@ -46,11 +51,21 @@ public struct LiiveRatingStars: View {
             }
             if showValue {
                 Text(String(format: "%.1f", value))
-                    .font(Font.custom(LiiveFont.family, size: size - 1).weight(.semibold).monospacedDigit())
+                    .font(
+                        Font.custom(LiiveFont.family, size: size - LiiveRatingStarsLayout.valueFontDelta)
+                            .weight(.semibold)
+                            .monospacedDigit()
+                    )
                     .foregroundColor(LiiveColor.text)
             }
         }
     }
+}
+
+private enum LiiveRatingStarsLayout {
+    static let starSpacing = LiiveSpacing.xs2 / 2
+    static let valueSpacing = LiiveSpacing.xs + LiiveSpacing.xs2 / 2
+    static let valueFontDelta = LiiveSpacing.xs2 / 2
 }
 
 private struct RatingStarShape: Shape {

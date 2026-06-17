@@ -13,14 +13,21 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun LiiveRatingStars(value: Double, max: Int = 5, size: Dp = 14.dp, showValue: Boolean = true) {
+fun LiiveRatingStars(
+    value: Double,
+    max: Int = 5,
+    size: Dp = LiiveSpacing.m + LiiveSpacing.xs2,
+    showValue: Boolean = true
+) {
     val c = LiiveTheme.colors
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(LiiveRatingStarsLayout.ValueSpacing)
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(LiiveRatingStarsLayout.StarSpacing)) {
             for (i in 0 until max) {
                 val fraction = (value - i).coerceIn(0.0, 1.0).toFloat()
                 Box(Modifier.size(size)) {
@@ -37,10 +44,16 @@ fun LiiveRatingStars(value: Double, max: Int = 5, size: Dp = 14.dp, showValue: B
                 String.format("%.1f", value),
                 color = c.text,
                 style = MaterialTheme.typography.labelMedium.tabularNumbers().copy(
-                    fontSize = (size.value - 1).sp,
+                    fontSize = (size.value - LiiveRatingStarsLayout.ValueFontDelta.value).sp,
                     fontWeight = FontWeight.SemiBold
                 )
             )
         }
     }
+}
+
+private object LiiveRatingStarsLayout {
+    val StarSpacing = LiiveSpacing.xs2 / 2
+    val ValueSpacing = LiiveSpacing.xs + LiiveSpacing.xs2 / 2
+    val ValueFontDelta = LiiveSpacing.xs2 / 2
 }
