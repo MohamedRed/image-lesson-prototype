@@ -3,6 +3,7 @@ import SwiftUI
 enum RideChromeLayout {
     static let topInset = LiiveSpacing.safeTop + LiiveSpacing.m + LiiveSpacing.xs2
     static let horizontalPadding = LiiveSpacing.screenGutter
+    static let glassPanelPadding = LiiveSpacing.xs2 - LiiveSpacing.xs2
     static let badgeHorizontalPadding = LiiveSpacing.m
     static let badgeVerticalPadding = LiiveSpacing.s - LiiveSpacing.xs2 / 2
     static let placeholderSize = LiiveSpacing.xs2 / 2

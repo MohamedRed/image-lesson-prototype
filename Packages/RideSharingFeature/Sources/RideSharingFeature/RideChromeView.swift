@@ -8,7 +8,7 @@ struct RideChromeView: View {
     var body: some View {
         HStack(alignment: .top) {
             if state.phase == .enroute {
-                LiiveGlassPanel(material: .thin, cornerRadius: LiiveRadius.full, padding: 0) {
+                LiiveGlassPanel(material: .thin, cornerRadius: LiiveRadius.full, padding: RideChromeLayout.glassPanelPadding) {
                     LiiveBadge("Voice connected", color: .success, dot: true)
                         .padding(.horizontal, RideChromeLayout.badgeHorizontalPadding)
                         .padding(.vertical, RideChromeLayout.badgeVerticalPadding)
@@ -35,7 +35,7 @@ struct RideChromeView: View {
 
     private func chromeButton(systemName: String, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            LiiveGlassPanel(material: .thin, cornerRadius: LiiveRadius.full, padding: 0) {
+            LiiveGlassPanel(material: .thin, cornerRadius: LiiveRadius.full, padding: RideChromeLayout.glassPanelPadding) {
                 Image(systemName: systemName)
                     .font(.system(size: RideChromeLayout.buttonIconSize, weight: RideChromeLayout.buttonIconWeight))
                     .foregroundColor(color)

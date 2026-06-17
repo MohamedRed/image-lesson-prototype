@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.liive.ride.designsystem.*
 import com.liive.ride.ui.*
@@ -110,7 +109,7 @@ private fun RideTopChrome(state: RideUiState, onToggleMic: () -> Unit) {
         verticalAlignment = Alignment.Top
     ) {
         if (state.phase == RidePhase.Enroute) {
-            LiiveGlassPanel(material = GlassMaterial.Thin, shape = LiiveRadius.full, padding = 0.dp) {
+            LiiveGlassPanel(material = GlassMaterial.Thin, shape = LiiveRadius.full, padding = RideChromeLayout.glassPanelPadding) {
                 Box(
                     Modifier.padding(
                         horizontal = RideChromeLayout.badgeHorizontalPadding,
@@ -152,7 +151,7 @@ private fun ChromeButton(
         modifier = Modifier.size(RideChromeLayout.buttonSize).clickableNoRipple(onClick),
         material = GlassMaterial.Thin,
         shape = LiiveRadius.full,
-        padding = 0.dp
+        padding = RideChromeLayout.glassPanelPadding
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Icon(painterResource(icon), null, tint = tint, modifier = Modifier.size(RideChromeLayout.buttonIconSize))
