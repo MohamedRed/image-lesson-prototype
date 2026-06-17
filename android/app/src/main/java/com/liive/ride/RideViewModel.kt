@@ -77,7 +77,9 @@ class RideViewModel(
         val config = mutableState.value.config
         updateState { it.copy(phase = RidePhase.Matching, paid = false, rating = 0, carProgress = 0f) }
         matchingJob = viewModelScope.launch {
-            activeSession = service.requestRide(config)
+            val session = service.requestRide(config)
+            activeSession = session
+            updateState { it.copy(driver = session.driver()) }
             delay(2_600)
             onEvent(RideEvent.MatchingComplete)
         }

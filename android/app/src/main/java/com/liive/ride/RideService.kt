@@ -4,6 +4,7 @@ data class RideSession(
     val id: String,
     val voiceRoomName: String,
     val driverName: String,
+    val driverRating: Double,
     val vehicle: String,
     val plate: String,
 )
@@ -23,14 +24,17 @@ interface RideService {
 }
 
 class MockRideService : RideService {
-    override suspend fun requestRide(config: RideConfig): RideSession =
-        RideSession(
+    override suspend fun requestRide(config: RideConfig): RideSession {
+        val driver = RideFixtures.driver
+        return RideSession(
             id = "ride_mock_001",
             voiceRoomName = "ride_mock_001",
-            driverName = "John Driver",
-            vehicle = "Toyota Camry · Blue",
-            plate = "ABC 123",
+            driverName = driver.name,
+            driverRating = driver.rating,
+            vehicle = driver.vehicle,
+            plate = driver.plate,
         )
+    }
 
     override fun cancelRide(session: RideSession?) = Unit
 
@@ -41,3 +45,6 @@ class MockRideService : RideService {
 
     override suspend fun submitRating(rating: Int, session: RideSession?) = Unit
 }
+
+fun RideSession.driver(): RideDriver =
+    RideDriver(name = driverName, rating = driverRating, vehicle = vehicle, plate = plate)

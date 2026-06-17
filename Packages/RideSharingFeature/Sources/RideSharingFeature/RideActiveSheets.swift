@@ -60,6 +60,7 @@ struct RideEnrouteSheetView: View {
     @ObservedObject var viewModel: RideSharingViewModel
 
     private var config: RideConfiguration { viewModel.state.config }
+    private var driver: RideDriver { viewModel.state.driver }
 
     var body: some View {
         LiiveBottomSheet {
@@ -75,10 +76,10 @@ struct RideEnrouteSheetView: View {
             .padding(.bottom, 12)
 
             LiiveDriverCard(
-                name: "John Driver",
-                rating: 4.8,
-                vehicle: "Toyota Camry · Blue",
-                plate: "ABC 123",
+                name: driver.name,
+                rating: driver.rating,
+                vehicle: driver.vehicle,
+                plate: driver.plate,
                 eta: config.isMultiLeg ? "3 min" : "4 min",
                 speaking: true
             ) {
@@ -140,6 +141,7 @@ struct RideCompleteSheetView: View {
     @ObservedObject var viewModel: RideSharingViewModel
 
     private var config: RideConfiguration { viewModel.state.config }
+    private var driver: RideDriver { viewModel.state.driver }
     private var fare: Double { config.price }
     private var base: Double { (fare / 1.0875 * 100).rounded() / 100 }
     private var tax: Double { ((fare - base) * 100).rounded() / 100 }
@@ -160,7 +162,7 @@ struct RideCompleteSheetView: View {
                     .liiveStyle(.title2)
                     .foregroundColor(LiiveColor.text)
                     .padding(.top, 14)
-                Text("\(fare.ridePrice) paid to John · receipt sent")
+                Text("\(fare.ridePrice) paid to \(driver.firstName) · receipt sent")
                     .font(LiiveFont.subhead.monospacedDigit())
                     .foregroundColor(LiiveColor.textSecondary)
                     .padding(.top, 6)
@@ -248,5 +250,11 @@ struct RideCompleteSheetView: View {
             }
         }
         .padding(.bottom, 16)
+    }
+}
+
+private extension RideDriver {
+    var firstName: String {
+        name.split(separator: " ").first.map(String.init) ?? name
     }
 }

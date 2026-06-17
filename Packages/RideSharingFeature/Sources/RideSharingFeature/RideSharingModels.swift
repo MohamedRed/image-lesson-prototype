@@ -109,10 +109,25 @@ public struct RideConfiguration: Codable, Equatable {
     public var isMultiLeg: Bool { tier.isMultiLeg }
 }
 
+public struct RideDriver: Codable, Equatable {
+    public let name: String
+    public let rating: Double
+    public let vehicle: String
+    public let plate: String
+
+    public init(name: String, rating: Double, vehicle: String, plate: String) {
+        self.name = name
+        self.rating = rating
+        self.vehicle = vehicle
+        self.plate = plate
+    }
+}
+
 public struct RideUIState: Codable, Equatable {
     public var phase: RidePhase = .destination
     public var destination: RideDestination?
     public var config = RideConfiguration()
+    public var driver = RideFixtures.driver
     public var paid = false
     public var rating = 0
     public var micEnabled = true
@@ -120,9 +135,41 @@ public struct RideUIState: Codable, Equatable {
     public var isSOSPresented = false
 
     public init() {}
+
+    private enum CodingKeys: String, CodingKey {
+        case phase
+        case destination
+        case config
+        case driver
+        case paid
+        case rating
+        case micEnabled
+        case carProgress
+        case isSOSPresented
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        phase = try container.decodeIfPresent(RidePhase.self, forKey: .phase) ?? .destination
+        destination = try container.decodeIfPresent(RideDestination.self, forKey: .destination)
+        config = try container.decodeIfPresent(RideConfiguration.self, forKey: .config) ?? RideConfiguration()
+        driver = try container.decodeIfPresent(RideDriver.self, forKey: .driver) ?? RideFixtures.driver
+        paid = try container.decodeIfPresent(Bool.self, forKey: .paid) ?? false
+        rating = try container.decodeIfPresent(Int.self, forKey: .rating) ?? 0
+        micEnabled = try container.decodeIfPresent(Bool.self, forKey: .micEnabled) ?? true
+        carProgress = try container.decodeIfPresent(Double.self, forKey: .carProgress) ?? 0
+        isSOSPresented = try container.decodeIfPresent(Bool.self, forKey: .isSOSPresented) ?? false
+    }
 }
 
 enum RideFixtures {
+    static let driver = RideDriver(
+        name: "John Driver",
+        rating: 4.8,
+        vehicle: "Toyota Camry · Blue",
+        plate: "ABC 123"
+    )
+
     static let destinations = [
         RideDestination(id: "home", systemImage: "house.fill", color: "accent", title: "Home", subtitle: "1208 Sutter St"),
         RideDestination(id: "work", systemImage: "briefcase.fill", color: "neutral", title: "Work", subtitle: "455 Market St, Floor 12"),

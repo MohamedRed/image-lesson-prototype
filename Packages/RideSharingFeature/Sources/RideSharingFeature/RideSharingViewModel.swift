@@ -118,6 +118,9 @@ public final class RideSharingViewModel: ObservableObject {
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 self.activeSession = session
+                if let session {
+                    self.mutate { $0.driver = session.driver }
+                }
             }
             try? await Task.sleep(nanoseconds: 2_600_000_000)
             guard !Task.isCancelled else { return }

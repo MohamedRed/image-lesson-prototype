@@ -24,6 +24,12 @@ class RideStateStore(context: Context) {
                     childSeat = json.optBoolean("childSeat", false),
                     destinationName = json.optString("destinationName", "Union Square")
                 ),
+                driver = RideDriver(
+                    name = json.optString("driverName", RideFixtures.driver.name),
+                    rating = json.optDouble("driverRating", RideFixtures.driver.rating),
+                    vehicle = json.optString("driverVehicle", RideFixtures.driver.vehicle),
+                    plate = json.optString("driverPlate", RideFixtures.driver.plate)
+                ),
                 paid = json.optBoolean("paid", false),
                 rating = json.optInt("rating", 0).coerceIn(0, 5),
                 micEnabled = json.optBoolean("micEnabled", true),
@@ -46,6 +52,10 @@ class RideStateStore(context: Context) {
             .put("femaleOnly", state.config.femaleOnly)
             .put("childSeat", state.config.childSeat)
             .put("destinationName", state.config.destinationName)
+            .put("driverName", state.driver.name)
+            .put("driverRating", state.driver.rating)
+            .put("driverVehicle", state.driver.vehicle)
+            .put("driverPlate", state.driver.plate)
             .put("paid", state.paid)
             .put("rating", state.rating)
             .put("micEnabled", state.micEnabled)

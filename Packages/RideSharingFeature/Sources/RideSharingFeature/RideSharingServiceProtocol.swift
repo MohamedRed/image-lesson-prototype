@@ -4,6 +4,7 @@ public struct RideSession: Codable, Equatable, Identifiable {
     public let id: String
     public let voiceRoomName: String
     public let driverName: String
+    public let driverRating: Double
     public let vehicle: String
     public let plate: String
 
@@ -11,14 +12,20 @@ public struct RideSession: Codable, Equatable, Identifiable {
         id: String,
         voiceRoomName: String,
         driverName: String,
+        driverRating: Double,
         vehicle: String,
         plate: String
     ) {
         self.id = id
         self.voiceRoomName = voiceRoomName
         self.driverName = driverName
+        self.driverRating = driverRating
         self.vehicle = vehicle
         self.plate = plate
+    }
+
+    public var driver: RideDriver {
+        RideDriver(name: driverName, rating: driverRating, vehicle: vehicle, plate: plate)
     }
 }
 
@@ -46,12 +53,14 @@ public final class MockRideSharingService: RideSharingServicing {
     public init() {}
 
     public func requestRide(with config: RideConfiguration) async throws -> RideSession {
-        RideSession(
+        let driver = RideFixtures.driver
+        return RideSession(
             id: "ride_mock_001",
             voiceRoomName: "ride_mock_001",
-            driverName: "John Driver",
-            vehicle: "Toyota Camry · Blue",
-            plate: "ABC 123"
+            driverName: driver.name,
+            driverRating: driver.rating,
+            vehicle: driver.vehicle,
+            plate: driver.plate
         )
     }
 

@@ -36,10 +36,18 @@ data class RideConfig(
     val destinationName: String = "Union Square",
 )
 
+data class RideDriver(
+    val name: String,
+    val rating: Double,
+    val vehicle: String,
+    val plate: String,
+)
+
 data class RideUiState(
     val phase: RidePhase = RidePhase.Destination,
     val destination: RideDestination? = null,
     val config: RideConfig = RideConfig(),
+    val driver: RideDriver = RideFixtures.driver,
     val paid: Boolean = false,
     val rating: Int = 0,
     val micEnabled: Boolean = true,
@@ -69,6 +77,13 @@ sealed interface RideEvent {
 }
 
 object RideFixtures {
+    val driver = RideDriver(
+        name = "John Driver",
+        rating = 4.8,
+        vehicle = "Toyota Camry · Blue",
+        plate = "ABC 123",
+    )
+
     val destinations = listOf(
         RideDestination("home", RideIcons.Home, IconCircleColor.Accent, "Home", "1208 Sutter St"),
         RideDestination("work", RideIcons.Work, IconCircleColor.Neutral, "Work", "455 Market St, Floor 12"),
@@ -83,3 +98,5 @@ object RideFixtures {
 }
 
 fun Double.ridePrice(): String = "$" + "%,.2f".format(this)
+
+fun RideDriver.firstName(): String = name.substringBefore(" ")

@@ -86,6 +86,7 @@ fun RideMatchingSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
 fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
     val c = LiiveTheme.colors
     val config = state.config
+    val driver = state.driver
     LiiveBottomSheet {
         Row(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
             Text(
@@ -103,10 +104,10 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             )
         }
         LiiveDriverCard(
-            name = "John Driver",
-            rating = 4.8,
-            vehicle = "Toyota Camry · Blue",
-            plate = "ABC 123",
+            name = driver.name,
+            rating = driver.rating,
+            vehicle = driver.vehicle,
+            plate = driver.plate,
             eta = if (config.tier.multiLeg) "3 min" else "4 min",
             speaking = true
         ) {
@@ -184,7 +185,7 @@ private fun PaidReceiptSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
         Column(Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             LiiveIconCircle(RideIcons.Check, IconCircleColor.Success, 56.dp, filled = true)
             Text("Thanks for riding", color = c.text, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 14.dp))
-            Text("${state.config.tier.price.ridePrice()} paid to John · receipt sent", color = c.textSecondary, style = MaterialTheme.typography.titleMedium.tabularNumbers(), modifier = Modifier.padding(top = 6.dp))
+            Text("${state.config.tier.price.ridePrice()} paid to ${state.driver.firstName()} · receipt sent", color = c.textSecondary, style = MaterialTheme.typography.titleMedium.tabularNumbers(), modifier = Modifier.padding(top = 6.dp))
         }
         Spacer(Modifier.height(20.dp))
         LiiveButton(
