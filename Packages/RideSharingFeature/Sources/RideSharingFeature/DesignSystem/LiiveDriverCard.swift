@@ -22,36 +22,53 @@ public struct LiiveDriverCard<Trailing: View>: View {
     }
 
     public var body: some View {
-        HStack(spacing: 14) {
-            LiiveAvatar(name: name, image: avatarImage, size: 54, ring: speaking)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 8) {
+        HStack(spacing: LiiveDriverCardLayout.rowSpacing) {
+            LiiveAvatar(name: name, image: avatarImage, size: LiiveDriverCardLayout.avatarSize, ring: speaking)
+            VStack(alignment: .leading, spacing: LiiveDriverCardLayout.textSpacing) {
+                HStack(spacing: LiiveDriverCardLayout.titleRatingSpacing) {
                     Text(name).font(LiiveFont.headline).foregroundColor(LiiveColor.text)
-                    if let rating { LiiveRatingStars(value: rating, size: 13) }
+                    if let rating { LiiveRatingStars(value: rating, size: LiiveDriverCardLayout.ratingStarSize) }
                 }
                 if vehicle != nil || plate != nil {
                     HStack(spacing: 0) {
                         if let vehicle { Text(vehicle).foregroundColor(LiiveColor.textSecondary) }
                         if vehicle != nil && plate != nil { Text(" · ").foregroundColor(LiiveColor.textSecondary) }
-                        if let plate { Text(plate).fontWeight(.semibold).tracking(0.5).foregroundColor(LiiveColor.text) }
+                        if let plate {
+                            Text(plate)
+                                .fontWeight(.semibold)
+                                .tracking(LiiveDriverCardLayout.plateTracking)
+                                .foregroundColor(LiiveColor.text)
+                        }
                     }
-                    .font(Font.custom(LiiveFont.family, size: 14))
+                    .font(LiiveFont.sheetMeta)
                     .lineLimit(1)
-                    .padding(.top, 2)
+                    .padding(.top, LiiveDriverCardLayout.secondaryLineTopPadding)
                 }
             }
-            Spacer(minLength: 8)
+            Spacer(minLength: LiiveDriverCardLayout.spacerMinLength)
             if let eta {
-                VStack(alignment: .trailing, spacing: 2) {
+                VStack(alignment: .trailing, spacing: LiiveDriverCardLayout.textSpacing) {
                     Text(eta).font(LiiveFont.title2.monospacedDigit()).foregroundColor(LiiveColor.accent)
                     Text("away").font(LiiveFont.caption2).foregroundColor(LiiveColor.textSecondary)
                 }
             }
             trailing
         }
-        .padding(14)
+        .padding(LiiveDriverCardLayout.cardPadding)
         .background(LiiveColor.surface)
         .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.lg, style: .continuous))
         .liiveShadow(.card)
     }
+}
+
+private enum LiiveDriverCardLayout {
+    static let rowSpacing = LiiveSpacing.m + LiiveSpacing.xs2
+    static let titleRatingSpacing = LiiveSpacing.s
+    static let textSpacing = LiiveSpacing.xs2
+    static let avatarSize = LiiveControl.xl - LiiveSpacing.xs2
+    static let ratingStarSize = LiiveSpacing.m + LiiveSpacing.xs2 / 2
+    static let secondaryLineTopPadding = LiiveSpacing.xs2
+    static let spacerMinLength = LiiveSpacing.s
+    static let plateTracking = LiiveSpacing.xs2 / 4
+    static let cardPadding = rowSpacing
 }

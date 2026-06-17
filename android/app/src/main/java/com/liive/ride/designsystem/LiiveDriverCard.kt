@@ -14,7 +14,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
@@ -34,19 +33,24 @@ fun LiiveDriverCard(
             .shadow(LiiveElevation.card, LiiveRadius.lg)
             .clip(LiiveRadius.lg)
             .background(c.surface)
-            .padding(14.dp),
+            .padding(LiiveDriverCardLayout.CardPadding),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp)
+        horizontalArrangement = Arrangement.spacedBy(LiiveDriverCardLayout.RowSpacing)
     ) {
-        LiiveAvatar(name = name, size = 54.dp, ring = speaking, image = avatarPainter)
+        LiiveAvatar(name = name, size = LiiveDriverCardLayout.AvatarSize, ring = speaking, image = avatarPainter)
         Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(LiiveDriverCardLayout.TitleRatingSpacing)
+            ) {
                 Text(name, color = c.text, style = MaterialTheme.typography.titleLarge)
-                if (rating != null) LiiveRatingStars(value = rating, size = 13.dp)
+                if (rating != null) LiiveRatingStars(value = rating, size = LiiveDriverCardLayout.RatingStarSize)
             }
             if (vehicle != null || plate != null) {
-                val vehicleStyle = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp)
-                Row(Modifier.fillMaxWidth().padding(top = 2.dp)) {
+                val vehicleStyle = MaterialTheme.typography.titleMedium.copy(
+                    fontSize = LiiveDriverCardLayout.VehicleFontSize
+                )
+                Row(Modifier.fillMaxWidth().padding(top = LiiveDriverCardLayout.SecondaryLineTopPadding)) {
                     if (vehicle != null) {
                         Text(
                             vehicle,
@@ -65,7 +69,7 @@ fun LiiveDriverCard(
                             plate,
                             color = c.text,
                             fontWeight = FontWeight.SemiBold,
-                            style = vehicleStyle.copy(letterSpacing = 0.5.sp),
+                            style = vehicleStyle.copy(letterSpacing = LiiveDriverCardLayout.PlateLetterSpacing),
                             maxLines = 1
                         )
                     }
@@ -73,11 +77,26 @@ fun LiiveDriverCard(
             }
         }
         if (eta != null) {
-            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(LiiveDriverCardLayout.TextSpacing)
+            ) {
                 Text(eta, color = c.accent, style = MaterialTheme.typography.headlineMedium.tabularNumbers())
                 Text("away", color = c.textSecondary, style = MaterialTheme.typography.labelSmall)
             }
         }
         trailing?.invoke()
     }
+}
+
+private object LiiveDriverCardLayout {
+    val RowSpacing = LiiveSpacing.m + LiiveSpacing.xs2
+    val TitleRatingSpacing = LiiveSpacing.s
+    val TextSpacing = LiiveSpacing.xs2
+    val AvatarSize = LiiveControl.xl - LiiveSpacing.xs2
+    val RatingStarSize = LiiveSpacing.m + LiiveSpacing.xs2 / 2
+    val SecondaryLineTopPadding = LiiveSpacing.xs2
+    val VehicleFontSize = (LiiveSpacing.m + LiiveSpacing.xs2).value.sp
+    val PlateLetterSpacing = (LiiveSpacing.xs2.value / 4).sp
+    val CardPadding = RowSpacing
 }
