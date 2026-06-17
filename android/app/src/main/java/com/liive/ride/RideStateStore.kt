@@ -1,7 +1,9 @@
 package com.liive.ride
 
 import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import org.json.JSONObject
+import javax.inject.Inject
 
 interface RideStateStoring {
     fun read(): RideUiState
@@ -9,7 +11,9 @@ interface RideStateStoring {
     fun clear()
 }
 
-class RideStateStore(context: Context) : RideStateStoring {
+class RideStateStore @Inject constructor(
+    @ApplicationContext context: Context
+) : RideStateStoring {
     private val preferences = context.getSharedPreferences("liive_ride_state", Context.MODE_PRIVATE)
 
     override fun read(): RideUiState {

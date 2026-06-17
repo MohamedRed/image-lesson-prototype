@@ -1,5 +1,7 @@
 package com.liive.ride
 
+import javax.inject.Inject
+
 data class RideSession(
     val id: String,
     val voiceRoomName: String,
@@ -24,7 +26,7 @@ interface RideService {
     suspend fun submitRating(rating: Int, session: RideSession?)
 }
 
-class MockRideService : RideService {
+class MockRideService @Inject constructor() : RideService {
     override suspend fun requestRide(config: RideConfig): RideSession {
         val driver = RideFixtures.driver
         return RideSession(

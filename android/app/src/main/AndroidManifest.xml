@@ -2,6 +2,7 @@
     <application
         android:allowBackup="false"
         android:label="Liive Ride"
+        android:name=".LiiveRideApplication"
         android:supportsRtl="true"
         android:theme="@style/Theme.LiiveRide">
         <activity

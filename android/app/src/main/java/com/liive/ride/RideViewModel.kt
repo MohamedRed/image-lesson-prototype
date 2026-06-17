@@ -1,9 +1,8 @@
 package com.liive.ride
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,8 +11,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.math.round
+import javax.inject.Inject
 
-class RideViewModel(
+@HiltViewModel
+class RideViewModel @Inject constructor(
     private val stateStore: RideStateStoring,
     private val service: RideService,
 ) : ViewModel() {
@@ -161,21 +162,5 @@ class RideViewModel(
             service.capturePayment(config.tier.price, config.destinationName)
             updateState { it.copy(paid = true) }
         }
-    }
-
-    companion object {
-        fun mockFactory(stateStore: RideStateStoring): ViewModelProvider.Factory =
-            factory(stateStore, MockRideService())
-
-        fun factory(
-            stateStore: RideStateStoring,
-            service: RideService,
-        ): ViewModelProvider.Factory =
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-                    return RideViewModel(stateStore, service) as T
-                }
-            }
     }
 }
