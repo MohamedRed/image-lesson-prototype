@@ -52,6 +52,7 @@ struct RideMatchingSheetView: View {
                 viewModel.handle(.cancelMatching)
             }
         }
+        .accessibilityIdentifier(RideAccessibilityIdentifier.matchingSheet)
         .onAppear { animate = true }
     }
 }
@@ -105,6 +106,7 @@ struct RideEnrouteSheetView: View {
             }
             .padding(.top, 14)
         }
+        .accessibilityIdentifier(RideAccessibilityIdentifier.enrouteSheet)
     }
 
     private func multiLegPanel(transferStatus: String) -> some View {
@@ -175,6 +177,7 @@ struct RideCompleteSheetView: View {
             }
             .padding(.top, 20)
         }
+        .accessibilityIdentifier(RideAccessibilityIdentifier.receiptSheet)
     }
 
     private var paymentSheet: some View {
@@ -230,6 +233,7 @@ struct RideCompleteSheetView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.top, 10)
         }
+        .accessibilityIdentifier(RideAccessibilityIdentifier.paymentSheet)
     }
 
     private var ratingControl: some View {

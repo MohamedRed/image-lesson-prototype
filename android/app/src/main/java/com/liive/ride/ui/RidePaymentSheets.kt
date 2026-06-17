@@ -17,11 +17,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.liive.ride.RideEvent
+import com.liive.ride.RideTestTags
 import com.liive.ride.RideUiState
 import com.liive.ride.fareBreakdown
 import com.liive.ride.firstName
@@ -43,7 +45,7 @@ import com.liive.ride.designsystem.tabularNumbers
 internal fun PaidReceiptSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
     val c = LiiveTheme.colors
     val fare = state.config.fareBreakdown()
-    LiiveBottomSheet {
+    LiiveBottomSheet(modifier = Modifier.testTag(RideTestTags.ReceiptSheet)) {
         Column(Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             LiiveIconCircle(RideIcons.Check, IconCircleColor.Success, 56.dp, filled = true)
             Text("Thanks for riding", color = c.text, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 14.dp))
@@ -64,7 +66,7 @@ internal fun PaidReceiptSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) 
 internal fun PaymentSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
     val c = LiiveTheme.colors
     val fare = state.config.fareBreakdown()
-    LiiveBottomSheet {
+    LiiveBottomSheet(modifier = Modifier.testTag(RideTestTags.PaymentSheet)) {
         Row(Modifier.fillMaxWidth().padding(bottom = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             LiiveIconCircle(RideIcons.Flag, IconCircleColor.Success, 36.dp, filled = true)
             Column(Modifier.weight(1f)) {

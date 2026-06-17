@@ -30,6 +30,7 @@ struct RideChromeView: View {
         }
         .padding(.horizontal, RideChromeLayout.horizontalPadding)
         .padding(.top, RideChromeLayout.topInset)
+        .accessibilityIdentifier(RideAccessibilityIdentifier.topChrome)
     }
 
     private func chromeButton(systemName: String, color: Color, action: @escaping () -> Void) -> some View {

@@ -24,6 +24,7 @@ public struct RideSharingView: View {
                 tripSummary: viewModel.state.tripSummary
             )
             .ignoresSafeArea()
+            .accessibilityIdentifier(RideAccessibilityIdentifier.map)
 
             if viewModel.state.phase == .complete {
                 LiiveColor.scrimSubtle
@@ -49,6 +50,7 @@ public struct RideSharingView: View {
                         }
                         .padding(.trailing, RideChromeLayout.sosTrailingPadding)
                         .padding(.top, RideChromeLayout.sosTopInset)
+                        .accessibilityIdentifier(RideAccessibilityIdentifier.sosButton)
                     }
                     Spacer()
                 }
@@ -67,6 +69,7 @@ public struct RideSharingView: View {
         .background(LiiveColor.bg)
         .preferredColorScheme(preferredColorScheme)
         .animation(.easeInOut(duration: LiiveMotion.base), value: viewModel.state.phase)
+        .accessibilityIdentifier(RideAccessibilityIdentifier.root)
     }
 
     @ViewBuilder

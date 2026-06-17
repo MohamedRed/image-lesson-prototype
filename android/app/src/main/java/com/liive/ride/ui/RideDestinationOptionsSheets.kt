@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -21,7 +22,7 @@ import com.liive.ride.designsystem.*
 @Composable
 fun RideDestinationSheet(onEvent: (RideEvent) -> Unit) {
     val c = LiiveTheme.colors
-    LiiveBottomSheet {
+    LiiveBottomSheet(modifier = Modifier.testTag(RideTestTags.DestinationSheet)) {
         Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Where to?", color = c.text, style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.weight(1f))
@@ -61,7 +62,7 @@ fun RideDestinationSheet(onEvent: (RideEvent) -> Unit) {
 @Composable
 fun RideOptionsSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
     val c = LiiveTheme.colors
-    LiiveBottomSheet {
+    LiiveBottomSheet(modifier = Modifier.testTag(RideTestTags.OptionsSheet)) {
         Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier.size(32.dp).clip(LiiveRadius.full).background(c.fillTertiary)

@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -31,7 +32,7 @@ fun RideMatchingSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
     val c = LiiveTheme.colors
     val transition = rememberInfiniteTransition(label = "matching")
 
-    LiiveBottomSheet {
+    LiiveBottomSheet(modifier = Modifier.testTag(RideTestTags.MatchingSheet)) {
         Column(
             Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 22.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -87,7 +88,7 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
     val c = LiiveTheme.colors
     val config = state.config
     val driver = state.driver
-    LiiveBottomSheet {
+    LiiveBottomSheet(modifier = Modifier.testTag(RideTestTags.EnrouteSheet)) {
         Row(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
             Text(
                 state.tripSummary.enrouteTitle,
@@ -181,7 +182,13 @@ fun RideCompleteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
 @Composable
 fun RideSOSConfirmation(onEmergency: () -> Unit, onCancel: () -> Unit) {
     val c = LiiveTheme.colors
-    Box(Modifier.fillMaxSize().background(c.scrimStrong), contentAlignment = Alignment.Center) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(c.scrimStrong)
+            .testTag(RideTestTags.SosConfirmation),
+        contentAlignment = Alignment.Center
+    ) {
         Column(
             Modifier.widthIn(max = 300.dp).clip(LiiveRadius.xl).background(c.surface).padding(22.dp),
             horizontalAlignment = Alignment.CenterHorizontally

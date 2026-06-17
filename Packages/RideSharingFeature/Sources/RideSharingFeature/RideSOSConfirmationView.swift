@@ -28,5 +28,6 @@ struct RideSOSConfirmationView: View {
             .background(LiiveColor.surface)
             .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.xl, style: .continuous))
         }
+        .accessibilityIdentifier(RideAccessibilityIdentifier.sosConfirmation)
     }
 }

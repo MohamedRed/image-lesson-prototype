@@ -51,6 +51,7 @@ struct RideDestinationSheetView: View {
             .background(LiiveColor.surfaceRaised)
             .clipShape(RoundedRectangle(cornerRadius: LiiveRadius.lg, style: .continuous))
         }
+        .accessibilityIdentifier(RideAccessibilityIdentifier.destinationSheet)
     }
 }
 
@@ -76,6 +77,7 @@ struct RideOptionsSheetView: View {
                 viewModel.handle(.confirmPickup)
             }
         }
+        .accessibilityIdentifier(RideAccessibilityIdentifier.optionsSheet)
     }
 
     private var header: some View {

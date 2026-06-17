@@ -27,7 +27,9 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.liive.ride.RideTestTags
 import com.liive.ride.RidePhase
 import com.liive.ride.RideTripSummary
 import com.liive.ride.designsystem.LiiveMapMarker
@@ -48,7 +50,7 @@ fun RideMapCanvas(
     val showRoute = effectivePhase != RidePhase.Destination
     val showCar = effectivePhase == RidePhase.Enroute
 
-    Box(Modifier.fillMaxSize().background(c.mapBackground)) {
+    Box(Modifier.fillMaxSize().background(c.mapBackground).testTag(RideTestTags.Map)) {
         Canvas(Modifier.fillMaxSize()) {
             val viewport = MapSvgViewport(size.width, size.height)
             drawMapBlock(RideMapGeometry.WaterBlock, c.mapWater, viewport)
