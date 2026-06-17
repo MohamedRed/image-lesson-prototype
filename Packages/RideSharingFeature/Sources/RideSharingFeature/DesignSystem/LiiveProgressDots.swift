@@ -5,13 +5,13 @@ public struct LiiveProgressDots: View {
     let current: Int
 
     public init(legs: Int, current: Int) {
-        self.legs = min(max(1, legs), 3)
-        self.current = max(1, current)
+        self.legs = min(max(LiiveProgressDotsLayout.firstLeg, legs), LiiveProgressDotsLayout.maxLegs)
+        self.current = max(LiiveProgressDotsLayout.firstLeg, current)
     }
 
     public var body: some View {
-        HStack(alignment: .center, spacing: 0) {
-            ForEach(1...legs, id: \.self) { index in
+        HStack(alignment: .center, spacing: LiiveProgressDotsLayout.containerSpacing) {
+            ForEach(LiiveProgressDotsLayout.firstLeg...legs, id: \.self) { index in
                 leg(index)
                 if index < legs {
                     transfer(after: index)
@@ -25,11 +25,13 @@ public struct LiiveProgressDots: View {
         let completed = index < current
         let active = index == current
 
-        return VStack(spacing: 4) {
+        return VStack(spacing: LiiveProgressDotsLayout.legGap) {
             Text("\(index)")
                 .font(LiiveFont.caption1.weight(.bold).monospacedDigit())
-                .foregroundColor(completed || active ? .white : LiiveColor.textTertiary)
-                .frame(width: 24, height: 24)
+                .foregroundColor(
+                    completed || active ? LiiveProgressDotsLayout.activeTextColor : LiiveColor.textTertiary
+                )
+                .frame(width: LiiveProgressDotsLayout.legCircleSize, height: LiiveProgressDotsLayout.legCircleSize)
                 .background(legColor(completed: completed, active: active))
                 .clipShape(Circle())
             Text("Leg \(index)")
@@ -42,17 +44,17 @@ public struct LiiveProgressDots: View {
     private func transfer(after index: Int) -> some View {
         let passed = index < current
 
-        return VStack(spacing: 3) {
+        return VStack(spacing: LiiveProgressDotsLayout.transferGap) {
             Rectangle()
                 .fill(passed ? LiiveColor.success : LiiveColor.fill)
-                .frame(height: 2)
+                .frame(height: LiiveProgressDotsLayout.connectorHeight)
                 .clipShape(Capsule())
             Image(systemName: "arrow.triangle.swap")
-                .font(.system(size: 13, weight: .bold))
+                .font(.system(size: LiiveProgressDotsLayout.transferIconSize, weight: .bold))
                 .foregroundColor(passed ? LiiveColor.success : LiiveColor.warning)
         }
-        .frame(minWidth: 28, maxWidth: .infinity)
-        .padding(.bottom, 15)
+        .frame(minWidth: LiiveProgressDotsLayout.transferMinWidth, maxWidth: .infinity)
+        .padding(.bottom, LiiveProgressDotsLayout.transferBottomPadding)
     }
 
     private func legColor(completed: Bool, active: Bool) -> Color {
@@ -64,4 +66,18 @@ public struct LiiveProgressDots: View {
         }
         return LiiveColor.fill
     }
+}
+
+private enum LiiveProgressDotsLayout {
+    static let firstLeg = 1
+    static let maxLegs = 3
+    static let containerSpacing: CGFloat = 0
+    static let legGap = LiiveSpacing.xs
+    static let legCircleSize = LiiveSpacing.xxl
+    static let transferGap = LiiveSpacing.xs - LiiveSpacing.xs2 / 2
+    static let connectorHeight = LiiveSpacing.xs2
+    static let transferIconSize = LiiveSpacing.m + LiiveSpacing.xs2 / 2
+    static let transferMinWidth = LiiveSpacing.xxl + LiiveSpacing.xs
+    static let transferBottomPadding = LiiveSpacing.l - LiiveSpacing.xs2 / 2
+    static let activeTextColor = Color.white
 }

@@ -21,15 +21,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun LiiveProgressDots(legs: Int, current: Int, modifier: Modifier = Modifier) {
-    val boundedLegs = legs.coerceIn(1, 3)
-    val boundedCurrent = current.coerceAtLeast(1)
+    val boundedLegs = legs.coerceIn(LiiveProgressDotsLayout.FirstLeg, LiiveProgressDotsLayout.MaxLegs)
+    val boundedCurrent = current.coerceAtLeast(LiiveProgressDotsLayout.FirstLeg)
 
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        for (index in 1..boundedLegs) {
+        for (index in LiiveProgressDotsLayout.FirstLeg..boundedLegs) {
             ProgressLeg(index = index, current = boundedCurrent)
             if (index < boundedLegs) {
                 ProgressTransfer(passed = index < boundedCurrent, modifier = Modifier.weight(1f))
@@ -51,12 +50,18 @@ private fun ProgressLeg(index: Int, current: Int) {
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(LiiveProgressDotsLayout.LegGap)
     ) {
-        Box(Modifier.size(24.dp).clip(CircleShape).background(background), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier
+                .size(LiiveProgressDotsLayout.LegCircleSize)
+                .clip(CircleShape)
+                .background(background),
+            contentAlignment = Alignment.Center
+        ) {
             Text(
                 text = index.toString(),
-                color = if (completed || active) Color.White else c.textTertiary,
+                color = if (completed || active) LiiveProgressDotsLayout.ActiveTextColor else c.textTertiary,
                 style = MaterialTheme.typography.labelMedium.tabularNumbers(),
                 fontWeight = FontWeight.Bold
             )
@@ -72,18 +77,36 @@ private fun ProgressTransfer(passed: Boolean, modifier: Modifier = Modifier) {
 
     Column(
         modifier
-            .defaultMinSize(minWidth = 28.dp)
-            .padding(bottom = 15.dp),
+            .defaultMinSize(minWidth = LiiveProgressDotsLayout.TransferMinWidth)
+            .padding(bottom = LiiveProgressDotsLayout.TransferBottomPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(3.dp)
+        verticalArrangement = Arrangement.spacedBy(LiiveProgressDotsLayout.TransferGap)
     ) {
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(2.dp)
+                .height(LiiveProgressDotsLayout.ConnectorHeight)
                 .clip(LiiveRadius.full)
                 .background(if (passed) c.success else c.fill)
         )
-        Icon(painterResource(RideIcons.SwapHoriz), null, tint = color, modifier = Modifier.size(13.dp))
+        Icon(
+            painterResource(RideIcons.SwapHoriz),
+            null,
+            tint = color,
+            modifier = Modifier.size(LiiveProgressDotsLayout.TransferIconSize)
+        )
     }
+}
+
+private object LiiveProgressDotsLayout {
+    const val FirstLeg = 1
+    const val MaxLegs = 3
+    val LegGap = LiiveSpacing.xs
+    val LegCircleSize = LiiveSpacing.xxl
+    val TransferGap = LiiveSpacing.xs - LiiveSpacing.xs2 / 2
+    val ConnectorHeight = LiiveSpacing.xs2
+    val TransferIconSize = LiiveSpacing.m + LiiveSpacing.xs2 / 2
+    val TransferMinWidth = LiiveSpacing.xxl + LiiveSpacing.xs
+    val TransferBottomPadding = LiiveSpacing.l - LiiveSpacing.xs2 / 2
+    val ActiveTextColor = Color.White
 }
