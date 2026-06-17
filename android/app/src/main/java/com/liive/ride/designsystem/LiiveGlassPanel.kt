@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 enum class GlassMaterial { Thin, Regular, Thick }
 
@@ -21,7 +20,7 @@ fun LiiveGlassPanel(
     modifier: Modifier = Modifier,
     material: GlassMaterial = GlassMaterial.Regular,
     shape: RoundedCornerShape = LiiveRadius.lg,
-    padding: Dp = 14.dp,
+    padding: Dp = LiiveSpacing.m + LiiveSpacing.xs2,
     content: @Composable () -> Unit
 ) {
     val c = LiiveTheme.colors
@@ -36,7 +35,7 @@ fun LiiveGlassPanel(
             .shadow(LiiveElevation.hud, shape, clip = false)
             .clip(shape)
             .background(materialColor)
-            .border(0.5.dp, c.borderStrong, shape)
+            .border(LiiveSpacing.xs2 / 4, c.borderStrong, shape)
             .padding(padding)
     ) { content() }
 }

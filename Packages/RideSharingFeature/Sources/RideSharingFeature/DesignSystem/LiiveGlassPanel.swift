@@ -7,11 +7,11 @@ public struct LiiveGlassPanel<Content: View>: View {
     public enum Material { case thin, regular, thick }
     var material: Material = .regular
     var cornerRadius: CGFloat = LiiveRadius.lg
-    var padding: CGFloat = 14
+    var padding: CGFloat = LiiveSpacing.m + LiiveSpacing.xs2
     let content: Content
 
     public init(material: Material = .regular, cornerRadius: CGFloat = LiiveRadius.lg,
-                padding: CGFloat = 14, @ViewBuilder content: () -> Content) {
+                padding: CGFloat = LiiveSpacing.m + LiiveSpacing.xs2, @ViewBuilder content: () -> Content) {
         self.material = material; self.cornerRadius = cornerRadius
         self.padding = padding; self.content = content()
     }
@@ -40,7 +40,7 @@ public struct LiiveGlassPanel<Content: View>: View {
             .background(materialFill, in: shape)
             .background(blur, in: shape)
             .overlay(
-                shape.strokeBorder(LiiveColor.borderStrong, lineWidth: 0.5)
+                shape.strokeBorder(LiiveColor.borderStrong, lineWidth: LiiveSpacing.xs2 / 4)
             )
             .liiveShadow(.hud)
     }
