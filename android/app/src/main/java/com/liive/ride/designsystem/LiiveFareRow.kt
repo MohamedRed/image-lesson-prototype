@@ -1,5 +1,6 @@
 package com.liive.ride.designsystem
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,7 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun LiiveFareRow(label: String, amount: String, muted: Boolean = false, total: Boolean = false) {
@@ -17,7 +17,11 @@ fun LiiveFareRow(label: String, amount: String, muted: Boolean = false, total: B
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(top = if (total) 12.dp else 6.dp, bottom = if (total) 0.dp else 6.dp)
+            .padding(
+                top = if (total) LiiveFareRowLayout.TotalTopPadding else LiiveFareRowLayout.RowVerticalPadding,
+                bottom = if (total) LiiveFareRowLayout.TotalBottomPadding else LiiveFareRowLayout.RowVerticalPadding
+            ),
+        horizontalArrangement = Arrangement.spacedBy(LiiveFareRowLayout.ContentGap)
     ) {
         Text(
             label,
@@ -39,4 +43,11 @@ fun LiiveFareRow(label: String, amount: String, muted: Boolean = false, total: B
             modifier = Modifier.alignByBaseline()
         )
     }
+}
+
+private object LiiveFareRowLayout {
+    val ContentGap = LiiveSpacing.m
+    val RowVerticalPadding = LiiveSpacing.s - LiiveSpacing.xs2
+    val TotalTopPadding = LiiveSpacing.m
+    val TotalBottomPadding = LiiveSpacing.xs2 - LiiveSpacing.xs2
 }

@@ -14,7 +14,7 @@ public struct LiiveFareRow: View {
     }
 
     public var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
+        HStack(alignment: .firstTextBaseline, spacing: LiiveFareRowLayout.contentGap) {
             Text(label)
                 .font(total ? LiiveFont.headline : LiiveFont.subhead)
                 .fontWeight(total ? .semibold : .regular)
@@ -25,12 +25,19 @@ public struct LiiveFareRow: View {
                 .fontWeight(total ? .bold : .medium)
                 .foregroundColor(LiiveColor.text)
         }
-        .padding(.top, total ? 12 : 6)
-        .padding(.bottom, total ? 0 : 6)
+        .padding(.top, total ? LiiveFareRowLayout.totalTopPadding : LiiveFareRowLayout.rowVerticalPadding)
+        .padding(.bottom, total ? LiiveFareRowLayout.totalBottomPadding : LiiveFareRowLayout.rowVerticalPadding)
     }
 
     private var labelColor: Color {
         if total { return LiiveColor.text }
         return muted ? LiiveColor.textTertiary : LiiveColor.textSecondary
     }
+}
+
+private enum LiiveFareRowLayout {
+    static let contentGap = LiiveSpacing.m
+    static let rowVerticalPadding = LiiveSpacing.s - LiiveSpacing.xs2
+    static let totalTopPadding = LiiveSpacing.m
+    static let totalBottomPadding = CGFloat.zero
 }
