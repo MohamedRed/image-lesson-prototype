@@ -107,6 +107,37 @@ public struct RideConfiguration: Codable, Equatable {
     public var price: Double { tier.price }
     public var eta: String { tier.eta }
     public var isMultiLeg: Bool { tier.isMultiLeg }
+    public var fareBreakdown: RideFareBreakdown { RideFareBreakdown(configuration: self) }
+}
+
+public struct RideFareBreakdown: Codable, Equatable {
+    public let rideFare: Double
+    public let taxAndFees: Double
+    public let costShareCredit: Double?
+    public let total: Double
+
+    public init(rideFare: Double, taxAndFees: Double, costShareCredit: Double?, total: Double) {
+        self.rideFare = rideFare
+        self.taxAndFees = taxAndFees
+        self.costShareCredit = costShareCredit
+        self.total = total
+    }
+
+    public init(configuration: RideConfiguration) {
+        let rideFare = (configuration.price / 1.0875).roundedToCents()
+        self.init(
+            rideFare: rideFare,
+            taxAndFees: (configuration.price - rideFare).roundedToCents(),
+            costShareCredit: configuration.isMultiLeg ? 2.00 : nil,
+            total: configuration.price
+        )
+    }
+}
+
+private extension Double {
+    func roundedToCents() -> Double {
+        (self * 100).rounded() / 100
+    }
 }
 
 public struct RideDriver: Codable, Equatable {

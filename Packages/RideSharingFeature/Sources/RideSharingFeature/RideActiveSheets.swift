@@ -142,9 +142,7 @@ struct RideCompleteSheetView: View {
 
     private var config: RideConfiguration { viewModel.state.config }
     private var driver: RideDriver { viewModel.state.driver }
-    private var fare: Double { config.price }
-    private var base: Double { (fare / 1.0875 * 100).rounded() / 100 }
-    private var tax: Double { ((fare - base) * 100).rounded() / 100 }
+    private var fare: RideFareBreakdown { config.fareBreakdown }
 
     var body: some View {
         if viewModel.state.paid {
@@ -162,7 +160,7 @@ struct RideCompleteSheetView: View {
                     .liiveStyle(.title2)
                     .foregroundColor(LiiveColor.text)
                     .padding(.top, 14)
-                Text("\(fare.ridePrice) paid to \(driver.firstName) · receipt sent")
+                Text("\(fare.total.ridePrice) paid to \(driver.firstName) · receipt sent")
                     .font(LiiveFont.subhead.monospacedDigit())
                     .foregroundColor(LiiveColor.textSecondary)
                     .padding(.top, 6)
@@ -194,15 +192,15 @@ struct RideCompleteSheetView: View {
             .padding(.bottom, 14)
 
             VStack(spacing: 0) {
-                LiiveFareRow(label: "Ride fare", amount: base.ridePrice)
-                LiiveFareRow(label: "Tax & fees", amount: tax.ridePrice)
-                if config.isMultiLeg {
-                    LiiveFareRow(label: "Cost-share credit", amount: "–$2.00", muted: true)
+                LiiveFareRow(label: "Ride fare", amount: fare.rideFare.ridePrice)
+                LiiveFareRow(label: "Tax & fees", amount: fare.taxAndFees.ridePrice)
+                if let credit = fare.costShareCredit {
+                    LiiveFareRow(label: "Cost-share credit", amount: "–\(credit.ridePrice)", muted: true)
                 }
                 Rectangle()
                     .fill(LiiveColor.separator)
                     .frame(height: 0.5)
-                LiiveFareRow(label: "Total", amount: fare.ridePrice, total: true)
+                LiiveFareRow(label: "Total", amount: fare.total.ridePrice, total: true)
             }
             .padding(.horizontal, 14)
             .padding(.top, 8)
@@ -221,7 +219,7 @@ struct RideCompleteSheetView: View {
             .padding(.bottom, 12)
 
             ratingControl
-            LiiveButton("Pay \(fare.ridePrice)", variant: .primary, size: .lg, shape: .capsule, fullWidth: true, tabularNumbers: true) {
+            LiiveButton("Pay \(fare.total.ridePrice)", variant: .primary, size: .lg, shape: .capsule, fullWidth: true, tabularNumbers: true) {
                 viewModel.handle(.pay)
             }
             Text("Secured by Stripe")

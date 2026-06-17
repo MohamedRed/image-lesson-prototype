@@ -36,6 +36,13 @@ data class RideConfig(
     val destinationName: String = "Union Square",
 )
 
+data class RideFareBreakdown(
+    val rideFare: Double,
+    val taxAndFees: Double,
+    val costShareCredit: Double?,
+    val total: Double,
+)
+
 data class RideDriver(
     val name: String,
     val rating: Double,
@@ -99,4 +106,20 @@ object RideFixtures {
 
 fun Double.ridePrice(): String = "$" + "%,.2f".format(this)
 
+fun Double.rideCreditPrice(): String = "–$" + "%,.2f".format(kotlin.math.abs(this))
+
+fun RideConfig.fareBreakdown(): RideFareBreakdown {
+    val rideFare = (tier.price / TAX_MULTIPLIER).roundedCurrency()
+    return RideFareBreakdown(
+        rideFare = rideFare,
+        taxAndFees = (tier.price - rideFare).roundedCurrency(),
+        costShareCredit = if (tier.multiLeg) 2.00 else null,
+        total = tier.price,
+    )
+}
+
 fun RideDriver.firstName(): String = name.substringBefore(" ")
+
+private const val TAX_MULTIPLIER = 1.0875
+
+private fun Double.roundedCurrency(): Double = kotlin.math.round(this * 100.0) / 100.0
