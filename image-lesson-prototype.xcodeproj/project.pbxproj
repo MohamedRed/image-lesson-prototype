@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		6A1379322DFFB3A600F14437 /* GliteImageLessonService in Frameworks */ = {isa = PBXBuildFile; productRef = 6A1379312DFFB3A600F14437 /* GliteImageLessonService */; };
 		6A1379352DFFB3BA00F14437 /* GliteImageLessonFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6A1379342DFFB3BA00F14437 /* GliteImageLessonFeature */; };
+		6BFA10002EF000000016F100 /* RideSharingFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6BFA10022EF000000016F100 /* RideSharingFeature */; };
 		6A70A9032DFA5AE1001D60BA /* image_lesson_prototypeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A70A9022DFA5AE1001D60BA /* image_lesson_prototypeApp.swift */; };
 		6A70A9052DFA5AE1001D60BA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A70A9042DFA5AE1001D60BA /* ContentView.swift */; };
 		6A70A9072DFA5AE3001D60BA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6A70A9062DFA5AE3001D60BA /* Assets.xcassets */; };
@@ -36,6 +37,7 @@
 			files = (
 				6A1379322DFFB3A600F14437 /* GliteImageLessonService in Frameworks */,
 				6A1379352DFFB3BA00F14437 /* GliteImageLessonFeature in Frameworks */,
+				6BFA10002EF000000016F100 /* RideSharingFeature in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -134,6 +136,7 @@
 			packageProductDependencies = (
 				6A1379312DFFB3A600F14437 /* GliteImageLessonService */,
 				6A1379342DFFB3BA00F14437 /* GliteImageLessonFeature */,
+				6BFA10022EF000000016F100 /* RideSharingFeature */,
 			);
 			productName = "image-lesson-prototype";
 			productReference = 6A70A8FF2DFA5AE1001D60BA /* image-lesson-prototype.app */;
@@ -166,6 +169,7 @@
 			packageReferences = (
 				6A1379302DFFB3A600F14437 /* XCLocalSwiftPackageReference "Packages/GliteImageLessonService" */,
 				6A1379332DFFB3BA00F14437 /* XCLocalSwiftPackageReference "Packages/GliteImageLessonFeature" */,
+				6BFA10012EF000000016F100 /* XCLocalSwiftPackageReference "Packages/RideSharingFeature" */,
 			);
 			productRefGroup = 6A70A9002DFA5AE1001D60BA /* Products */;
 			projectDirPath = "";
@@ -419,6 +423,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/GliteImageLessonFeature;
 		};
+		6BFA10012EF000000016F100 /* XCLocalSwiftPackageReference "Packages/RideSharingFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/RideSharingFeature;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -429,6 +437,10 @@
 		6A1379342DFFB3BA00F14437 /* GliteImageLessonFeature */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = GliteImageLessonFeature;
+		};
+		6BFA10022EF000000016F100 /* RideSharingFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RideSharingFeature;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -6,12 +6,13 @@
 //
 
 import SwiftUI
+import RideSharingFeature
 
 @main
 struct image_lesson_prototypeApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LiiveRideFeature.mockAppView()
         }
     }
 }
