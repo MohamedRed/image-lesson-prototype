@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -46,59 +45,57 @@ fun RideMapCanvas(phase: RidePhase, isMultiLeg: Boolean, carProgress: Float, tri
     Box(Modifier.fillMaxSize().background(c.mapBackground)) {
         Canvas(Modifier.fillMaxSize()) {
             val viewport = MapSvgViewport(size.width, size.height)
-            rotate(degrees = -8f, pivot = viewport.point(70f, 670f)) {
-                drawRect(
-                    c.mapWater,
-                    topLeft = viewport.point(-40f, 540f),
-                    size = Size(viewport.length(220f), viewport.length(260f)),
-                    alpha = 0.9f
-                )
-            }
-            drawRoundRect(
-                c.mapPark,
-                topLeft = viewport.point(250f, 40f),
-                size = Size(viewport.length(240f), viewport.length(180f)),
-                cornerRadius = CornerRadius(viewport.length(10f)),
-                alpha = 0.55f
-            )
-            drawRoundRect(
-                c.mapDistrict,
-                topLeft = viewport.point(-20f, 120f),
-                size = Size(viewport.length(150f), viewport.length(150f)),
-                cornerRadius = CornerRadius(viewport.length(8f)),
-                alpha = 0.50f
-            )
+            drawMapBlock(RideMapGeometry.WaterBlock, c.mapWater, viewport)
+            drawMapBlock(RideMapGeometry.ParkBlock, c.mapPark, viewport)
+            drawMapBlock(RideMapGeometry.DistrictBlock, c.mapDistrict, viewport)
             drawStreets(c.mapRoad, viewport)
             if (showRoute) {
                 drawShadowedRoute(routePath(viewport, isMultiLeg), c.mapRoute, viewport)
                 if (isMultiLeg) {
-                    val t = viewport.point(150f, 320f)
-                    drawCircle(androidx.compose.ui.graphics.Color.White, radius = viewport.length(5f), center = t)
-                    drawCircle(c.warning, radius = viewport.length(5f), center = t, style = Stroke(width = viewport.length(3f)))
+                    val t = viewport.point(RideMapGeometry.Transfer)
+                    drawCircle(Color.White, radius = viewport.length(RideMapGeometry.TransferRadius), center = t)
+                    drawCircle(
+                        c.warning,
+                        radius = viewport.length(RideMapGeometry.TransferRadius),
+                        center = t,
+                        style = Stroke(width = viewport.length(RideMapGeometry.TransferStrokeWidth))
+                    )
                 }
             }
         }
 
         if (effectivePhase == RidePhase.Destination) {
-            OverlayAt(MapPoint(196f, 470f), OverlayAnchor.Center) {
+            OverlayAt(RideMapGeometry.Origin, OverlayAnchor.Center) {
                 PulseMarker()
             }
         }
-        if (showRoute && !showCar) OverlayAt(MapPoint(196f, 470f), OverlayAnchor.Bottom) {
+        if (showRoute && !showCar) OverlayAt(RideMapGeometry.Origin, OverlayAnchor.Bottom) {
             LiiveMapMarker(MapMarkerKind.Origin, "Pickup")
         }
         if (showCar) OverlayAt(carPoint(isMultiLeg, carProgress), OverlayAnchor.Bottom) {
             LiiveMapMarker(MapMarkerKind.Car, tripSummary.mapMarkerLabel)
         }
-        if (isMultiLeg && showRoute) OverlayAt(MapPoint(150f, 320f), OverlayAnchor.Bottom) {
+        if (isMultiLeg && showRoute) OverlayAt(RideMapGeometry.Transfer, OverlayAnchor.Bottom) {
             LiiveMapMarker(MapMarkerKind.Transfer, "Transfer")
         }
-        if (effectivePhase != RidePhase.Destination) OverlayAt(MapPoint(250f, 165f), OverlayAnchor.Bottom) {
+        if (effectivePhase != RidePhase.Destination) OverlayAt(RideMapGeometry.Destination, OverlayAnchor.Bottom) {
             LiiveMapMarker(MapMarkerKind.Destination, "Union Square")
         }
-        if (phase == RidePhase.Matching) OverlayAt(MapPoint(196f, 470f), OverlayAnchor.Center) {
+        if (phase == RidePhase.Matching) OverlayAt(RideMapGeometry.Origin, OverlayAnchor.Center) {
             RadarMarker()
         }
+    }
+}
+
+private fun DrawScope.drawMapBlock(block: MapBlock, blockColor: Color, viewport: MapSvgViewport) {
+    rotate(degrees = block.rotationDegrees, pivot = viewport.point(block.pivot)) {
+        drawRoundRect(
+            blockColor,
+            topLeft = viewport.point(block.topLeft),
+            size = Size(viewport.length(block.size.width), viewport.length(block.size.height)),
+            cornerRadius = CornerRadius(viewport.length(block.cornerRadius)),
+            alpha = block.alpha
+        )
     }
 }
 
@@ -106,60 +103,52 @@ private fun DrawScope.drawShadowedRoute(path: Path, routeColor: Color, viewport:
     drawIntoCanvas { canvas ->
         val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = android.graphics.Color.BLACK
-            alpha = (255 * RouteShadowAlpha).roundToInt()
+            alpha = (255 * RideMapGeometry.RouteShadowAlpha).roundToInt()
             style = Paint.Style.STROKE
-            strokeWidth = viewport.length(RouteStrokeWidth)
+            strokeWidth = viewport.length(RideMapGeometry.RouteStrokeWidth)
             strokeCap = Paint.Cap.ROUND
-            maskFilter = BlurMaskFilter(viewport.length(RouteShadowBlur), BlurMaskFilter.Blur.NORMAL)
+            maskFilter = BlurMaskFilter(viewport.length(RideMapGeometry.RouteShadowBlur), BlurMaskFilter.Blur.NORMAL)
         }
         canvas.nativeCanvas.save()
-        canvas.nativeCanvas.translate(0f, viewport.length(RouteShadowYOffset))
+        canvas.nativeCanvas.translate(0f, viewport.length(RideMapGeometry.RouteShadowYOffset))
         canvas.nativeCanvas.drawPath(path.asAndroidPath(), shadowPaint)
         canvas.nativeCanvas.restore()
     }
-    drawPath(path, routeColor, style = Stroke(width = viewport.length(RouteStrokeWidth), cap = StrokeCap.Round))
+    drawPath(path, routeColor, style = Stroke(width = viewport.length(RideMapGeometry.RouteStrokeWidth), cap = StrokeCap.Round))
 }
 
 private fun DrawScope.drawStreets(roadColor: Color, viewport: MapSvgViewport) {
-    val major = listOf(
-        MapLine(-20f, 250f, 430f, 225f), MapLine(-20f, 370f, 430f, 350f),
-        MapLine(-20f, 500f, 430f, 520f), MapLine(-20f, 630f, 430f, 650f),
-        MapLine(70f, -20f, 120f, 780f), MapLine(210f, -20f, 240f, 780f),
-        MapLine(330f, -20f, 360f, 780f)
-    )
-    val minor = listOf(
-        MapLine(-20f, 180f, 430f, 165f), MapLine(-20f, 430f, 430f, 445f),
-        MapLine(140f, -20f, 170f, 780f), MapLine(280f, -20f, 305f, 780f)
-    )
-    major.forEach {
+    RideMapGeometry.MajorStreets.forEach {
         drawLine(
             roadColor,
             viewport.point(it.x1, it.y1),
             viewport.point(it.x2, it.y2),
-            strokeWidth = viewport.length(9f),
+            strokeWidth = viewport.length(RideMapGeometry.MajorStreetWidth),
             cap = StrokeCap.Round,
-            alpha = 0.95f
+            alpha = RideMapGeometry.MajorStreetAlpha
         )
     }
-    minor.forEach {
+    RideMapGeometry.MinorStreets.forEach {
         drawLine(
             roadColor,
             viewport.point(it.x1, it.y1),
             viewport.point(it.x2, it.y2),
-            strokeWidth = viewport.length(4f),
+            strokeWidth = viewport.length(RideMapGeometry.MinorStreetWidth),
             cap = StrokeCap.Round,
-            alpha = 0.60f
+            alpha = RideMapGeometry.MinorStreetAlpha
         )
     }
 }
 
 private fun routePath(viewport: MapSvgViewport, multiLeg: Boolean) = Path().apply {
-    moveToPoint(MapPoint(196f, 470f), viewport)
+    moveToPoint(RideMapGeometry.Origin, viewport)
     if (multiLeg) {
-        cubicToPoint(MapPoint(150f, 430f), MapPoint(120f, 380f), MapPoint(150f, 320f), viewport)
-        cubicToPoint(MapPoint(175f, 285f), MapPoint(230f, 230f), MapPoint(250f, 165f), viewport)
+        RideMapGeometry.MultiLegControls.forEach {
+            cubicToPoint(it.firstControl, it.secondControl, it.end, viewport)
+        }
     } else {
-        cubicToPoint(MapPoint(170f, 400f), MapPoint(300f, 330f), MapPoint(250f, 165f), viewport)
+        val controls = RideMapGeometry.SingleLegControls
+        cubicToPoint(controls.firstControl, controls.secondControl, controls.end, viewport)
     }
 }
 
@@ -181,12 +170,12 @@ private fun OverlayAt(point: MapPoint, anchor: OverlayAnchor, content: @Composab
         val placeable = subcompose("content", content).first().measure(
             constraints.copy(minWidth = 0, minHeight = 0)
         )
-        val x = (constraints.maxWidth * (point.x / MapWidth) - placeable.width / 2f).roundToInt()
+        val x = (constraints.maxWidth * (point.x / RideMapGeometry.MapWidth) - placeable.width / 2f).roundToInt()
         val yAnchor = when (anchor) {
             OverlayAnchor.Center -> placeable.height / 2f
             OverlayAnchor.Bottom -> placeable.height.toFloat()
         }
-        val y = (constraints.maxHeight * (point.y / MapHeight) - yAnchor).roundToInt()
+        val y = (constraints.maxHeight * (point.y / RideMapGeometry.MapHeight) - yAnchor).roundToInt()
 
         layout(constraints.maxWidth, constraints.maxHeight) {
             placeable.placeRelative(x, y)
@@ -198,12 +187,22 @@ private fun OverlayAt(point: MapPoint, anchor: OverlayAnchor, content: @Composab
 private fun PulseMarker() {
     val c = LiiveTheme.colors
     val transition = rememberInfiniteTransition(label = "pulse")
-    val scale by transition.animateFloat(0.35f, 1f, infiniteRepeatable(tween(2000), RepeatMode.Restart), label = "scale")
-    Box(Modifier.size(66.dp)) {
+    val scale by transition.animateFloat(
+        RideMapGeometry.CurrentPulseScaleStart,
+        1f,
+        infiniteRepeatable(tween(RideMapGeometry.CurrentPulseDurationMs), RepeatMode.Restart),
+        label = "scale"
+    )
+    Box(Modifier.size(RideMapGeometry.CurrentPulseSize.dp)) {
         Canvas(Modifier.fillMaxSize()) {
             drawCircle(c.accentTint, radius = size.minDimension / 2f * scale, center = center, alpha = 1f - scale)
-            drawCircle(c.accent, radius = 11.dp.toPx(), center = center)
-            drawCircle(androidx.compose.ui.graphics.Color.White, radius = 11.dp.toPx(), center = center, style = Stroke(width = 3.dp.toPx()))
+            drawCircle(c.accent, radius = RideMapGeometry.CurrentDotRadius.dp.toPx(), center = center)
+            drawCircle(
+                Color.White,
+                radius = RideMapGeometry.CurrentDotRadius.dp.toPx(),
+                center = center,
+                style = Stroke(width = RideMapGeometry.CurrentDotStrokeWidth.dp.toPx())
+            )
         }
     }
 }
@@ -212,22 +211,28 @@ private fun PulseMarker() {
 private fun RadarMarker() {
     val c = LiiveTheme.colors
     val transition = rememberInfiniteTransition(label = "radar")
-    val scale by transition.animateFloat(0.11f, 1f, infiniteRepeatable(tween(1800), RepeatMode.Restart), label = "scale")
-    Box(Modifier.size(126.dp)) {
+    val scale by transition.animateFloat(
+        RideMapGeometry.RadarPulseScaleStart,
+        1f,
+        infiniteRepeatable(tween(RideMapGeometry.RadarPulseDurationMs), RepeatMode.Restart),
+        label = "scale"
+    )
+    Box(Modifier.size(RideMapGeometry.RadarPulseSize.dp)) {
         Canvas(Modifier.fillMaxSize()) {
             drawCircle(c.accent, radius = size.minDimension / 2f * scale, center = center, alpha = 1f - scale)
-            drawCircle(c.accent, radius = 7.dp.toPx(), center = center)
-            drawCircle(androidx.compose.ui.graphics.Color.White, radius = 7.dp.toPx(), center = center, style = Stroke(width = 3.dp.toPx()))
+            drawCircle(c.accent, radius = RideMapGeometry.RadarDotRadius.dp.toPx(), center = center)
+            drawCircle(
+                Color.White,
+                radius = RideMapGeometry.RadarDotRadius.dp.toPx(),
+                center = center,
+                style = Stroke(width = RideMapGeometry.RadarDotStrokeWidth.dp.toPx())
+            )
         }
     }
 }
 
 private fun carPoint(multiLeg: Boolean, progress: Float): MapPoint {
-    val points = if (multiLeg) {
-        listOf(MapPoint(196f, 470f), MapPoint(150f, 400f), MapPoint(150f, 320f), MapPoint(205f, 250f), MapPoint(250f, 165f))
-    } else {
-        listOf(MapPoint(196f, 470f), MapPoint(215f, 390f), MapPoint(285f, 300f), MapPoint(250f, 165f))
-    }
+    val points = RideMapGeometry.carPoints(multiLeg)
     val raw = (progress.coerceIn(0f, 1f) * (points.size - 1)).coerceAtMost((points.size - 1).toFloat())
     val index = raw.toInt().coerceAtMost(points.size - 2)
     val local = raw - index
@@ -237,23 +242,3 @@ private fun carPoint(multiLeg: Boolean, progress: Float): MapPoint {
 }
 
 private enum class OverlayAnchor { Center, Bottom }
-private data class MapPoint(val x: Float, val y: Float)
-private data class MapLine(val x1: Float, val y1: Float, val x2: Float, val y2: Float)
-private data class MapSvgViewport(val width: Float, val height: Float) {
-    private val scale = maxOf(width / MapWidth, height / MapHeight)
-    private val offsetX = (width - MapWidth * scale) / 2f
-    private val offsetY = (height - MapHeight * scale) / 2f
-
-    fun point(point: MapPoint) = point(point.x, point.y)
-
-    fun point(x: Float, y: Float) = Offset(offsetX + x * scale, offsetY + y * scale)
-
-    fun length(value: Float) = value * scale
-}
-
-private const val MapWidth = 402f
-private const val MapHeight = 740f
-private const val RouteStrokeWidth = 7f
-private const val RouteShadowBlur = 3f
-private const val RouteShadowYOffset = 2f
-private const val RouteShadowAlpha = 0.35f
