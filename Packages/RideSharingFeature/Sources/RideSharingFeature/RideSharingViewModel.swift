@@ -27,7 +27,6 @@ public final class RideSharingViewModel: ObservableObject {
 
     private let service: RideSharingServicing
     private let storage: UserDefaults
-    private let storageKey = "liive-ride-state"
     private var matchingTask: Task<Void, Never>?
     private var rideTask: Task<Void, Never>?
     private var activeSession: RideSession?
@@ -39,7 +38,7 @@ public final class RideSharingViewModel: ObservableObject {
     ) {
         self.service = service
         self.storage = storage
-        self.state = initialState ?? Self.restoreState(from: storage, key: storageKey)
+        self.state = initialState ?? Self.restoreState(from: storage, key: RidePersistence.stateStorageKey)
         if initialState == nil {
             resumeTimelineIfNeeded()
         }
@@ -135,7 +134,7 @@ public final class RideSharingViewModel: ObservableObject {
                     }
                 }
             }
-            try? await Task.sleep(nanoseconds: 2_600_000_000)
+            try? await Task.sleep(nanoseconds: RideFlowTiming.matchingDelayNanoseconds)
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 self.handle(.matchingComplete)
@@ -156,11 +155,10 @@ public final class RideSharingViewModel: ObservableObject {
         rideTask?.cancel()
         rideTask = Task { [weak self] in
             let start = Date()
-            let duration = 11.0
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 80_000_000)
+                try? await Task.sleep(nanoseconds: RideFlowTiming.progressTickNanoseconds)
                 let elapsed = Date().timeIntervalSince(start)
-                let progress = min(1, initialProgress + elapsed / duration)
+                let progress = min(1, initialProgress + elapsed / RideFlowTiming.rideDuration)
                 await MainActor.run {
                     self?.handle(.setCarProgress(progress))
                 }
@@ -227,7 +225,7 @@ public final class RideSharingViewModel: ObservableObject {
 
     private func persist() {
         guard let data = try? JSONEncoder().encode(state) else { return }
-        storage.set(data, forKey: storageKey)
+        storage.set(data, forKey: RidePersistence.stateStorageKey)
     }
 
     private static func restoreState(from storage: UserDefaults, key: String) -> RideUIState {

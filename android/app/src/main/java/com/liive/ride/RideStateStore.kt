@@ -14,7 +14,7 @@ interface RideStateStoring {
 class RideStateStore @Inject constructor(
     @ApplicationContext context: Context
 ) : RideStateStoring {
-    private val preferences = context.getSharedPreferences("liive_ride_state", Context.MODE_PRIVATE)
+    private val preferences = context.getSharedPreferences(RidePersistence.StateStoreName, Context.MODE_PRIVATE)
 
     override fun read(): RideUiState {
         val raw = preferences.getString(KEY, null) ?: return RideUiState()
@@ -106,6 +106,6 @@ class RideStateStore @Inject constructor(
     }
 
     private companion object {
-        const val KEY = "ride_ui_state"
+        const val KEY = RidePersistence.StateKey
     }
 }

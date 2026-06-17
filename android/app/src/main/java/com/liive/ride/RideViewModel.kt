@@ -92,7 +92,7 @@ class RideViewModel @Inject constructor(
             val session = service.requestRide(config)
             activeSession = session
             updateState { it.copy(driver = session.driver(), tripSummary = session.tripSummary) }
-            delay(2_600)
+            delay(RideFlowTiming.MatchingDelayMs)
             onEvent(RideEvent.MatchingComplete)
         }
     }
@@ -145,12 +145,13 @@ class RideViewModel @Inject constructor(
     private fun startEnrouteFrom(initialProgress: Float) {
         rideJob?.cancel()
         rideJob = viewModelScope.launch {
-            val durationMs = 11_000f
-            var elapsed = initialProgress.coerceIn(0f, 1f) * durationMs
-            while (elapsed < durationMs) {
-                delay(80)
-                elapsed += 80f
-                onEvent(RideEvent.SetCarProgress(round((elapsed / durationMs) * 1000f) / 1000f))
+            var elapsed = initialProgress.coerceIn(0f, 1f) * RideFlowTiming.RideDurationMs
+            while (elapsed < RideFlowTiming.RideDurationMs) {
+                delay(RideFlowTiming.ProgressTickMs)
+                elapsed += RideFlowTiming.ProgressTickMs.toFloat()
+                val progress = elapsed / RideFlowTiming.RideDurationMs
+                val roundedProgress = round(progress * RideFlowTiming.ProgressPrecision) / RideFlowTiming.ProgressPrecision
+                onEvent(RideEvent.SetCarProgress(roundedProgress))
             }
             onEvent(RideEvent.FinishRide)
         }
