@@ -79,9 +79,9 @@ public enum RideTier: String, CaseIterable, Codable, Identifiable, Equatable {
 
     var price: Double {
         switch self {
-        case .pool: return 9.50
-        case .premium: return 12.50
-        case .exclusive: return 18.00
+        case .pool: return RidePricing.poolFare
+        case .premium: return RidePricing.premiumFare
+        case .exclusive: return RidePricing.exclusiveFare
         }
     }
 
@@ -140,11 +140,11 @@ public struct RideFareBreakdown: Codable, Equatable {
     }
 
     public init(configuration: RideConfiguration) {
-        let rideFare = (configuration.price / 1.0875).roundedToCents()
+        let rideFare = (configuration.price / RidePricing.taxMultiplier).roundedToCents()
         self.init(
             rideFare: rideFare,
             taxAndFees: (configuration.price - rideFare).roundedToCents(),
-            costShareCredit: configuration.isMultiLeg ? 2.00 : nil,
+            costShareCredit: configuration.isMultiLeg ? RidePricing.poolCostShareCredit : nil,
             total: configuration.price
         )
     }
@@ -189,7 +189,7 @@ public struct RideTripSummary: Codable, Equatable {
 
 private extension Double {
     func roundedToCents() -> Double {
-        (self * 100).rounded() / 100
+        (self * RidePricing.currencyScale).rounded() / RidePricing.currencyScale
     }
 }
 
@@ -267,16 +267,4 @@ enum RideFixtures {
         RideDestination(id: "union-square", systemImage: "clock", color: "neutral", title: "Union Square", subtitle: "Geary & Powell"),
         RideDestination(id: "sfo-terminal-2", systemImage: "airplane", color: "neutral", title: "SFO — Terminal 2", subtitle: "Airport")
     ]
-}
-
-private enum RideTripDefaults {
-    static let singleLegEnrouteTitle = "Your driver is arriving"
-    static let multiLegEnrouteTitle = "On leg 2 of 2"
-    static let singleLegETA = "4 min"
-    static let multiLegETA = "3 min"
-    static let singleLegMarkerLabel = "4 min"
-    static let multiLegMarkerLabel = "Leg 2 · 3 min"
-    static let transferStatus = "Transfer at Hayes St complete · 150m walk"
-    static let completedDuration = "18 min"
-    static let completedDistance = "5.2 km"
 }

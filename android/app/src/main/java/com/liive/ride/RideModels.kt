@@ -22,9 +22,9 @@ enum class RideTier(
     val eta: String,
     val multiLeg: Boolean,
 ) {
-    Pool("Pool", RideIcons.Group, "Share · may transfer once", 9.50, "12 min", true),
-    Premium("Premium", RideIcons.Car, "Private · direct route", 12.50, "8 min", false),
-    Exclusive("Exclusive", RideIcons.Star, "Top-rated · luxury", 18.00, "7 min", false),
+    Pool("Pool", RideIcons.Group, "Share · may transfer once", RidePricing.PoolFare, "12 min", true),
+    Premium("Premium", RideIcons.Car, "Private · direct route", RidePricing.PremiumFare, "8 min", false),
+    Exclusive("Exclusive", RideIcons.Star, "Top-rated · luxury", RidePricing.ExclusiveFare, "7 min", false),
 }
 
 data class RideConfig(
@@ -120,11 +120,11 @@ fun Double.ridePrice(): String = "$" + "%,.2f".format(this)
 fun Double.rideCreditPrice(): String = "–$" + "%,.2f".format(kotlin.math.abs(this))
 
 fun RideConfig.fareBreakdown(): RideFareBreakdown {
-    val rideFare = (tier.price / TAX_MULTIPLIER).roundedCurrency()
+    val rideFare = (tier.price / RidePricing.TaxMultiplier).roundedCurrency()
     return RideFareBreakdown(
         rideFare = rideFare,
         taxAndFees = (tier.price - rideFare).roundedCurrency(),
-        costShareCredit = if (tier.multiLeg) 2.00 else null,
+        costShareCredit = if (tier.multiLeg) RidePricing.PoolCostShareCredit else null,
         total = tier.price,
     )
 }
@@ -143,18 +143,5 @@ fun RideConfig.tripSummary(): RideTripSummary {
 
 fun RideDriver.firstName(): String = name.substringBefore(" ")
 
-private const val TAX_MULTIPLIER = 1.0875
-
-private fun Double.roundedCurrency(): Double = kotlin.math.round(this * 100.0) / 100.0
-
-private object RideTripDefaults {
-    const val SingleLegEnrouteTitle = "Your driver is arriving"
-    const val MultiLegEnrouteTitle = "On leg 2 of 2"
-    const val SingleLegEta = "4 min"
-    const val MultiLegEta = "3 min"
-    const val SingleLegMarkerLabel = "4 min"
-    const val MultiLegMarkerLabel = "Leg 2 · 3 min"
-    const val TransferStatus = "Transfer at Hayes St complete · 150m walk"
-    const val CompletedDuration = "18 min"
-    const val CompletedDistance = "5.2 km"
-}
+private fun Double.roundedCurrency(): Double =
+    kotlin.math.round(this * RidePricing.CurrencyScale) / RidePricing.CurrencyScale
