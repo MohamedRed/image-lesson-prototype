@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.round
 
 class RideViewModel(
-    private val stateStore: RideStateStore,
+    private val stateStore: RideStateStoring,
     private val service: RideService,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(stateStore.read())
@@ -164,11 +164,11 @@ class RideViewModel(
     }
 
     companion object {
-        fun mockFactory(stateStore: RideStateStore): ViewModelProvider.Factory =
+        fun mockFactory(stateStore: RideStateStoring): ViewModelProvider.Factory =
             factory(stateStore, MockRideService())
 
         fun factory(
-            stateStore: RideStateStore,
+            stateStore: RideStateStoring,
             service: RideService,
         ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {

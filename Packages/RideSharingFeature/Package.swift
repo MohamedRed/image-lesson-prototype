@@ -24,5 +24,9 @@ let package = Package(
             ],
             swiftSettings: [.define("USE_LIVEKIT")]
         ),
+        .executableTarget(
+            name: "RideSharingFeatureFlowCheck",
+            dependencies: ["RideSharingFeature"]
+        ),
     ]
 )

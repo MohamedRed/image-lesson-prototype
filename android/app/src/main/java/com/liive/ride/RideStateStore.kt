@@ -3,10 +3,16 @@ package com.liive.ride
 import android.content.Context
 import org.json.JSONObject
 
-class RideStateStore(context: Context) {
+interface RideStateStoring {
+    fun read(): RideUiState
+    fun write(state: RideUiState)
+    fun clear()
+}
+
+class RideStateStore(context: Context) : RideStateStoring {
     private val preferences = context.getSharedPreferences("liive_ride_state", Context.MODE_PRIVATE)
 
-    fun read(): RideUiState {
+    override fun read(): RideUiState {
         val raw = preferences.getString(KEY, null) ?: return RideUiState()
         return runCatching {
             val json = JSONObject(raw)
@@ -45,7 +51,7 @@ class RideStateStore(context: Context) {
         }
     }
 
-    fun write(state: RideUiState) {
+    override fun write(state: RideUiState) {
         val json = JSONObject()
             .put("phase", state.phase.name)
             .put("destinationId", state.destination?.id.orEmpty())
@@ -73,7 +79,7 @@ class RideStateStore(context: Context) {
         preferences.edit().putString(KEY, json.toString()).apply()
     }
 
-    fun clear() {
+    override fun clear() {
         preferences.edit().remove(KEY).apply()
     }
 
