@@ -43,11 +43,11 @@ public struct RideSharingView: View {
                 VStack {
                     HStack {
                         Spacer()
-                        LiiveSOSButton(size: 54, showLabel: false) {
+                        LiiveSOSButton(size: RideChromeLayout.sosSize, showLabel: false) {
                             viewModel.handle(.presentSOS(true))
                         }
-                        .padding(.trailing, 16)
-                        .padding(.top, 116)
+                        .padding(.trailing, RideChromeLayout.sosTrailingPadding)
+                        .padding(.top, RideChromeLayout.sosTopInset)
                     }
                     Spacer()
                 }

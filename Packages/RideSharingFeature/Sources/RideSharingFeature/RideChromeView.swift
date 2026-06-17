@@ -10,14 +10,14 @@ struct RideChromeView: View {
             if state.phase == .enroute {
                 LiiveGlassPanel(material: .thin, cornerRadius: LiiveRadius.full, padding: 0) {
                     LiiveBadge("Voice connected", color: .success, dot: true)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
+                        .padding(.horizontal, RideChromeLayout.badgeHorizontalPadding)
+                        .padding(.vertical, RideChromeLayout.badgeVerticalPadding)
                 }
             } else {
-                Spacer().frame(width: 1, height: 1)
+                Spacer().frame(width: RideChromeLayout.placeholderSize, height: RideChromeLayout.placeholderSize)
             }
             Spacer()
-            HStack(spacing: 8) {
+            HStack(spacing: RideChromeLayout.buttonSpacing) {
                 if state.phase == .enroute {
                     chromeButton(
                         systemName: state.micEnabled ? "mic.fill" : "mic.slash.fill",
@@ -28,17 +28,17 @@ struct RideChromeView: View {
                 chromeButton(systemName: "location.circle.fill", color: LiiveColor.accent, action: onLocate)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 58)
+        .padding(.horizontal, RideChromeLayout.horizontalPadding)
+        .padding(.top, RideChromeLayout.topInset)
     }
 
     private func chromeButton(systemName: String, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             LiiveGlassPanel(material: .thin, cornerRadius: LiiveRadius.full, padding: 0) {
                 Image(systemName: systemName)
-                    .font(.system(size: 19, weight: .semibold))
+                    .font(.system(size: RideChromeLayout.buttonIconSize, weight: RideChromeLayout.buttonIconWeight))
                     .foregroundColor(color)
-                    .frame(width: 44, height: 44)
+                    .frame(width: RideChromeLayout.buttonSize, height: RideChromeLayout.buttonSize)
             }
         }
         .buttonStyle(.plain)

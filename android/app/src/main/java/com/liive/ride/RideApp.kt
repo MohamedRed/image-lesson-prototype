@@ -47,10 +47,12 @@ fun RideApp(viewModel: RideViewModel, darkTheme: Boolean = true) {
 
             if (state.phase == RidePhase.Matching || state.phase == RidePhase.Enroute) {
                 LiiveSosButton(
-                    size = 54.dp,
+                    size = RideChromeLayout.sosSize,
                     showLabel = false,
                     onActivate = { viewModel.onEvent(RideEvent.PresentSOS(true)) },
-                    modifier = Modifier.align(Alignment.TopEnd).padding(top = 116.dp, end = 16.dp)
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = RideChromeLayout.sosTopInset, end = RideChromeLayout.sosEndPadding)
                 )
             }
 
@@ -77,21 +79,32 @@ fun RideApp(viewModel: RideViewModel, darkTheme: Boolean = true) {
 @Composable
 private fun RideTopChrome(state: RideUiState, onToggleMic: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().padding(top = 58.dp, start = 16.dp, end = 16.dp),
+        Modifier
+            .fillMaxWidth()
+            .padding(
+                top = RideChromeLayout.topInset,
+                start = RideChromeLayout.horizontalPadding,
+                end = RideChromeLayout.horizontalPadding
+            ),
         verticalAlignment = Alignment.Top
     ) {
         if (state.phase == RidePhase.Enroute) {
             LiiveGlassPanel(material = GlassMaterial.Thin, shape = LiiveRadius.full, padding = 0.dp) {
-                Box(Modifier.padding(horizontal = 12.dp, vertical = 7.dp)) {
+                Box(
+                    Modifier.padding(
+                        horizontal = RideChromeLayout.badgeHorizontalPadding,
+                        vertical = RideChromeLayout.badgeVerticalPadding
+                    )
+                ) {
                     LiiveBadge("Voice connected", BadgeColor.Success, dot = true)
                 }
             }
         } else {
-            Spacer(Modifier.size(1.dp))
+            Spacer(Modifier.size(RideChromeLayout.placeholderSize))
         }
 
         Spacer(Modifier.weight(1f))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(RideChromeLayout.buttonSpacing)) {
             if (state.phase == RidePhase.Enroute) {
                 ChromeButton(
                     icon = if (state.micEnabled) RideIcons.Mic else RideIcons.MicOff,
@@ -115,13 +128,13 @@ private fun ChromeButton(
     onClick: () -> Unit
 ) {
     LiiveGlassPanel(
-        modifier = Modifier.size(44.dp).clickableNoRipple(onClick),
+        modifier = Modifier.size(RideChromeLayout.buttonSize).clickableNoRipple(onClick),
         material = GlassMaterial.Thin,
         shape = LiiveRadius.full,
         padding = 0.dp
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Icon(painterResource(icon), null, tint = tint, modifier = Modifier.size(19.dp))
+            Icon(painterResource(icon), null, tint = tint, modifier = Modifier.size(RideChromeLayout.buttonIconSize))
         }
     }
 }
