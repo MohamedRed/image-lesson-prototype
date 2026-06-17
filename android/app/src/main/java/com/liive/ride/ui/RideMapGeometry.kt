@@ -58,6 +58,9 @@ internal object RideMapGeometry {
     const val RadarDotRadius = 7
     const val RadarDotStrokeWidth = 3
     const val PulseScaleEnd = 1f
+    const val DotShadowBlur = 10
+    const val DotShadowYOffset = 4
+    const val DotShadowAlpha = 0.35f
 
     val MajorStreets = listOf(
         MapLine(-20f, 250f, 430f, 225f),

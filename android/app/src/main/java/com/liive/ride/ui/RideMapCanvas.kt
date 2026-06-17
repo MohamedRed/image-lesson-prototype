@@ -215,7 +215,7 @@ private fun PulseMarker() {
                     startOpacity = RideMapGeometry.CurrentPulseOpacityStart
                 )
             )
-            drawCircle(c.accent, radius = RideMapGeometry.CurrentDotRadius.dp.toPx(), center = center)
+            drawPinShadowCircle(c.accent, radius = RideMapGeometry.CurrentDotRadius.dp.toPx(), center = center)
             drawCircle(
                 Color.White,
                 radius = RideMapGeometry.CurrentDotRadius.dp.toPx(),
@@ -248,7 +248,7 @@ private fun RadarMarker() {
                     startOpacity = RideMapGeometry.RadarPulseOpacityStart
                 )
             )
-            drawCircle(c.accent, radius = RideMapGeometry.RadarDotRadius.dp.toPx(), center = center)
+            drawPinShadowCircle(c.accent, radius = RideMapGeometry.RadarDotRadius.dp.toPx(), center = center)
             drawCircle(
                 Color.White,
                 radius = RideMapGeometry.RadarDotRadius.dp.toPx(),
