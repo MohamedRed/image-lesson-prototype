@@ -11,24 +11,29 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun LiiveCard(
     modifier: Modifier = Modifier,
     active: Boolean = false,
     raised: Boolean = false,
-    padding: Dp = 16.dp,
+    padding: Dp = LiiveCardLayout.Padding,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val c = LiiveTheme.colors
     Column(
         modifier
-            .shadow(if (active) 0.dp else LiiveElevation.card, LiiveRadius.lg)
+            .shadow(if (active) LiiveCardLayout.ActiveElevation else LiiveElevation.card, LiiveRadius.lg)
             .clip(LiiveRadius.lg)
             .background(if (raised) c.surfaceRaised else c.surface)
-            .border(1.5.dp, if (active) c.accent else Color.Transparent, LiiveRadius.lg)
+            .border(LiiveCardLayout.StrokeWidth, if (active) c.accent else Color.Transparent, LiiveRadius.lg)
             .padding(padding),
         content = content
     )
+}
+
+private object LiiveCardLayout {
+    val Padding = LiiveSpacing.l
+    val StrokeWidth = LiiveSpacing.xs2 - LiiveSpacing.xs2 / 4
+    val ActiveElevation = LiiveSpacing.xs2 - LiiveSpacing.xs2
 }
