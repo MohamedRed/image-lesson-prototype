@@ -44,3 +44,6 @@ val LiiveType = Typography(
     labelMedium    = sg(12, 16, FontWeight.Normal, 0.0),   // Caption 1
     labelSmall     = sg(11, 13, FontWeight.Normal, 0.06),  // Caption 2
 )
+
+val LiiveSheetMeta = LiiveType.titleMedium.copy(fontSize = 14.sp)
+val LiiveSheetMetaSemibold = LiiveSheetMeta.copy(fontWeight = FontWeight.SemiBold)

@@ -1,9 +1,9 @@
 import SwiftUI
 
 enum RideSheetLayout {
-    static let stackedSpacing: CGFloat = 0
-    static let hairlineHeight: CGFloat = 0.5
-    static let selectedBorderWidth: CGFloat = 1.5
+    static let stackedSpacing = CGFloat.zero
+    static let hairlineHeight = LiiveStroke.hairline
+    static let selectedBorderWidth = LiiveStroke.active
 
     static let compactGap = LiiveSpacing.xs2
     static let inlineGap = LiiveSpacing.xs + LiiveSpacing.xs2

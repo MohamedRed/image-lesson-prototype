@@ -1,13 +1,12 @@
 package com.liive.ride.ui
 
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.liive.ride.designsystem.LiiveControl
 import com.liive.ride.designsystem.LiiveSpacing
+import com.liive.ride.designsystem.LiiveStroke
 
 internal object RideSheetLayout {
-    val hairlineHeight = 0.5.dp
-    val selectedBorderWidth = 1.5.dp
+    val hairlineHeight = LiiveStroke.hairline
+    val selectedBorderWidth = LiiveStroke.active
 
     val compactGap = LiiveSpacing.xs2
     val inlineGap = LiiveSpacing.xs + LiiveSpacing.xs2
@@ -35,7 +34,6 @@ internal object RideSheetLayout {
     val matchingDotLift = -(LiiveSpacing.s - LiiveSpacing.xs2 / 2)
     const val matchingDotDurationMs = 600
     const val matchingDotDelayMs = 160
-    val matchingMetaFontSize = 14.sp
     val matchingDescriptionMaxWidth = LiiveControl.xl * MaxWidthColumnCount
     val matchingContentTopPadding = LiiveSpacing.s
     val matchingContentBottomPadding = LiiveSpacing.xxl - LiiveSpacing.xs2

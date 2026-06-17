@@ -40,6 +40,11 @@ object LiiveControl {
     val xl = 56.dp
 }
 
+object LiiveStroke {
+    val hairline = LiiveSpacing.xs2 / 4
+    val active = LiiveSpacing.xs2 - hairline
+}
+
 object LiiveElevation {
     val small = 2.dp
     val card = 4.dp

@@ -38,6 +38,11 @@ public enum LiiveControl {
     public static let xl: CGFloat = 56
 }
 
+public enum LiiveStroke {
+    public static let hairline = LiiveSpacing.xs2 / 4
+    public static let active = LiiveSpacing.xs2 - hairline
+}
+
 /// Elevation shadows (color, radius, x, y).
 public struct LiiveShadow {
     public let color: Color

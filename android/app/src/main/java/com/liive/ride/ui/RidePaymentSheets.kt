@@ -35,6 +35,7 @@ import com.liive.ride.designsystem.LiiveFareRow
 import com.liive.ride.designsystem.LiiveIconCircle
 import com.liive.ride.designsystem.LiiveListRow
 import com.liive.ride.designsystem.LiiveRadius
+import com.liive.ride.designsystem.LiiveSheetMeta
 import com.liive.ride.designsystem.LiiveTheme
 import com.liive.ride.designsystem.RideIcons
 import com.liive.ride.designsystem.tabularNumbers
@@ -150,7 +151,7 @@ private fun RatingControl(rating: Int, onEvent: (RideEvent) -> Unit) {
         Text(
             "Rate your driver",
             color = c.textSecondary,
-            style = MaterialTheme.typography.titleMedium.copy(fontSize = RideSheetLayout.matchingMetaFontSize)
+            style = LiiveSheetMeta
         )
         Row(
             horizontalArrangement = Arrangement.spacedBy(RideSheetLayout.inlineGap),

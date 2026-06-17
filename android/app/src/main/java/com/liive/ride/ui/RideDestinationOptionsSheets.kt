@@ -30,8 +30,7 @@ fun RideDestinationSheet(onEvent: (RideEvent) -> Unit) {
             Text(
                 "Now ▾",
                 color = c.accent,
-                style = MaterialTheme.typography.titleMedium.copy(fontSize = RideSheetLayout.matchingMetaFontSize),
-                fontWeight = FontWeight.SemiBold
+                style = LiiveSheetMetaSemibold
             )
         }
 

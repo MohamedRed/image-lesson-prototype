@@ -69,7 +69,7 @@ fun RideMatchingSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             Text(
                 "Matching you with a nearby${if (state.config.femaleOnly) " female-only" else ""} ${state.config.tier.name.lowercase()} driver and reserving a legal curb.",
                 color = c.textSecondary,
-                style = MaterialTheme.typography.titleMedium.copy(fontSize = RideSheetLayout.matchingMetaFontSize),
+                style = LiiveSheetMeta,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .widthIn(max = RideSheetLayout.matchingDescriptionMaxWidth)
@@ -111,7 +111,7 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
             Text(
                 "to ${config.destinationName}",
                 color = c.textSecondary,
-                style = MaterialTheme.typography.titleMedium.copy(fontSize = RideSheetLayout.matchingMetaFontSize),
+                style = LiiveSheetMeta,
                 modifier = Modifier.alignByBaseline()
             )
         }
