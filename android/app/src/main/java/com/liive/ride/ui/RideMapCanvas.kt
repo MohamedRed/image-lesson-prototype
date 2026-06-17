@@ -36,7 +36,13 @@ import com.liive.ride.designsystem.MapMarkerKind
 import kotlin.math.roundToInt
 
 @Composable
-fun RideMapCanvas(phase: RidePhase, isMultiLeg: Boolean, carProgress: Float, tripSummary: RideTripSummary) {
+fun RideMapCanvas(
+    phase: RidePhase,
+    isMultiLeg: Boolean,
+    carProgress: Float,
+    destinationName: String,
+    tripSummary: RideTripSummary
+) {
     val c = LiiveTheme.colors
     val effectivePhase = if (phase == RidePhase.Complete) RidePhase.Enroute else phase
     val showRoute = effectivePhase != RidePhase.Destination
@@ -79,7 +85,7 @@ fun RideMapCanvas(phase: RidePhase, isMultiLeg: Boolean, carProgress: Float, tri
             LiiveMapMarker(MapMarkerKind.Transfer, "Transfer")
         }
         if (effectivePhase != RidePhase.Destination) OverlayAt(RideMapGeometry.Destination, OverlayAnchor.Bottom) {
-            LiiveMapMarker(MapMarkerKind.Destination, "Union Square")
+            LiiveMapMarker(MapMarkerKind.Destination, destinationName)
         }
         if (phase == RidePhase.Matching) OverlayAt(RideMapGeometry.Origin, OverlayAnchor.Center) {
             RadarMarker()

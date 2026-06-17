@@ -28,6 +28,7 @@ fun RideApp(viewModel: RideViewModel, darkTheme: Boolean = true) {
                 phase = state.phase,
                 isMultiLeg = state.config.tier.multiLeg,
                 carProgress = state.carProgress,
+                destinationName = state.config.destinationName,
                 tripSummary = state.tripSummary
             )
 

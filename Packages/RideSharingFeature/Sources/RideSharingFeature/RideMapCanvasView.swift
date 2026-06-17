@@ -4,6 +4,7 @@ struct RideMapCanvasView: View {
     let phase: RidePhase
     let isMultiLeg: Bool
     let carProgress: Double
+    let destinationName: String
     let tripSummary: RideTripSummary
 
     var body: some View {
@@ -145,7 +146,7 @@ struct RideMapCanvasView: View {
             bottomAnchoredMarker(kind: .transfer, label: "Transfer", at: RideMapGeometry.transfer, size: size)
         }
         if effectivePhase != .destination {
-            bottomAnchoredMarker(kind: .destination, label: "Union Square", at: RideMapGeometry.destination, size: size)
+            bottomAnchoredMarker(kind: .destination, label: destinationName, at: RideMapGeometry.destination, size: size)
         }
     }
 
