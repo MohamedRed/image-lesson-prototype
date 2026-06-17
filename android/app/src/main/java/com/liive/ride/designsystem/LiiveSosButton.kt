@@ -23,12 +23,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun LiiveSosButton(
-    size: Dp = 64.dp,
+    size: Dp = LiiveControl.xl + LiiveSpacing.s,
     showLabel: Boolean = true,
     modifier: Modifier = Modifier,
     onActivate: () -> Unit
@@ -37,14 +36,18 @@ fun LiiveSosButton(
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val pressScale by animateFloatAsState(
-        targetValue = if (pressed) 0.94f else 1f,
+        targetValue = if (pressed) LiiveSosButtonLayout.PressedScale else LiiveSosButtonLayout.RestingScale,
         animationSpec = tween(durationMillis = LiiveMotion.fastMs, easing = LiiveMotion.easeOut),
         label = "LiiveSosButtonPressScale"
     )
     val transition = rememberInfiniteTransition(label = "sos")
     val pulse by transition.animateFloat(
-        initialValue = 0f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(1500, easing = LiiveMotion.easeOut), RepeatMode.Restart),
+        initialValue = LiiveSosButtonLayout.PulseStart,
+        targetValue = LiiveSosButtonLayout.PulseEnd,
+        animationSpec = infiniteRepeatable(
+            tween(LiiveSosButtonLayout.PulseDurationMs, easing = LiiveMotion.easeOut),
+            RepeatMode.Restart
+        ),
         label = "pulse"
     )
     Box(
@@ -55,7 +58,10 @@ fun LiiveSosButton(
     ) {
         Box(
             Modifier.matchParentSize().graphicsLayer {
-                scaleX = 1f + pulse * 0.5f; scaleY = 1f + pulse * 0.5f; alpha = (1f - pulse) * 0.35f
+                val pulseScale = LiiveSosButtonLayout.RestingScale + pulse * LiiveSosButtonLayout.PulseScaleDelta
+                scaleX = pulseScale
+                scaleY = pulseScale
+                alpha = (LiiveSosButtonLayout.PulseEnd - pulse) * LiiveSosButtonLayout.PulseStartOpacity
             }.clip(CircleShape).background(c.danger)
         )
         Box(
@@ -64,8 +70,8 @@ fun LiiveSosButton(
                     elevation = LiiveElevation.sos,
                     shape = CircleShape,
                     clip = false,
-                    ambientColor = c.danger.copy(alpha = 0.45f),
-                    spotColor = c.danger.copy(alpha = 0.45f),
+                    ambientColor = c.danger.copy(alpha = LiiveSosButtonLayout.ShadowColorAlpha),
+                    spotColor = c.danger.copy(alpha = LiiveSosButtonLayout.ShadowColorAlpha),
                 )
                 .clip(CircleShape)
                 .background(c.danger)
@@ -74,14 +80,44 @@ fun LiiveSosButton(
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(1.dp)
+                verticalArrangement = Arrangement.spacedBy(LiiveSosButtonLayout.LabelGap)
             ) {
-                Text("SOS", color = Color.White, fontWeight = FontWeight.Bold,
-                    fontSize = (size.value * 0.28f).sp, fontFamily = SchibstedGrotesk)
-                if (showLabel) Text("HELP", color = Color.White.copy(alpha = 0.9f),
-                    fontWeight = FontWeight.SemiBold, fontSize = (size.value * 0.15f).sp,
-                    fontFamily = SchibstedGrotesk, letterSpacing = 0.5.sp)
+                Text(
+                    "SOS",
+                    color = LiiveSosButtonLayout.ForegroundColor,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = (size.value * LiiveSosButtonLayout.SosTextScale).sp,
+                    fontFamily = SchibstedGrotesk
+                )
+                if (showLabel) {
+                    Text(
+                        "HELP",
+                        color = LiiveSosButtonLayout.ForegroundColor.copy(alpha = LiiveSosButtonLayout.HelpTextOpacity),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = (size.value * LiiveSosButtonLayout.HelpTextScale).sp,
+                        fontFamily = SchibstedGrotesk,
+                        letterSpacing = LiiveSosButtonLayout.HelpLetterSpacing
+                    )
+                }
             }
         }
     }
+}
+
+private object LiiveSosButtonLayout {
+    val LabelGap = LiiveSpacing.xs2 / 2
+    const val RestingScale = 1f
+    const val PressedScale = 0.94f
+    const val PulseStart = 0f
+    const val PulseEnd = 1f
+    const val PulseScaleDelta = 0.5f
+    const val PulseStartOpacity = 0.35f
+    const val PulseDurationMs = LiiveMotion.slowMs + LiiveMotion.slowMs + LiiveMotion.slowMs +
+        LiiveMotion.baseMs + LiiveMotion.fastMs
+    const val SosTextScale = 0.28f
+    const val HelpTextScale = 0.15f
+    const val HelpTextOpacity = 0.9f
+    const val ShadowColorAlpha = 0.45f
+    val HelpLetterSpacing = (LiiveSpacing.xs2.value / 4).sp
+    val ForegroundColor = Color.White
 }
