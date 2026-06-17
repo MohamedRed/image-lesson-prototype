@@ -46,15 +46,18 @@ internal object RideMapGeometry {
     const val TransferRadius = 5f
     const val TransferStrokeWidth = 3f
     const val CurrentPulseSize = 66
-    const val CurrentPulseScaleStart = 0.35f
+    const val CurrentPulseScaleStart = 0.33f
+    const val CurrentPulseOpacityStart = 0.65f
     const val CurrentPulseDurationMs = 2_000
     const val CurrentDotRadius = 11
     const val CurrentDotStrokeWidth = 3
     const val RadarPulseSize = 126
     const val RadarPulseScaleStart = 0.11f
+    const val RadarPulseOpacityStart = 0.50f
     const val RadarPulseDurationMs = 1_800
     const val RadarDotRadius = 7
     const val RadarDotStrokeWidth = 3
+    const val PulseScaleEnd = 1f
 
     val MajorStreets = listOf(
         MapLine(-20f, 250f, 430f, 225f),

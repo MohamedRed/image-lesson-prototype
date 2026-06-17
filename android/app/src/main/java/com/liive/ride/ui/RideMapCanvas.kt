@@ -197,13 +197,22 @@ private fun PulseMarker() {
     val transition = rememberInfiniteTransition(label = "pulse")
     val scale by transition.animateFloat(
         RideMapGeometry.CurrentPulseScaleStart,
-        1f,
+        RideMapGeometry.PulseScaleEnd,
         infiniteRepeatable(tween(RideMapGeometry.CurrentPulseDurationMs), RepeatMode.Restart),
         label = "scale"
     )
     Box(Modifier.size(RideMapGeometry.CurrentPulseSize.dp)) {
         Canvas(Modifier.fillMaxSize()) {
-            drawCircle(c.accentTint, radius = size.minDimension / 2f * scale, center = center, alpha = 1f - scale)
+            drawCircle(
+                c.accentTint,
+                radius = size.minDimension / 2f * scale,
+                center = center,
+                alpha = pulseAlpha(
+                    scale = scale,
+                    startScale = RideMapGeometry.CurrentPulseScaleStart,
+                    startOpacity = RideMapGeometry.CurrentPulseOpacityStart
+                )
+            )
             drawCircle(c.accent, radius = RideMapGeometry.CurrentDotRadius.dp.toPx(), center = center)
             drawCircle(
                 Color.White,
@@ -221,13 +230,22 @@ private fun RadarMarker() {
     val transition = rememberInfiniteTransition(label = "radar")
     val scale by transition.animateFloat(
         RideMapGeometry.RadarPulseScaleStart,
-        1f,
+        RideMapGeometry.PulseScaleEnd,
         infiniteRepeatable(tween(RideMapGeometry.RadarPulseDurationMs), RepeatMode.Restart),
         label = "scale"
     )
     Box(Modifier.size(RideMapGeometry.RadarPulseSize.dp)) {
         Canvas(Modifier.fillMaxSize()) {
-            drawCircle(c.accent, radius = size.minDimension / 2f * scale, center = center, alpha = 1f - scale)
+            drawCircle(
+                c.accent,
+                radius = size.minDimension / 2f * scale,
+                center = center,
+                alpha = pulseAlpha(
+                    scale = scale,
+                    startScale = RideMapGeometry.RadarPulseScaleStart,
+                    startOpacity = RideMapGeometry.RadarPulseOpacityStart
+                )
+            )
             drawCircle(c.accent, radius = RideMapGeometry.RadarDotRadius.dp.toPx(), center = center)
             drawCircle(
                 Color.White,
@@ -237,6 +255,15 @@ private fun RadarMarker() {
             )
         }
     }
+}
+
+private fun pulseAlpha(scale: Float, startScale: Float, startOpacity: Float): Float {
+    val scaleRange = RideMapGeometry.PulseScaleEnd - startScale
+    val progress = ((scale - startScale) / scaleRange).coerceIn(
+        PulseAlphaProgress.Start,
+        PulseAlphaProgress.End
+    )
+    return startOpacity * (PulseAlphaProgress.End - progress)
 }
 
 private fun carPoint(multiLeg: Boolean, progress: Float): MapPoint {
@@ -250,3 +277,8 @@ private fun carPoint(multiLeg: Boolean, progress: Float): MapPoint {
 }
 
 private enum class OverlayAnchor { Center, Bottom }
+
+private object PulseAlphaProgress {
+    const val Start = 0f
+    const val End = 1f
+}
