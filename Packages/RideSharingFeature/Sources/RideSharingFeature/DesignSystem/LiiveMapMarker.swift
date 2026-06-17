@@ -30,7 +30,7 @@ public struct LiiveMapMarker: View {
     }
 
     public var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: LiiveMapMarkerLayout.markerGap) {
             if kind == .origin {
                 originDot
             } else {
@@ -46,26 +46,36 @@ public struct LiiveMapMarker: View {
     private var originDot: some View {
         Circle()
             .fill(color)
-            .frame(width: 18, height: 18)
-            .overlay(Circle().stroke(.white, lineWidth: 3))
+            .frame(width: LiiveMapMarkerLayout.dotSize, height: LiiveMapMarkerLayout.dotSize)
+            .overlay(
+                Circle().stroke(
+                    LiiveMapMarkerLayout.outlineColor,
+                    lineWidth: LiiveMapMarkerLayout.dotStrokeWidth
+                )
+            )
             .liiveShadow(.pin)
     }
 
     private var pinMarker: some View {
         ZStack(alignment: .bottom) {
             PointerTail(color: color)
-                .frame(width: 12, height: 12)
-                .offset(y: 5)
+                .frame(width: LiiveMapMarkerLayout.pinTailSize, height: LiiveMapMarkerLayout.pinTailSize)
+                .offset(y: LiiveMapMarkerLayout.pinTailOffset)
             Circle()
                 .fill(color)
-                .frame(width: 38, height: 38)
-                .overlay(Circle().stroke(.white, lineWidth: 2.5))
+                .frame(width: LiiveMapMarkerLayout.pinSize, height: LiiveMapMarkerLayout.pinSize)
+                .overlay(
+                    Circle().stroke(
+                        LiiveMapMarkerLayout.outlineColor,
+                        lineWidth: LiiveMapMarkerLayout.pinStrokeWidth
+                    )
+                )
                 .liiveShadow(.pin)
             Image(systemName: icon)
-                .font(.system(size: 18, weight: .bold))
-                .foregroundColor(.white)
+                .font(.system(size: LiiveMapMarkerLayout.glyphSize, weight: .bold))
+                .foregroundColor(LiiveMapMarkerLayout.outlineColor)
         }
-        .frame(width: 38, height: 38)
+        .frame(width: LiiveMapMarkerLayout.pinSize, height: LiiveMapMarkerLayout.pinSize)
     }
 
     private func labelTag(_ label: String) -> some View {
@@ -73,17 +83,33 @@ public struct LiiveMapMarker: View {
             .font(LiiveFont.caption1.weight(.semibold))
             .foregroundColor(LiiveColor.text)
             .lineLimit(1)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 2)
+            .padding(.horizontal, LiiveMapMarkerLayout.labelHorizontalPadding)
+            .padding(.vertical, LiiveMapMarkerLayout.labelVerticalPadding)
             .background(LiiveColor.surface)
             .clipShape(Capsule())
             .overlay(alignment: .bottom) {
                 Capsule()
                     .fill(color)
-                    .frame(height: 2)
+                    .frame(height: LiiveMapMarkerLayout.labelIndicatorHeight)
             }
             .liiveShadow(.card)
     }
+}
+
+private enum LiiveMapMarkerLayout {
+    static let markerGap = LiiveSpacing.xs
+    static let dotSize = LiiveSpacing.l + LiiveSpacing.xs2
+    static let dotStrokeWidth = LiiveSpacing.xs - LiiveSpacing.xs2 / 2
+    static let pinSize = LiiveControl.md - LiiveSpacing.xs - LiiveSpacing.xs2
+    static let glyphSize = dotSize
+    static let pinTailSize = LiiveSpacing.m
+    static let pinTailOffset = LiiveSpacing.xs + LiiveSpacing.xs2 / 2
+    static let pinStrokeWidth = LiiveSpacing.xs2 + LiiveSpacing.xs2 / 4
+    static let labelHorizontalPadding = LiiveSpacing.s
+    static let labelVerticalPadding = LiiveSpacing.xs2
+    static let labelIndicatorHeight = LiiveSpacing.xs2
+    static let pointerRotationDegrees = 45.0
+    static let outlineColor = Color.white
 }
 
 private struct PointerTail: View {
@@ -94,14 +120,14 @@ private struct PointerTail: View {
             .fill(color)
             .overlay(alignment: .trailing) {
                 Rectangle()
-                    .fill(.white)
-                    .frame(width: 2.5)
+                    .fill(LiiveMapMarkerLayout.outlineColor)
+                    .frame(width: LiiveMapMarkerLayout.pinStrokeWidth)
             }
             .overlay(alignment: .bottom) {
                 Rectangle()
-                    .fill(.white)
-                    .frame(height: 2.5)
+                    .fill(LiiveMapMarkerLayout.outlineColor)
+                    .frame(height: LiiveMapMarkerLayout.pinStrokeWidth)
             }
-            .rotationEffect(.degrees(45))
+            .rotationEffect(.degrees(LiiveMapMarkerLayout.pointerRotationDegrees))
     }
 }

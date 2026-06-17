@@ -26,7 +26,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun LiiveMapMarker(kind: MapMarkerKind, label: String? = null) {
@@ -45,39 +44,48 @@ fun LiiveMapMarker(kind: MapMarkerKind, label: String? = null) {
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.widthIn(max = 150.dp)
+        verticalArrangement = Arrangement.spacedBy(LiiveMapMarkerLayout.MarkerGap),
+        modifier = Modifier.widthIn(max = LiiveMapMarkerLayout.MaxLabelWidth)
     ) {
         if (kind == MapMarkerKind.Origin) {
             Box(
                 Modifier
-                    .size(18.dp)
+                    .size(LiiveMapMarkerLayout.DotSize)
                     .shadow(LiiveElevation.card, CircleShape)
                     .clip(CircleShape)
                     .background(color)
-                    .border(3.dp, Color.White, CircleShape)
+                    .border(LiiveMapMarkerLayout.DotStrokeWidth, LiiveMapMarkerLayout.OutlineColor, CircleShape)
             )
         } else {
             Box(
-                Modifier.size(38.dp),
+                Modifier.size(LiiveMapMarkerLayout.PinSize),
                 contentAlignment = Alignment.Center
             ) {
                 PointerTail(
                     color = color,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .offset(y = 7.5.dp)
+                        .offset(y = LiiveMapMarkerLayout.PinTailOffset)
                 )
                 Box(
                     Modifier
-                        .size(38.dp)
+                        .size(LiiveMapMarkerLayout.PinSize)
                         .shadow(LiiveElevation.card, CircleShape)
                         .clip(CircleShape)
                         .background(color)
-                        .border(2.5.dp, Color.White, CircleShape),
+                        .border(
+                            LiiveMapMarkerLayout.PinStrokeWidth,
+                            LiiveMapMarkerLayout.OutlineColor,
+                            CircleShape
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(painterResource(icon), null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    Icon(
+                        painterResource(icon),
+                        null,
+                        tint = LiiveMapMarkerLayout.OutlineColor,
+                        modifier = Modifier.size(LiiveMapMarkerLayout.GlyphSize)
+                    )
                 }
             }
         }
@@ -89,18 +97,28 @@ fun LiiveMapMarker(kind: MapMarkerKind, label: String? = null) {
 
 @Composable
 private fun PointerTail(color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier.size(18.dp)) {
-        val edge = 12.dp.toPx()
-        val strokeWidth = 2.5.dp.toPx()
+    Canvas(modifier.size(LiiveMapMarkerLayout.TailCanvasSize)) {
+        val edge = LiiveMapMarkerLayout.TailEdgeSize.toPx()
+        val strokeWidth = LiiveMapMarkerLayout.PinStrokeWidth.toPx()
         val left = (size.width - edge) / 2f
         val top = (size.height - edge) / 2f
         val right = left + edge
         val bottom = top + edge
 
-        rotate(degrees = 45f, pivot = center) {
+        rotate(degrees = LiiveMapMarkerLayout.PointerRotationDegrees, pivot = center) {
             drawRect(color, topLeft = Offset(left, top), size = Size(edge, edge))
-            drawLine(Color.White, Offset(right, top), Offset(right, bottom), strokeWidth = strokeWidth)
-            drawLine(Color.White, Offset(left, bottom), Offset(right, bottom), strokeWidth = strokeWidth)
+            drawLine(
+                LiiveMapMarkerLayout.OutlineColor,
+                Offset(right, top),
+                Offset(right, bottom),
+                strokeWidth = strokeWidth
+            )
+            drawLine(
+                LiiveMapMarkerLayout.OutlineColor,
+                Offset(left, bottom),
+                Offset(right, bottom),
+                strokeWidth = strokeWidth
+            )
         }
     }
 }
@@ -120,16 +138,38 @@ private fun MarkerLabel(label: String, color: Color) {
             color = c.text,
             style = MaterialTheme.typography.labelMedium,
             maxLines = 1,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+            modifier = Modifier.padding(
+                horizontal = LiiveMapMarkerLayout.LabelHorizontalPadding,
+                vertical = LiiveMapMarkerLayout.LabelVerticalPadding
+            )
         )
         Box(
             Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .height(2.dp)
+                .height(LiiveMapMarkerLayout.LabelIndicatorHeight)
                 .background(color)
         )
     }
+}
+
+private object LiiveMapMarkerLayout {
+    val MarkerGap = LiiveSpacing.xs
+    val MaxLabelWidth = LiiveSpacing.huge + LiiveSpacing.huge + LiiveSpacing.huge +
+        LiiveSpacing.xxxl - LiiveSpacing.xs2
+    val DotSize = LiiveSpacing.l + LiiveSpacing.xs2
+    val DotStrokeWidth = LiiveSpacing.xs - LiiveSpacing.xs2 / 2
+    val PinSize = LiiveControl.md - LiiveSpacing.xs - LiiveSpacing.xs2
+    val GlyphSize = DotSize
+    val TailCanvasSize = DotSize
+    val TailEdgeSize = LiiveSpacing.m
+    val PinTailOffset = LiiveSpacing.s - LiiveSpacing.xs2 / 4
+    val PinStrokeWidth = LiiveSpacing.xs2 + LiiveSpacing.xs2 / 4
+    val LabelHorizontalPadding = LiiveSpacing.s
+    val LabelVerticalPadding = LiiveSpacing.xs2
+    val LabelIndicatorHeight = LiiveSpacing.xs2
+    const val PointerRotationDegrees = 45f
+    val OutlineColor = Color.White
 }
 
 enum class MapMarkerKind { Car, Origin, Destination, Transfer }
