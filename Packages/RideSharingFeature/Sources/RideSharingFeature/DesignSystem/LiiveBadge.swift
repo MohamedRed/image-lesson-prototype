@@ -49,17 +49,28 @@ public struct LiiveBadge: View {
     }
 
     public var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: LiiveBadgeLayout.contentGap) {
             if dot {
-                Circle().fill(solid ? onSolid : fg).frame(width: 7, height: 7)
+                Circle()
+                    .fill(solid ? onSolid : fg)
+                    .frame(width: LiiveBadgeLayout.dotSize, height: LiiveBadgeLayout.dotSize)
             }
             Text(text)
                 .font(LiiveFont.caption1.weight(.semibold))
-                .tracking(0.1)
+                .tracking(LiiveBadgeLayout.letterSpacing)
         }
-        .padding(.horizontal, 9).padding(.vertical, 3)
+        .padding(.horizontal, LiiveBadgeLayout.horizontalPadding)
+        .padding(.vertical, LiiveBadgeLayout.verticalPadding)
         .foregroundColor(solid ? onSolid : fg)
         .background(solid ? solidBg : tintBg)
         .clipShape(Capsule())
     }
+}
+
+private enum LiiveBadgeLayout {
+    static let contentGap = LiiveSpacing.xs + LiiveSpacing.xs2 / 2
+    static let dotSize = LiiveSpacing.s - LiiveSpacing.xs2 / 2
+    static let horizontalPadding = LiiveSpacing.s + LiiveSpacing.xs2 / 2
+    static let verticalPadding = LiiveSpacing.xs - LiiveSpacing.xs2 / 2
+    static let letterSpacing = LiiveSpacing.xs2 / 20
 }
