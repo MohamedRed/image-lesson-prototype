@@ -51,7 +51,7 @@ fun LiiveMapMarker(kind: MapMarkerKind, label: String? = null) {
             Box(
                 Modifier
                     .size(LiiveMapMarkerLayout.DotSize)
-                    .shadow(LiiveElevation.card, CircleShape)
+                    .shadow(LiiveElevation.pin, CircleShape)
                     .clip(CircleShape)
                     .background(color)
                     .border(LiiveMapMarkerLayout.DotStrokeWidth, LiiveMapMarkerLayout.OutlineColor, CircleShape)
@@ -70,7 +70,7 @@ fun LiiveMapMarker(kind: MapMarkerKind, label: String? = null) {
                 Box(
                     Modifier
                         .size(LiiveMapMarkerLayout.PinSize)
-                        .shadow(LiiveElevation.card, CircleShape)
+                        .shadow(LiiveElevation.pin, CircleShape)
                         .clip(CircleShape)
                         .background(color)
                         .border(
@@ -129,7 +129,7 @@ private fun MarkerLabel(label: String, color: Color) {
 
     Box(
         Modifier
-            .shadow(LiiveElevation.card, LiiveRadius.full)
+            .shadow(LiiveElevation.small, LiiveRadius.full)
             .clip(LiiveRadius.full)
             .background(c.surface)
     ) {

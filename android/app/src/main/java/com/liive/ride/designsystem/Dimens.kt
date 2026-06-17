@@ -48,6 +48,7 @@ object LiiveStroke {
 object LiiveElevation {
     val small = 2.dp
     val card = 4.dp
+    val pin = 10.dp
     val hud = 12.dp
     val sheet = 16.dp
     val sos = 18.dp

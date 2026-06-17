@@ -92,7 +92,7 @@ public struct LiiveMapMarker: View {
                     .fill(color)
                     .frame(height: LiiveMapMarkerLayout.labelIndicatorHeight)
             }
-            .liiveShadow(.card)
+            .liiveShadow(.small)
     }
 }
 
