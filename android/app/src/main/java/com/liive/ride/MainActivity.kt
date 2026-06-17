@@ -14,7 +14,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val stateStore = remember { RideStateStore(applicationContext) }
             val viewModel: RideViewModel = viewModel(
-                factory = RideViewModel.factory(stateStore)
+                factory = RideViewModel.mockFactory(stateStore)
             )
             RideApp(viewModel)
         }

@@ -164,9 +164,12 @@ class RideViewModel(
     }
 
     companion object {
+        fun mockFactory(stateStore: RideStateStore): ViewModelProvider.Factory =
+            factory(stateStore, MockRideService())
+
         fun factory(
             stateStore: RideStateStore,
-            service: RideService = MockRideService(),
+            service: RideService,
         ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")

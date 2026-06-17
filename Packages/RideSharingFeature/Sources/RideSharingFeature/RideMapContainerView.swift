@@ -4,7 +4,6 @@ import SwiftUI
 public enum ServiceMode {
     case demo
     case localDev(RideLocalDevConfig)
-    case production
 
     /// Quick access to common configurations
     public static let localDefault = ServiceMode.localDev(.default)
@@ -21,34 +20,13 @@ public struct RideMapContainerView: View {
     /// Initialize with a specific service mode
     public init(mode: ServiceMode = .demo, preferredColorScheme: ColorScheme? = .dark) {
         self.preferredColorScheme = preferredColorScheme
-        switch mode {
-        case .demo:
-            self.service = MockRideSharingService()
-
-        case .localDev:
-            self.service = MockRideSharingService()
-
-        case .production:
-            self.service = MockRideSharingService()
-        }
+        self.service = MockRideSharingService()
     }
 
-    /// Legacy initializer for backward compatibility
-    @available(*, deprecated, message: "Use init(mode:) instead")
-    public init(service: RideSharingServicing) {
+    /// Initialize with an explicit service implementation for production wiring.
+    public init(service: RideSharingServicing, preferredColorScheme: ColorScheme? = .dark) {
         self.service = service
-        self.preferredColorScheme = .dark
-    }
-
-    /// Legacy initializer for backward compatibility
-    @available(*, deprecated, message: "Use init(mode:) instead")
-    public init(useRealService: Bool) {
-        self.preferredColorScheme = .dark
-        if useRealService {
-            self.service = MockRideSharingService()
-        } else {
-            self.service = MockRideSharingService()
-        }
+        self.preferredColorScheme = preferredColorScheme
     }
 
     public var body: some View {
