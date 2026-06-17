@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 private const val StepperMinusLabel = "\u2212"
@@ -31,7 +30,12 @@ fun LiiveStepper(value: Int, range: IntRange, onChange: (Int) -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         StepperControl(StepperMinusLabel, enabled = value > range.first) { onChange((value - 1).coerceAtLeast(range.first)) }
-        Box(Modifier.width(1.dp).height(18.dp).background(c.separator))
+        Box(
+            Modifier
+                .width(LiiveStepperLayout.SeparatorWidth)
+                .height(LiiveStepperLayout.SeparatorHeight)
+                .background(c.separator)
+        )
         StepperControl("+", enabled = value < range.last) { onChange((value + 1).coerceAtMost(range.last)) }
     }
 }
@@ -40,7 +44,8 @@ fun LiiveStepper(value: Int, range: IntRange, onChange: (Int) -> Unit) {
 private fun StepperControl(label: String, enabled: Boolean, onClick: () -> Unit) {
     val c = LiiveTheme.colors
     Box(
-        Modifier.size(width = 44.dp, height = 32.dp)
+        Modifier
+            .size(width = LiiveStepperLayout.ControlWidth, height = LiiveStepperLayout.ControlHeight)
             .clickable(
                 enabled = enabled,
                 interactionSource = remember { MutableInteractionSource() },
@@ -52,9 +57,17 @@ private fun StepperControl(label: String, enabled: Boolean, onClick: () -> Unit)
             label,
             color = if (enabled) c.text else c.textQuaternary,
             style = MaterialTheme.typography.titleLarge.copy(
-                fontSize = 20.sp,
+                fontSize = LiiveStepperLayout.ControlFontSize,
                 fontWeight = FontWeight.Normal
             )
         )
     }
+}
+
+private object LiiveStepperLayout {
+    val SeparatorWidth = LiiveSpacing.xs2 / 2
+    val SeparatorHeight = LiiveSpacing.l + LiiveSpacing.xs2
+    val ControlWidth = LiiveControl.md
+    val ControlHeight = LiiveControl.sm
+    val ControlFontSize = LiiveSpacing.xl.value.sp
 }
