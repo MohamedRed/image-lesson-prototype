@@ -173,8 +173,7 @@ struct RideMapCanvasView: View {
     }
 
     private func markerPoint(_ point: MapPoint, in size: CGSize) -> CGPoint {
-        let viewport = RideMapGeometry.viewportSize
-        return CGPoint(x: point.x / viewport.width * size.width, y: point.y / viewport.height * size.height)
+        MapSvgViewport(size: size).point(point)
     }
 }
 

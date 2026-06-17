@@ -178,12 +178,14 @@ private fun OverlayAt(point: MapPoint, anchor: OverlayAnchor, content: @Composab
         val placeable = subcompose("content", content).first().measure(
             constraints.copy(minWidth = 0, minHeight = 0)
         )
-        val x = (constraints.maxWidth * (point.x / RideMapGeometry.MapWidth) - placeable.width / 2f).roundToInt()
+        val viewport = MapSvgViewport(constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat())
+        val markerPoint = viewport.point(point)
+        val x = (markerPoint.x - placeable.width / 2f).roundToInt()
         val yAnchor = when (anchor) {
             OverlayAnchor.Center -> placeable.height / 2f
             OverlayAnchor.Bottom -> placeable.height.toFloat()
         }
-        val y = (constraints.maxHeight * (point.y / RideMapGeometry.MapHeight) - yAnchor).roundToInt()
+        val y = (markerPoint.y - yAnchor).roundToInt()
 
         layout(constraints.maxWidth, constraints.maxHeight) {
             placeable.placeRelative(x, y)
