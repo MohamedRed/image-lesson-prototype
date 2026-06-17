@@ -61,6 +61,19 @@ struct RideSharingFeatureFlowCheck {
             recordingService.capturedDestinationName == "Union Square",
             "Injected service should receive payment capture requests."
         )
+
+        let failingViewModel = RideSharingViewModel(
+            service: FailingRideService(),
+            storage: storage,
+            initialState: RideUIState()
+        )
+        failingViewModel.handle(.selectDestination(destination))
+        failingViewModel.handle(.confirmPickup)
+        try require(failingViewModel.state.phase == .matching, "Failed request should first enter matching.")
+        try await waitUntil(
+            failingViewModel.state.phase == .options,
+            message: "Failed request should return to options instead of entering a live ride."
+        )
     }
 
     @MainActor
@@ -100,6 +113,22 @@ private final class RecordingRideService: RideSharingServicing {
     func capturePayment(amount: Double, destinationName: String) async throws -> RidePaymentReceipt {
         capturedDestinationName = destinationName
         return try await MockRideSharingService().capturePayment(amount: amount, destinationName: destinationName)
+    }
+
+    func submitRating(_ rating: Int, session: RideSession?) async {}
+}
+
+private struct FailingRideService: RideSharingServicing {
+    func requestRide(with config: RideConfiguration) async throws -> RideSession {
+        throw FlowCheckError.failed("Synthetic ride request failure.")
+    }
+
+    func cancelRide(_ session: RideSession?) {}
+
+    func setMicrophoneEnabled(_ enabled: Bool) async {}
+
+    func capturePayment(amount: Double, destinationName: String) async throws -> RidePaymentReceipt {
+        throw FlowCheckError.failed("Synthetic payment failure.")
     }
 
     func submitRating(_ rating: Int, session: RideSession?) async {}

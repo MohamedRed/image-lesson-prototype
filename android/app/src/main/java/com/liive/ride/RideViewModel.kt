@@ -89,7 +89,12 @@ class RideViewModel @Inject constructor(
             )
         }
         matchingJob = viewModelScope.launch {
-            val session = service.requestRide(config)
+            val session = runCatching { service.requestRide(config) }.getOrElse {
+                activeSession = null
+                matchingJob = null
+                updateState { it.copy(phase = RidePhase.Options) }
+                return@launch
+            }
             activeSession = session
             updateState { it.copy(driver = session.driver(), tripSummary = session.tripSummary) }
             delay(RideFlowTiming.MatchingDelayMs)

@@ -123,15 +123,24 @@ public final class RideSharingViewModel: ObservableObject {
         }
         matchingTask = Task { [weak self] in
             guard let self else { return }
-            let session = try? await service.requestRide(with: config)
+            let session: RideSession
+            do {
+                session = try await service.requestRide(with: config)
+            } catch {
+                guard !Task.isCancelled else { return }
+                await MainActor.run {
+                    self.activeSession = nil
+                    self.matchingTask = nil
+                    self.mutate { $0.phase = .options }
+                }
+                return
+            }
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 self.activeSession = session
-                if let session {
-                    self.mutate {
-                        $0.driver = session.driver
-                        $0.tripSummary = session.tripSummary
-                    }
+                self.mutate {
+                    $0.driver = session.driver
+                    $0.tripSummary = session.tripSummary
                 }
             }
             try? await Task.sleep(nanoseconds: RideFlowTiming.matchingDelayNanoseconds)

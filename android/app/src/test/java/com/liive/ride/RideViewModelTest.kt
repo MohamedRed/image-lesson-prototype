@@ -85,6 +85,19 @@ class RideViewModelTest {
         assertEquals(3, restoredViewModel.state.value.config.passengers)
         assertEquals(2, restoredViewModel.state.value.config.bags)
     }
+
+    @Test
+    fun rideRequestFailureReturnsToOptionsWithoutStartingRide() = runTest(dispatcher) {
+        val store = FakeRideStateStore()
+        val viewModel = RideViewModel(store, FailingRideService())
+
+        viewModel.onEvent(RideEvent.SelectDestination(RideFixtures.destinations[2]))
+        viewModel.onEvent(RideEvent.ConfirmPickup)
+        assertEquals(RidePhase.Matching, viewModel.state.value.phase)
+
+        runCurrent()
+        assertEquals(RidePhase.Options, viewModel.state.value.phase)
+    }
 }
 
 private class FakeRideStateStore(initialState: RideUiState = RideUiState()) : RideStateStoring {
@@ -139,4 +152,20 @@ private class RecordingRideService : RideService {
     override suspend fun submitRating(rating: Int, session: RideSession?) {
         submittedRatings += rating
     }
+}
+
+private class FailingRideService : RideService {
+    override suspend fun requestRide(config: RideConfig): RideSession {
+        error("Synthetic ride request failure.")
+    }
+
+    override fun cancelRide(session: RideSession?) = Unit
+
+    override suspend fun setMicrophoneEnabled(enabled: Boolean) = Unit
+
+    override suspend fun capturePayment(amount: Double, destinationName: String): RidePaymentReceipt {
+        error("Synthetic payment failure.")
+    }
+
+    override suspend fun submitRating(rating: Int, session: RideSession?) = Unit
 }
