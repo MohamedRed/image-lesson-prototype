@@ -37,12 +37,18 @@ public struct LiiveButton: View {
         self.disabled = disabled; self.loading = loading; self.action = action
     }
 
-    private var height: CGFloat { size == .sm ? 32 : size == .lg ? 50 : 44 }
+    private var height: CGFloat {
+        switch size {
+        case .sm: return LiiveButtonLayout.smallHeight
+        case .md: return LiiveButtonLayout.mediumHeight
+        case .lg: return LiiveButtonLayout.largeHeight
+        }
+    }
     private var horizontalPadding: CGFloat {
         switch size {
-        case .sm: return 14
-        case .md: return 18
-        case .lg: return 22
+        case .sm: return LiiveButtonLayout.smallHorizontalPadding
+        case .md: return LiiveButtonLayout.mediumHorizontalPadding
+        case .lg: return LiiveButtonLayout.largeHorizontalPadding
         }
     }
     private var titleFont: Font {
@@ -79,34 +85,34 @@ public struct LiiveButton: View {
         case .secondary: return LiiveColor.text
         case .tinted: return LiiveColor.accent
         case .plain: return LiiveColor.accent
-        case .destructive: return .white
+        case .destructive: return LiiveButtonLayout.destructiveForegroundColor
         case .destructivePlain: return LiiveColor.danger
         }
     }
     private var radius: CGFloat { shape == .capsule ? LiiveRadius.full : LiiveRadius.md }
     private var isInteractive: Bool { !disabled && !loading }
     private var opacity: Double {
-        if disabled { return 0.4 }
+        if disabled { return LiiveButtonLayout.disabledOpacity }
         if pressed {
             switch variant {
-            case .plain, .tinted, .destructivePlain: return 0.5
-            default: return 0.85
+            case .plain, .tinted, .destructivePlain: return LiiveButtonLayout.subtlePressedOpacity
+            default: return LiiveButtonLayout.filledPressedOpacity
             }
         }
-        return 1
+        return LiiveButtonLayout.enabledOpacity
     }
 
     public var body: some View {
         Button(action: { if isInteractive { action() } }) {
-            HStack(spacing: LiiveSpacing.s) {
+            HStack(spacing: LiiveButtonLayout.contentGap) {
                 if loading {
                     ProgressView()
                         .progressViewStyle(.circular)
                         .tint(fg)
-                        .frame(width: 18, height: 18)
+                        .frame(width: LiiveButtonLayout.spinnerSize, height: LiiveButtonLayout.spinnerSize)
                 } else if iconOnly, let icon {
                     icon
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: LiiveButtonLayout.iconSize, weight: .semibold))
                 } else {
                     if let icon { icon }
                     Text(title)
@@ -118,11 +124,11 @@ public struct LiiveButton: View {
             .frame(maxWidth: fullWidth ? .infinity : nil)
             .frame(width: iconOnly && !fullWidth ? height : nil)
             .frame(height: height)
-            .padding(.horizontal, iconOnly ? 0 : horizontalPadding)
+            .padding(.horizontal, iconOnly ? LiiveButtonLayout.iconOnlyHorizontalPadding : horizontalPadding)
             .foregroundColor(fg)
             .background(bg)
             .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
-            .scaleEffect(pressed ? LiiveMotion.pressScale : 1)
+            .scaleEffect(pressed ? LiiveMotion.pressScale : LiiveButtonLayout.restingScale)
             .opacity(opacity)
             .animation(.easeOut(duration: LiiveMotion.fast), value: pressed)
         }
@@ -130,10 +136,30 @@ public struct LiiveButton: View {
         .disabled(disabled || loading)
         .accessibilityLabel(Text(accessibilityLabel ?? title))
         .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
+            DragGesture(minimumDistance: LiiveButtonLayout.dragMinimumDistance)
                 .updating($pressed) { _, state, _ in
                     state = isInteractive
                 }
         )
     }
+}
+
+private enum LiiveButtonLayout {
+    static let smallHeight = LiiveControl.sm
+    static let mediumHeight = LiiveControl.md
+    static let largeHeight = LiiveControl.lg
+    static let smallHorizontalPadding = LiiveSpacing.m + LiiveSpacing.xs2
+    static let mediumHorizontalPadding = LiiveSpacing.l + LiiveSpacing.xs2
+    static let largeHorizontalPadding = LiiveSpacing.xxl - LiiveSpacing.xs2
+    static let iconOnlyHorizontalPadding = LiiveSpacing.xs2 - LiiveSpacing.xs2
+    static let contentGap = LiiveSpacing.s
+    static let iconSize = LiiveSpacing.l + LiiveSpacing.xs2
+    static let spinnerSize = iconSize
+    static let disabledOpacity = 0.4
+    static let subtlePressedOpacity = 0.5
+    static let filledPressedOpacity = 0.85
+    static let enabledOpacity = 1.0
+    static let restingScale: CGFloat = 1.0
+    static let dragMinimumDistance = LiiveSpacing.xs2 - LiiveSpacing.xs2
+    static let destructiveForegroundColor = Color.white
 }

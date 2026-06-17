@@ -28,7 +28,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 
 enum class LiiveButtonVariant { Primary, Secondary, Tinted, Plain, Destructive, DestructivePlain }
 enum class LiiveButtonSize { Sm, Md, Lg }
@@ -55,17 +54,21 @@ fun LiiveButton(
     val pressed by interaction.collectIsPressedAsState()
     val enabled = !disabled && !loading
 
-    val height = when (size) { LiiveButtonSize.Sm -> 32.dp; LiiveButtonSize.Lg -> 50.dp; else -> 44.dp }
+    val height = when (size) {
+        LiiveButtonSize.Sm -> LiiveButtonLayout.SmallHeight
+        LiiveButtonSize.Md -> LiiveButtonLayout.MediumHeight
+        LiiveButtonSize.Lg -> LiiveButtonLayout.LargeHeight
+    }
     val horizontalPadding = when (size) {
-        LiiveButtonSize.Sm -> 14.dp
-        LiiveButtonSize.Md -> 18.dp
-        LiiveButtonSize.Lg -> 22.dp
+        LiiveButtonSize.Sm -> LiiveButtonLayout.SmallHorizontalPadding
+        LiiveButtonSize.Md -> LiiveButtonLayout.MediumHorizontalPadding
+        LiiveButtonSize.Lg -> LiiveButtonLayout.LargeHorizontalPadding
     }
     val bgPressed = when (variant) {
         LiiveButtonVariant.Primary -> c.accentPressed
         LiiveButtonVariant.Secondary -> c.fillSecondary
         LiiveButtonVariant.Tinted -> c.accentTint
-        LiiveButtonVariant.Plain, LiiveButtonVariant.DestructivePlain -> Color.Transparent
+        LiiveButtonVariant.Plain, LiiveButtonVariant.DestructivePlain -> LiiveButtonLayout.TransparentColor
         LiiveButtonVariant.Destructive -> c.danger
     }
     val bg = if (enabled && pressed) {
@@ -75,7 +78,7 @@ fun LiiveButton(
             LiiveButtonVariant.Primary -> c.accent
             LiiveButtonVariant.Secondary -> c.fill
             LiiveButtonVariant.Tinted -> c.accentTint
-            LiiveButtonVariant.Plain, LiiveButtonVariant.DestructivePlain -> Color.Transparent
+            LiiveButtonVariant.Plain, LiiveButtonVariant.DestructivePlain -> LiiveButtonLayout.TransparentColor
             LiiveButtonVariant.Destructive -> c.danger
         }
     }
@@ -83,7 +86,7 @@ fun LiiveButton(
         LiiveButtonVariant.Primary -> c.onAccent
         LiiveButtonVariant.Secondary -> c.text
         LiiveButtonVariant.Tinted, LiiveButtonVariant.Plain -> c.accent
-        LiiveButtonVariant.Destructive -> Color.White
+        LiiveButtonVariant.Destructive -> LiiveButtonLayout.DestructiveForegroundColor
         LiiveButtonVariant.DestructivePlain -> c.danger
     }
     val labelWeight = when (variant) {
@@ -102,18 +105,18 @@ fun LiiveButton(
     }
     val shape: RoundedCornerShape = if (capsule) LiiveRadius.full else LiiveRadius.md
     val targetOpacity = when {
-        disabled -> 0.4f
+        disabled -> LiiveButtonLayout.DisabledOpacity
         enabled && pressed && variant in setOf(
             LiiveButtonVariant.Plain,
             LiiveButtonVariant.Tinted,
             LiiveButtonVariant.DestructivePlain
-        ) -> 0.5f
-        enabled && pressed -> 0.85f
-        else -> 1f
+        ) -> LiiveButtonLayout.SubtlePressedOpacity
+        enabled && pressed -> LiiveButtonLayout.FilledPressedOpacity
+        else -> LiiveButtonLayout.EnabledOpacity
     }
     val motionSpec = tween<Float>(durationMillis = LiiveMotion.fastMs, easing = LiiveMotion.easeOut)
     val animatedScale by animateFloatAsState(
-        targetValue = if (enabled && pressed) LiiveMotion.pressScale else 1f,
+        targetValue = if (enabled && pressed) LiiveMotion.pressScale else LiiveButtonLayout.RestingScale,
         animationSpec = motionSpec,
         label = "LiiveButtonScale"
     )
@@ -143,20 +146,35 @@ fun LiiveButton(
             .clip(shape)
             .background(animatedBackground)
             .clickable(interactionSource = interaction, indication = null, enabled = enabled) { onClick() }
-            .padding(horizontal = if (iconOnly) 0.dp else horizontalPadding),
+            .padding(horizontal = if (iconOnly) LiiveButtonLayout.IconOnlyHorizontalPadding else horizontalPadding),
         contentAlignment = Alignment.Center,
     ) {
         if (loading) {
             CircularProgressIndicator(
                 color = fg,
-                strokeWidth = 2.dp,
-                modifier = Modifier.size(18.dp)
+                strokeWidth = LiiveButtonLayout.SpinnerStrokeWidth,
+                modifier = Modifier.size(LiiveButtonLayout.SpinnerSize)
             )
         } else if (iconOnly && icon != null) {
-            Icon(painterResource(icon), contentDescription, tint = fg, modifier = Modifier.size(18.dp))
+            Icon(
+                painterResource(icon),
+                contentDescription,
+                tint = fg,
+                modifier = Modifier.size(LiiveButtonLayout.IconSize)
+            )
         } else {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (icon != null) Icon(painterResource(icon), null, tint = fg, modifier = Modifier.size(18.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(LiiveButtonLayout.ContentGap)
+            ) {
+                if (icon != null) {
+                    Icon(
+                        painterResource(icon),
+                        null,
+                        tint = fg,
+                        modifier = Modifier.size(LiiveButtonLayout.IconSize)
+                    )
+                }
                 Text(
                     text = title,
                     color = fg,
@@ -165,8 +183,36 @@ fun LiiveButton(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (iconRight != null) Icon(painterResource(iconRight), null, tint = fg, modifier = Modifier.size(18.dp))
+                if (iconRight != null) {
+                    Icon(
+                        painterResource(iconRight),
+                        null,
+                        tint = fg,
+                        modifier = Modifier.size(LiiveButtonLayout.IconSize)
+                    )
+                }
             }
         }
     }
+}
+
+private object LiiveButtonLayout {
+    val SmallHeight = LiiveControl.sm
+    val MediumHeight = LiiveControl.md
+    val LargeHeight = LiiveControl.lg
+    val SmallHorizontalPadding = LiiveSpacing.m + LiiveSpacing.xs2
+    val MediumHorizontalPadding = LiiveSpacing.l + LiiveSpacing.xs2
+    val LargeHorizontalPadding = LiiveSpacing.xxl - LiiveSpacing.xs2
+    val IconOnlyHorizontalPadding = LiiveSpacing.xs2 - LiiveSpacing.xs2
+    val ContentGap = LiiveSpacing.s
+    val IconSize = LiiveSpacing.l + LiiveSpacing.xs2
+    val SpinnerSize = IconSize
+    val SpinnerStrokeWidth = LiiveSpacing.xs2
+    const val DisabledOpacity = 0.4f
+    const val SubtlePressedOpacity = 0.5f
+    const val FilledPressedOpacity = 0.85f
+    const val EnabledOpacity = 1f
+    const val RestingScale = 1f
+    val TransparentColor = Color.Transparent
+    val DestructiveForegroundColor = Color.White
 }
