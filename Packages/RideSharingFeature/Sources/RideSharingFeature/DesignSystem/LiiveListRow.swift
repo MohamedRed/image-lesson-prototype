@@ -34,9 +34,9 @@ public struct LiiveListRow<Leading: View, Trailing: View>: View {
 
     public var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 12) {
+            HStack(spacing: LiiveListRowLayout.rowSpacing) {
                 leading
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: LiiveListRowLayout.textSpacing) {
                     Text(title)
                         .font(LiiveFont.body)
                         .tracking(LiiveFont.Tracking.title3)
@@ -49,7 +49,7 @@ public struct LiiveListRow<Leading: View, Trailing: View>: View {
                             .lineLimit(2)
                     }
                 }
-                Spacer(minLength: 8)
+                Spacer(minLength: LiiveListRowLayout.spacerMinLength)
                 if let value {
                     Text(value)
                         .font(LiiveFont.body)
@@ -58,19 +58,19 @@ public struct LiiveListRow<Leading: View, Trailing: View>: View {
                 trailing
                 if chevron {
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: LiiveListRowLayout.chevronIconSize, weight: .semibold))
                         .foregroundColor(LiiveColor.textTertiary)
                 }
             }
             .frame(minHeight: LiiveSpacing.touchMin)
             .frame(maxWidth: .infinity)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .padding(.horizontal, LiiveListRowLayout.horizontalPadding)
+            .padding(.vertical, LiiveListRowLayout.verticalPadding)
             .background(action != nil && isPressed ? LiiveColor.fillQuaternary : Color.clear)
             if divider {
                 Rectangle()
                     .fill(LiiveColor.separator)
-                    .frame(height: 0.5)
+                    .frame(height: LiiveListRowLayout.dividerHeight)
             }
         }
         .contentShape(Rectangle())
@@ -83,4 +83,14 @@ public struct LiiveListRow<Leading: View, Trailing: View>: View {
         .animation(.easeOut(duration: LiiveMotion.fast), value: isPressed)
         .onTapGesture { action?() }
     }
+}
+
+private enum LiiveListRowLayout {
+    static let rowSpacing = LiiveSpacing.m
+    static let textSpacing = LiiveSpacing.xs2 / 2
+    static let spacerMinLength = LiiveSpacing.s
+    static let chevronIconSize = LiiveSpacing.l - LiiveSpacing.xs2
+    static let horizontalPadding = LiiveSpacing.screenGutter
+    static let verticalPadding = LiiveSpacing.s + LiiveSpacing.xs2
+    static let dividerHeight = LiiveSpacing.xs2 / 4
 }

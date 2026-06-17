@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun LiiveListRow(
@@ -57,12 +56,15 @@ fun LiiveListRow(
                 .fillMaxWidth()
                 .heightIn(min = LiiveSpacing.touchMin)
                 .background(if (onClick != null && pressed) c.fillQuaternary else Color.Transparent)
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+                .padding(
+                    horizontal = LiiveListRowLayout.HorizontalPadding,
+                    vertical = LiiveListRowLayout.VerticalPadding
+                ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(LiiveListRowLayout.RowSpacing)
         ) {
             leading()
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LiiveListRowLayout.TextSpacing)) {
                 Text(
                     title,
                     color = c.text,
@@ -81,11 +83,25 @@ fun LiiveListRow(
             }
             trailing()
             if (chevron) {
-                Icon(painterResource(RideIcons.ChevronRight), null, tint = c.textTertiary, modifier = Modifier.size(18.dp))
+                Icon(
+                    painterResource(RideIcons.ChevronRight),
+                    null,
+                    tint = c.textTertiary,
+                    modifier = Modifier.size(LiiveListRowLayout.ChevronIconSize)
+                )
             }
         }
         if (divider) {
-            Box(Modifier.fillMaxWidth().height(0.5.dp).background(c.separator))
+            Box(Modifier.fillMaxWidth().height(LiiveListRowLayout.DividerHeight).background(c.separator))
         }
     }
+}
+
+private object LiiveListRowLayout {
+    val RowSpacing = LiiveSpacing.m
+    val TextSpacing = LiiveSpacing.xs2 / 2
+    val ChevronIconSize = LiiveSpacing.l - LiiveSpacing.xs2
+    val HorizontalPadding = LiiveSpacing.screenGutter
+    val VerticalPadding = LiiveSpacing.s + LiiveSpacing.xs2
+    val DividerHeight = LiiveSpacing.xs2 / 4
 }
