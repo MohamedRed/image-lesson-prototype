@@ -91,7 +91,9 @@ struct RideEnrouteSheetView: View {
                     icon: Image(systemName: "phone.fill"),
                     iconOnly: true,
                     accessibilityLabel: "Call driver"
-                ) {}
+                ) {
+                    viewModel.handle(.callDriver)
+                }
             }
 
             if let transferStatus = trip.transferStatus {
@@ -99,7 +101,7 @@ struct RideEnrouteSheetView: View {
             }
 
             HStack(spacing: RideSheetLayout.rowGap) {
-                LiiveButton("Message", variant: .secondary, size: .lg, fullWidth: true, icon: Image(systemName: "message.fill")) {}
+                LiiveButton("Message", variant: .secondary, size: .lg, fullWidth: true, icon: Image(systemName: "message.fill")) { viewModel.handle(.messageDriver) }
                 LiiveButton("Cancel Ride", variant: .destructivePlain, size: .lg, fullWidth: true) {
                     viewModel.handle(.cancelRide)
                 }

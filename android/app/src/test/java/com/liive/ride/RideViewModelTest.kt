@@ -154,6 +154,24 @@ class RideViewModelTest {
         assertEquals(listOf(session), service.cancelledSessions)
         assertEquals(null, viewModel.state.value.activeSession)
     }
+    @Test
+    fun chromeAndDriverActionsExposeExplicitStandaloneNotices() = runTest(dispatcher) {
+        val viewModel = RideViewModel(FakeRideStateStore(), RecordingRideService())
+
+        viewModel.onEvent(RideEvent.Locate)
+        assertEquals("Location centered", viewModel.state.value.actionNotice?.title)
+
+        viewModel.onEvent(RideEvent.CallDriver)
+        assertEquals("Phone integration required", viewModel.state.value.actionNotice?.title)
+        assertTrue(viewModel.state.value.actionNotice?.message?.contains("native dialer") == true)
+
+        viewModel.onEvent(RideEvent.MessageDriver)
+        assertEquals("Chat service required", viewModel.state.value.actionNotice?.title)
+
+        viewModel.onEvent(RideEvent.DismissActionNotice)
+        assertEquals(null, viewModel.state.value.actionNotice)
+    }
+
 }
 
 private class FakeRideStateStore(initialState: RideUiState = RideUiState()) : RideStateStoring {

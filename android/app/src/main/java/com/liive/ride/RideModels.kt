@@ -59,6 +59,11 @@ data class RideDriver(
     val plate: String,
 )
 
+data class RideActionNotice(
+    val title: String,
+    val message: String,
+)
+
 data class RideUiState(
     val phase: RidePhase = RidePhase.Destination,
     val destination: RideDestination? = null,
@@ -71,6 +76,7 @@ data class RideUiState(
     val micEnabled: Boolean = true,
     val carProgress: Float = 0f,
     val sosPresented: Boolean = false,
+    val actionNotice: RideActionNotice? = null,
 )
 
 sealed interface RideEvent {
@@ -88,7 +94,11 @@ sealed interface RideEvent {
     data class SetCarProgress(val progress: Float) : RideEvent
     data object FinishRide : RideEvent
     data object ToggleMic : RideEvent
+    data object Locate : RideEvent
+    data object CallDriver : RideEvent
+    data object MessageDriver : RideEvent
     data class PresentSOS(val presented: Boolean) : RideEvent
+    data object DismissActionNotice : RideEvent
     data object Pay : RideEvent
     data class Rate(val rating: Int) : RideEvent
     data object Reset : RideEvent

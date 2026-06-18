@@ -66,7 +66,26 @@ class RideViewModel @Inject constructor(
                 val enabled = mutableState.value.micEnabled
                 viewModelScope.launch { service.setMicrophoneEnabled(enabled) }
             }
+            RideEvent.Locate -> updateState {
+                it.copy(actionNotice = RideActionNotice(
+                    title = "Location centered",
+                    message = "Showing your current pickup area on the Liive map."
+                ))
+            }
+            RideEvent.CallDriver -> updateState {
+                it.copy(actionNotice = RideActionNotice(
+                    title = "Phone integration required",
+                    message = "Calling ${it.driver.firstName()} needs native dialer integration."
+                ))
+            }
+            RideEvent.MessageDriver -> updateState {
+                it.copy(actionNotice = RideActionNotice(
+                    title = "Chat service required",
+                    message = "Driver messaging needs the ride chat service."
+                ))
+            }
             is RideEvent.PresentSOS -> updateState { it.copy(sosPresented = event.presented) }
+            RideEvent.DismissActionNotice -> updateState { it.copy(actionNotice = null) }
             RideEvent.Pay -> capturePayment()
             is RideEvent.Rate -> {
                 updateState { it.copy(rating = event.rating.coerceIn(0, 5)) }

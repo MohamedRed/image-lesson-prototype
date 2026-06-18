@@ -1,5 +1,6 @@
 package com.liive.ride.ui
 
+import androidx.compose.ui.unit.dp
 import com.liive.ride.designsystem.LiiveControl
 import com.liive.ride.designsystem.LiiveSpacing
 
@@ -16,4 +17,9 @@ internal object RideChromeLayout {
     val sosTopInset = topInset + buttonSize + LiiveSpacing.m + LiiveSpacing.xs2
     val sosEndPadding = LiiveSpacing.screenGutter
     val sosSize = LiiveControl.xl - LiiveSpacing.xs2
+    val noticeTopInset = topInset + buttonSize + LiiveSpacing.l
+    val noticeMaxWidth = 340.dp
+    val noticeHorizontalPadding = LiiveSpacing.l
+    val noticeVerticalPadding = LiiveSpacing.m
+    val noticeTextGap = LiiveSpacing.xs
 }

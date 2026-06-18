@@ -17,7 +17,11 @@ public final class RideSharingViewModel: ObservableObject {
         case setCarProgress(Double)
         case finishRide
         case toggleMic
+        case locate
+        case callDriver
+        case messageDriver
         case presentSOS(Bool)
+        case dismissActionNotice
         case pay
         case rate(Int)
         case reset
@@ -94,8 +98,31 @@ public final class RideSharingViewModel: ObservableObject {
             mutate { $0.micEnabled.toggle() }
             let enabled = state.micEnabled
             Task { await service.setMicrophoneEnabled(enabled) }
+        case .locate:
+            mutate {
+                $0.actionNotice = RideActionNotice(
+                    title: "Location centered",
+                    message: "Showing your current pickup area on the Liive map."
+                )
+            }
+        case .callDriver:
+            mutate {
+                $0.actionNotice = RideActionNotice(
+                    title: "Phone integration required",
+                    message: "Calling \($0.driver.firstName) needs native dialer integration."
+                )
+            }
+        case .messageDriver:
+            mutate {
+                $0.actionNotice = RideActionNotice(
+                    title: "Chat service required",
+                    message: "Driver messaging needs the ride chat service."
+                )
+            }
         case .presentSOS(let presented):
             mutate { $0.isSOSPresented = presented }
+        case .dismissActionNotice:
+            mutate { $0.actionNotice = nil }
         case .pay:
             capturePayment()
         case .rate(let rating):
@@ -271,5 +298,12 @@ public final class RideSharingViewModel: ObservableObject {
             return RideUIState()
         }
         return state
+    }
+}
+
+
+private extension RideDriver {
+    var firstName: String {
+        name.split(separator: " ").first.map(String.init) ?? name
     }
 }

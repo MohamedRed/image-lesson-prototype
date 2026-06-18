@@ -125,7 +125,7 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
         ) {
             LiiveButton(
                 title = "",
-                onClick = {},
+                onClick = { onEvent(RideEvent.CallDriver) },
                 variant = LiiveButtonVariant.Tinted,
                 icon = RideIcons.Phone,
                 iconOnly = true,
@@ -139,7 +139,7 @@ fun RideEnrouteSheet(state: RideUiState, onEvent: (RideEvent) -> Unit) {
         ) {
             LiiveButton(
                 title = "Message",
-                onClick = {},
+                onClick = { onEvent(RideEvent.MessageDriver) },
                 modifier = Modifier.weight(1f),
                 variant = LiiveButtonVariant.Secondary,
                 size = LiiveButtonSize.Lg,

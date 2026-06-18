@@ -35,10 +35,22 @@ public struct RideSharingView: View {
             VStack {
                 RideChromeView(
                     state: viewModel.state,
-                    onLocate: {},
+                    onLocate: { viewModel.handle(.locate) },
                     onToggleMic: { viewModel.handle(.toggleMic) }
                 )
                 Spacer()
+            }
+
+            if let notice = viewModel.state.actionNotice {
+                VStack {
+                    RideActionNoticeBanner(notice: notice) {
+                        viewModel.handle(.dismissActionNotice)
+                    }
+                    .padding(.top, RideChromeLayout.noticeTopInset)
+                    .padding(.horizontal, RideChromeLayout.horizontalPadding)
+                    Spacer()
+                }
+                .transition(.opacity)
             }
 
             if viewModel.state.phase == .matching || viewModel.state.phase == .enroute {
@@ -86,6 +98,30 @@ public struct RideSharingView: View {
         case .complete:
             RideCompleteSheetView(viewModel: viewModel)
         }
+    }
+}
+
+private struct RideActionNoticeBanner: View {
+    let notice: RideActionNotice
+    let onDismiss: () -> Void
+
+    var body: some View {
+        Button(action: onDismiss) {
+            LiiveGlassPanel(material: .thin, cornerRadius: LiiveRadius.xl, padding: 0) {
+                VStack(alignment: .leading, spacing: RideChromeLayout.noticeTextGap) {
+                    Text(notice.title)
+                        .font(LiiveFont.subhead.weight(.semibold))
+                        .foregroundColor(LiiveColor.text)
+                    Text(notice.message)
+                        .font(LiiveFont.footnote)
+                        .foregroundColor(LiiveColor.textSecondary)
+                }
+                .padding(RideChromeLayout.noticePanelPadding)
+                .frame(maxWidth: RideChromeLayout.noticeMaxWidth, alignment: .leading)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Dismiss ride notice")
     }
 }
 

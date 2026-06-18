@@ -52,6 +52,15 @@ struct RideSharingFeatureFlowCheck {
         viewModel.handle(.matchingComplete)
         try require(viewModel.state.phase == .enroute, "Matching completion should enter live ride.")
 
+        viewModel.handle(.locate)
+        try require(viewModel.state.actionNotice?.title == "Location centered", "Locate action should expose an explicit standalone notice.")
+        viewModel.handle(.callDriver)
+        try require(viewModel.state.actionNotice?.title == "Phone integration required", "Call action should not be a silent no-op.")
+        viewModel.handle(.messageDriver)
+        try require(viewModel.state.actionNotice?.title == "Chat service required", "Message action should not be a silent no-op.")
+        viewModel.handle(.dismissActionNotice)
+        try require(viewModel.state.actionNotice == nil, "Dismiss notice should clear transient action copy.")
+
         viewModel.handle(.finishRide)
         try require(viewModel.state.phase == .complete, "Finishing ride should enter payment.")
         try require(viewModel.state.carProgress == 1, "Finished ride should place the car at route end.")

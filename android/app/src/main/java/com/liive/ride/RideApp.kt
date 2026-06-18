@@ -7,6 +7,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -60,8 +62,23 @@ internal fun RideAppContent(
 
             RideTopChrome(
                 state = state,
+                onLocate = { onEvent(RideEvent.Locate) },
                 onToggleMic = { onEvent(RideEvent.ToggleMic) }
             )
+
+            state.actionNotice?.let { notice ->
+                RideActionNoticeBanner(
+                    notice = notice,
+                    onDismiss = { onEvent(RideEvent.DismissActionNotice) },
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(
+                            top = RideChromeLayout.noticeTopInset,
+                            start = RideChromeLayout.horizontalPadding,
+                            end = RideChromeLayout.horizontalPadding
+                        )
+                )
+            }
 
             if (state.phase == RidePhase.Matching || state.phase == RidePhase.Enroute) {
                 LiiveSosButton(
@@ -96,7 +113,7 @@ internal fun RideAppContent(
 }
 
 @Composable
-private fun RideTopChrome(state: RideUiState, onToggleMic: () -> Unit) {
+private fun RideTopChrome(state: RideUiState, onLocate: () -> Unit, onToggleMic: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -135,8 +152,34 @@ private fun RideTopChrome(state: RideUiState, onToggleMic: () -> Unit) {
             ChromeButton(
                 icon = RideIcons.LocationSearching,
                 tint = LiiveTheme.colors.accent,
-                onClick = {}
+                onClick = onLocate
             )
+        }
+    }
+}
+
+@Composable
+private fun RideActionNoticeBanner(
+    notice: RideActionNotice,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = LiiveTheme.colors
+    LiiveGlassPanel(
+        modifier = modifier.widthIn(max = RideChromeLayout.noticeMaxWidth).clickableNoRipple(onDismiss),
+        material = GlassMaterial.Thin,
+        shape = LiiveRadius.xl,
+        padding = RideChromeLayout.glassPanelPadding
+    ) {
+        Column(
+            Modifier.padding(
+                horizontal = RideChromeLayout.noticeHorizontalPadding,
+                vertical = RideChromeLayout.noticeVerticalPadding
+            ),
+            verticalArrangement = Arrangement.spacedBy(RideChromeLayout.noticeTextGap)
+        ) {
+            Text(notice.title, color = colors.text, style = MaterialTheme.typography.titleSmall)
+            Text(notice.message, color = colors.textSecondary, style = MaterialTheme.typography.bodySmall)
         }
     }
 }

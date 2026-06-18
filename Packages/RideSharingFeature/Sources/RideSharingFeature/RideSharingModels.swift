@@ -207,6 +207,16 @@ public struct RideDriver: Codable, Equatable {
     }
 }
 
+public struct RideActionNotice: Codable, Equatable {
+    public let title: String
+    public let message: String
+
+    public init(title: String, message: String) {
+        self.title = title
+        self.message = message
+    }
+}
+
 public struct RideUIState: Codable, Equatable {
     public var phase: RidePhase = .destination
     public var destination: RideDestination?
@@ -219,6 +229,7 @@ public struct RideUIState: Codable, Equatable {
     public var micEnabled = true
     public var carProgress = 0.0
     public var isSOSPresented = false
+    public var actionNotice: RideActionNotice?
 
     public init() {}
 
@@ -234,6 +245,7 @@ public struct RideUIState: Codable, Equatable {
         case micEnabled
         case carProgress
         case isSOSPresented
+        case actionNotice
     }
 
     public init(from decoder: Decoder) throws {
@@ -250,6 +262,7 @@ public struct RideUIState: Codable, Equatable {
         micEnabled = try container.decodeIfPresent(Bool.self, forKey: .micEnabled) ?? true
         carProgress = try container.decodeIfPresent(Double.self, forKey: .carProgress) ?? 0
         isSOSPresented = try container.decodeIfPresent(Bool.self, forKey: .isSOSPresented) ?? false
+        actionNotice = try container.decodeIfPresent(RideActionNotice.self, forKey: .actionNotice)
     }
 }
 
