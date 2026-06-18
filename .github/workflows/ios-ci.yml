@@ -1,0 +1,51 @@
+name: iOS CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/ios-ci.yml"
+      - "Packages/RideSharingFeature/**"
+      - "Liive Ride Design System/**"
+  pull_request:
+    paths:
+      - ".github/workflows/ios-ci.yml"
+      - "Packages/RideSharingFeature/**"
+      - "Liive Ride Design System/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  liive-ride-swift-checks:
+    name: Liive Ride Swift Checks
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Run flow check
+        run: swift run --package-path Packages/RideSharingFeature -j 1 RideSharingFeatureFlowCheck
+
+      - name: Render native snapshots
+        run: swift run --package-path Packages/RideSharingFeature -j 1 RideSharingFeatureSnapshot "$RUNNER_TEMP/liive-ride-ios-snapshots"
+
+      - name: Upload snapshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: liive-ride-ios-snapshots
+          path: ${{ runner.temp }}/liive-ride-ios-snapshots
+          if-no-files-found: error
