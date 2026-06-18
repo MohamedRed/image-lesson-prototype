@@ -49,16 +49,8 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Install Android SDK packages
-        run: |
-          yes | sdkmanager --licenses >/dev/null
-          sdkmanager "platform-tools" "platforms;android-36" "build-tools;35.0.0" "build-tools;36.0.0"
-
-      - name: Run Android unit tests
-        run: ./android/gradlew -p android :app:testDebugUnitTest --no-daemon --no-configuration-cache --console=plain
-
-      - name: Build debug APK
-        run: ./android/gradlew -p android :app:assembleDebug --no-daemon --no-configuration-cache --console=plain
+      - name: Run Android unit tests and build debug APK
+        run: ./android/ci/cloud-apk-build.sh
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
