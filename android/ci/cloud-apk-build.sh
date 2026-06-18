@@ -28,7 +28,15 @@ fi
 
 printf 'sdk.dir=%s\n' "$ANDROID_HOME" > "$ANDROID_PROJECT/local.properties"
 
+set +o pipefail
 yes | sdkmanager --licenses >/dev/null
+license_status=${PIPESTATUS[1]}
+set -o pipefail
+if (( license_status != 0 )); then
+  echo "Android SDK license acceptance failed" >&2
+  exit "$license_status"
+fi
+
 sdkmanager \
   "platform-tools" \
   "platforms;android-36" \

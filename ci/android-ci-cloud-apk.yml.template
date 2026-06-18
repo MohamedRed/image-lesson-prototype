@@ -1,10 +1,7 @@
 # Template for .github/workflows/android-ci.yml
 #
-# This workflow is intentionally stored outside .github/workflows because the
-# current GitHub credential cannot update active workflow files without the
-# GitHub `workflow` OAuth scope. A maintainer with that scope should copy this
-# file to .github/workflows/android-ci.yml to make Android APK builds a cloud
-# CI gate.
+# This reference copy mirrors the active .github/workflows/android-ci.yml
+# workflow for agents that need to inspect or reinstall the Android APK CI gate.
 
 name: Android CI
 
