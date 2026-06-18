@@ -148,6 +148,7 @@ private struct SnapshotState {
     private static func options(tier: RideTier) -> RideUIState {
         let destination = unionSquare
         var state = RideUIState()
+        state.phase = .options
         state.destination = destination
         state.config = RideConfiguration(
             tier: tier,
