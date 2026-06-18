@@ -14,4 +14,13 @@ enum RideChromeLayout {
     static let sosTopInset = topInset + buttonSize + LiiveSpacing.m + LiiveSpacing.xs2
     static let sosTrailingPadding = LiiveSpacing.screenGutter
     static let sosSize = LiiveControl.xl - LiiveSpacing.xs2
+    static let noticeTopInset = topInset + buttonSize + LiiveSpacing.l
+    static let noticeMaxWidth = 340.0
+    static let noticeTextGap = LiiveSpacing.xs
+    static let noticePanelPadding = EdgeInsets(
+        top: LiiveSpacing.m,
+        leading: LiiveSpacing.l,
+        bottom: LiiveSpacing.m,
+        trailing: LiiveSpacing.l
+    )
 }
