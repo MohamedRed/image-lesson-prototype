@@ -90,12 +90,29 @@ capture() {
   echo "captured $OUT_DIR/$name.png"
 }
 
-tap_text() {
-  local needle="$1"
-  local dump="$OUT_DIR/ui.xml"
-  adb_device exec-out uiautomator dump /dev/tty > "$dump"
-  local xy
-  xy="$(python3 - "$dump" "$needle" <<'PY'
+dump_ui() {
+  local dump="$1"
+  local raw="$dump.raw"
+  mkdir -p "$(dirname "$dump")"
+  adb_device exec-out uiautomator dump /dev/tty > "$raw" || return 1
+  python3 - "$raw" "$dump" <<'PY'
+import sys
+from pathlib import Path
+
+raw_path, out_path = map(Path, sys.argv[1:3])
+raw = raw_path.read_text(errors="replace")
+start = raw.find("<?xml")
+end = raw.rfind("</hierarchy>")
+if start < 0 or end < 0:
+    raise SystemExit(1)
+Path(out_path).write_text(raw[start : end + len("</hierarchy>")])
+PY
+}
+
+find_text_xy() {
+  local dump="$1"
+  local needle="$2"
+  python3 - "$dump" "$needle" <<'PY'
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -115,7 +132,27 @@ for node in root.iter("node"):
             sys.exit(0)
 print("")
 PY
-)"
+}
+
+wait_for_text() {
+  local needle="$1"
+  local dump="$OUT_DIR/ui.xml"
+  for _ in {1..60}; do
+    if dump_ui "$dump" && [[ -n "$(find_text_xy "$dump" "$needle")" ]]; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "Timed out waiting for text/content-desc containing '$needle'." >&2
+  return 1
+}
+
+tap_text() {
+  local needle="$1"
+  local dump="$OUT_DIR/ui.xml"
+  wait_for_text "$needle"
+  local xy
+  xy="$(find_text_xy "$dump" "$needle")"
   if [[ -z "$xy" ]]; then
     echo "Could not find tappable text/content-desc containing '$needle'." >&2
     exit 1
@@ -131,25 +168,25 @@ fi
 
 adb_device shell pm clear "$PACKAGE" >/dev/null
 adb_device shell am start -n "$ACTIVITY" >/dev/null
-sleep 2
+wait_for_text "Where to?"
 capture "01-destination"
 
 tap_text "Union Square"
-sleep 1
+wait_for_text "Choose your ride"
 capture "02-options-premium"
 
 tap_text "Pool"
-sleep 1
+wait_for_text "2 legs"
 capture "03-options-pool"
 
 tap_text "Confirm Pickup"
-sleep 1
+wait_for_text "Finding your driver"
 capture "04-matching"
 
-sleep 4
+wait_for_text "On leg 2 of 2"
 capture "05-enroute"
 
-sleep 12
+wait_for_text "You've arrived"
 capture "06-complete"
 
 echo "Liive Ride Android screenshots written to $OUT_DIR"
