@@ -14,3 +14,10 @@ DerivedData/
 # Swift Package Manager
 .build/
 .swiftpm/
+
+# Android / Gradle local state
+android/local.properties
+android/.gradle/
+android/.kotlin/
+android/**/build/
+android/**/*.iml
