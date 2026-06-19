@@ -87,7 +87,7 @@ class RideViewModelTest {
     }
 
     @Test
-    fun rideRequestFailureReturnsToOptionsWithoutStartingRide() = runTest(dispatcher) {
+    fun rideRequestFailureReturnsToOptionsWithServiceRequiredNotice() = runTest(dispatcher) {
         val store = FakeRideStateStore()
         val viewModel = RideViewModel(store, FailingRideService())
 
@@ -97,10 +97,12 @@ class RideViewModelTest {
 
         runCurrent()
         assertEquals(RidePhase.Options, viewModel.state.value.phase)
+        assertEquals("Dispatch service required", viewModel.state.value.actionNotice?.title)
+        assertTrue(viewModel.state.value.actionNotice?.message?.contains("cannot be confirmed") == true)
     }
 
     @Test
-    fun paymentFailureLeavesCompletedRideUnpaid() = runTest(dispatcher) {
+    fun paymentFailureLeavesCompletedRideUnpaidWithServiceRequiredNotice() = runTest(dispatcher) {
         val store = FakeRideStateStore(RideUiState(phase = RidePhase.Complete))
         val service = PaymentFailingRideService()
         val viewModel = RideViewModel(store, service)
@@ -110,6 +112,8 @@ class RideViewModelTest {
 
         assertEquals(1, service.paymentAttempts)
         assertEquals(false, viewModel.state.value.paid)
+        assertEquals("Payment service required", viewModel.state.value.actionNotice?.title)
+        assertTrue(viewModel.state.value.actionNotice?.message?.contains("was not charged") == true)
     }
 
     @Test

@@ -163,6 +163,10 @@ public final class RideSharingViewModel: ObservableObject {
                     self.mutate {
                         $0.activeSession = nil
                         $0.phase = .options
+                        $0.actionNotice = RideActionNotice(
+                            title: "Dispatch service required",
+                            message: "This ride cannot be confirmed until the dispatch and matching service is connected."
+                        )
                     }
                 }
                 return
@@ -246,6 +250,14 @@ public final class RideSharingViewModel: ObservableObject {
             do {
                 _ = try await service.capturePayment(amount: amount, destinationName: destinationName)
             } catch {
+                await MainActor.run {
+                    self.mutate {
+                        $0.actionNotice = RideActionNotice(
+                            title: "Payment service required",
+                            message: "Payment could not be completed and your card was not charged. Connect the payment service before taking live fares."
+                        )
+                    }
+                }
                 return
             }
             await MainActor.run {

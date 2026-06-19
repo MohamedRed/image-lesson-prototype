@@ -87,6 +87,14 @@ struct RideSharingFeatureFlowCheck {
             failingViewModel.state.phase == .options,
             message: "Failed request should return to options instead of entering a live ride."
         )
+        try require(
+            failingViewModel.state.actionNotice?.title == "Dispatch service required",
+            "Failed dispatch should show an explicit service-required notice."
+        )
+        try require(
+            failingViewModel.state.actionNotice?.message.contains("cannot be confirmed") == true,
+            "Failed dispatch notice should tell riders no ride was confirmed."
+        )
 
         var paymentFailureState = RideUIState()
         paymentFailureState.phase = .complete
@@ -103,6 +111,14 @@ struct RideSharingFeatureFlowCheck {
             message: "Failed payment service should still be invoked."
         )
         try require(!paymentFailureViewModel.state.paid, "Failed payment should not mark the ride paid.")
+        try require(
+            paymentFailureViewModel.state.actionNotice?.title == "Payment service required",
+            "Failed payment should show an explicit service-required notice."
+        )
+        try require(
+            paymentFailureViewModel.state.actionNotice?.message.contains("was not charged") == true,
+            "Failed payment notice should tell riders they were not charged."
+        )
 
         let restoredConfiguration = RideConfiguration(destinationName: "Union Square")
         let restoredSession = RideSession(

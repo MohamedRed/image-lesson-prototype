@@ -117,7 +117,15 @@ class RideViewModel @Inject constructor(
             } catch (error: Exception) {
                 activeSession = null
                 matchingJob = null
-                updateState { it.copy(phase = RidePhase.Options) }
+                updateState {
+                    it.copy(
+                        phase = RidePhase.Options,
+                        actionNotice = RideActionNotice(
+                            title = "Dispatch service required",
+                            message = "This ride cannot be confirmed until the dispatch and matching service is connected."
+                        )
+                    )
+                }
                 return@launch
             }
             activeSession = session
@@ -212,6 +220,14 @@ class RideViewModel @Inject constructor(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
+                updateState {
+                    it.copy(
+                        actionNotice = RideActionNotice(
+                            title = "Payment service required",
+                            message = "Payment could not be completed and your card was not charged. Connect the payment service before taking live fares."
+                        )
+                    )
+                }
                 return@launch
             }
             updateState { it.copy(paid = true) }
