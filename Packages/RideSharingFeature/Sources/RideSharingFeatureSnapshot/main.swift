@@ -106,17 +106,19 @@ private struct SnapshotState {
 
     static let all: [SnapshotState] = [
         SnapshotState("01-destination-dark.png", .dark, RideUIState()),
-        SnapshotState("02-options-dark.png", .dark, options(tier: .premium)),
+        SnapshotState("02-options-dark.png", .dark, options(tier: .pool)),
         SnapshotState("03-matching-dark.png", .dark, phase(.matching, tier: .pool)),
         SnapshotState("04-enroute-dark.png", .dark, enroute),
         SnapshotState("05-payment-dark.png", .dark, payment),
         SnapshotState("06-receipt-dark.png", .dark, receipt),
-        SnapshotState("07-destination-light.png", .light, RideUIState()),
-        SnapshotState("08-options-light.png", .light, options(tier: .premium)),
-        SnapshotState("09-matching-light.png", .light, phase(.matching, tier: .pool)),
-        SnapshotState("10-enroute-light.png", .light, enroute),
-        SnapshotState("11-payment-light.png", .light, payment),
-        SnapshotState("12-receipt-light.png", .light, receipt)
+        SnapshotState("07-sos-dark.png", .dark, sos),
+        SnapshotState("08-destination-light.png", .light, RideUIState()),
+        SnapshotState("09-options-light.png", .light, options(tier: .pool)),
+        SnapshotState("10-matching-light.png", .light, phase(.matching, tier: .pool)),
+        SnapshotState("11-enroute-light.png", .light, enroute),
+        SnapshotState("12-payment-light.png", .light, payment),
+        SnapshotState("13-receipt-light.png", .light, receipt),
+        SnapshotState("14-sos-light.png", .light, sos)
     ]
 
     private static var enroute: RideUIState {
@@ -126,7 +128,7 @@ private struct SnapshotState {
     }
 
     private static var payment: RideUIState {
-        var state = phase(.complete, tier: .premium)
+        var state = phase(.complete, tier: .pool)
         state.carProgress = 1
         state.rating = 4
         return state
@@ -136,6 +138,12 @@ private struct SnapshotState {
         var state = payment
         state.paid = true
         state.rating = 5
+        return state
+    }
+
+    private static var sos: RideUIState {
+        var state = enroute
+        state.isSOSPresented = true
         return state
     }
 

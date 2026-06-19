@@ -7,7 +7,7 @@ import androidx.compose.ui.tooling.preview.Preview
 private object RidePreviewStates {
     val destination = RideUiState()
 
-    val options = base(destinationIndex = 2, tier = RideTier.Premium).copy(
+    val options = base(destinationIndex = 2, tier = RideTier.Pool).copy(
         phase = RidePhase.Options
     )
 
@@ -20,13 +20,15 @@ private object RidePreviewStates {
         carProgress = 0.56f
     )
 
-    val payment = base(destinationIndex = 2, tier = RideTier.Premium).copy(
+    val payment = base(destinationIndex = 2, tier = RideTier.Pool).copy(
         phase = RidePhase.Complete,
         carProgress = 1f,
         rating = 4
     )
 
     val receipt = payment.copy(paid = true, rating = 5)
+
+    val sos = enroute.copy(sosPresented = true)
 
     private fun base(destinationIndex: Int, tier: RideTier): RideUiState {
         val destination = RideFixtures.destinations[destinationIndex]
@@ -80,6 +82,12 @@ private fun RideReceiptPreview() {
     RidePreviewContent(RidePreviewStates.receipt, darkTheme = true)
 }
 
+@Preview(name = "7 SOS", widthDp = 402, heightDp = 740, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun RideSosPreview() {
+    RidePreviewContent(RidePreviewStates.sos, darkTheme = true)
+}
+
 @Preview(name = "Light 1 Destination", widthDp = 402, heightDp = 740, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
 private fun RideLightDestinationPreview() {
@@ -114,6 +122,12 @@ private fun RideLightPaymentPreview() {
 @Composable
 private fun RideLightReceiptPreview() {
     RidePreviewContent(RidePreviewStates.receipt, darkTheme = false)
+}
+
+@Preview(name = "Light 7 SOS", widthDp = 402, heightDp = 740, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Composable
+private fun RideLightSosPreview() {
+    RidePreviewContent(RidePreviewStates.sos, darkTheme = false)
 }
 
 @Composable

@@ -4,7 +4,7 @@ enum RidePreviewStates {
     static let destination = RideUIState()
 
     static var options: RideUIState {
-        var state = base(destinationIndex: 2, tier: .premium)
+        var state = base(destinationIndex: 2, tier: .pool)
         state.phase = .options
         return state
     }
@@ -23,7 +23,7 @@ enum RidePreviewStates {
     }
 
     static var payment: RideUIState {
-        var state = base(destinationIndex: 2, tier: .premium)
+        var state = base(destinationIndex: 2, tier: .pool)
         state.phase = .complete
         state.carProgress = 1
         state.rating = 4
@@ -34,6 +34,12 @@ enum RidePreviewStates {
         var state = payment
         state.paid = true
         state.rating = 5
+        return state
+    }
+
+    static var sos: RideUIState {
+        var state = enroute
+        state.isSOSPresented = true
         return state
     }
 
