@@ -27,6 +27,9 @@ jobs:
     name: Android Build and Unit Tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      APPETIZE_API_TOKEN: ${{ secrets.APPETIZE_API_TOKEN }}
+      APPETIZE_PUBLIC_KEY: ${{ secrets.APPETIZE_PUBLIC_KEY }}
 
     steps:
       - name: Checkout repository
@@ -50,3 +53,41 @@ jobs:
           name: liive-ride-debug-apk
           path: android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+      - name: Upload debug APK to Appetize
+        id: appetize
+        if: ${{ env.APPETIZE_API_TOKEN != '' }}
+        uses: appetizeio/github-action-appetize@v1.0.5
+        with:
+          apiToken: ${{ env.APPETIZE_API_TOKEN }}
+          publicKey: ${{ env.APPETIZE_PUBLIC_KEY }}
+          platform: android
+          appFile: android/app/build/outputs/apk/debug/app-debug.apk
+          fileType: apk
+          note: "Liive Ride Android debug APK from ${{ github.sha }}"
+          timeout: "120"
+
+      - name: Publish Appetize preview link
+        if: ${{ steps.appetize.outputs.publicKey != '' }}
+        run: |
+          URL="https://appetize.io/app/${{ steps.appetize.outputs.publicKey }}"
+          mkdir -p "$RUNNER_TEMP/liive-ride-appetize"
+          printf '%s\n' "$URL" > "$RUNNER_TEMP/liive-ride-appetize/url.txt"
+          echo "### Liive Ride Android Appetize preview" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "$URL" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Appetize preview link artifact
+        if: ${{ steps.appetize.outputs.publicKey != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: liive-ride-appetize-preview
+          path: ${{ runner.temp }}/liive-ride-appetize/url.txt
+          if-no-files-found: error
+
+      - name: Missing Appetize token note
+        if: ${{ env.APPETIZE_API_TOKEN == '' }}
+        run: |
+          echo "### Liive Ride Android APK built" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Set the APPETIZE_API_TOKEN repository secret to enable automatic Appetize upload." >> "$GITHUB_STEP_SUMMARY"
