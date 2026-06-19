@@ -51,6 +51,7 @@ COMMON_GRADLE_ARGS=(
   --stacktrace
 )
 
+python3 "$SCRIPT_DIR/visual-parity-check.py"
 "$WRAPPER" "${COMMON_GRADLE_ARGS[@]}" :app:testDebugUnitTest
 "$WRAPPER" "${COMMON_GRADLE_ARGS[@]}" :app:assembleDebug
 

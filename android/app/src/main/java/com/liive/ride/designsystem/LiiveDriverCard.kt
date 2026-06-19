@@ -46,7 +46,7 @@ fun LiiveDriverCard(
                 Text(
                     name,
                     color = c.text,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false)
@@ -94,10 +94,10 @@ fun LiiveDriverCard(
 }
 
 private object LiiveDriverCardLayout {
-    val RowSpacing = LiiveSpacing.m + LiiveSpacing.xs2
+    val RowSpacing = LiiveSpacing.s + LiiveSpacing.xs2
     val TitleRatingSpacing = LiiveSpacing.s
     val TextSpacing = LiiveSpacing.xs2
-    val AvatarSize = LiiveControl.xl - LiiveSpacing.xs2
+    val AvatarSize = LiiveControl.lg + LiiveSpacing.xs2
     val RatingStarSize = LiiveSpacing.m + LiiveSpacing.xs2 / 2
     val SecondaryLineTopPadding = LiiveSpacing.xs2
     val PlateLetterSpacing = (LiiveSpacing.xs2.value / 4).sp
