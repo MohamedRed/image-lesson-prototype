@@ -25,7 +25,9 @@ Captured from the live Appetize Android preview for Liive Ride.
 
 ## Parity assessment
 
-Status: **close enough to use as live Android preview evidence, with follow-up polish required before calling visual parity complete.**
+Status: **live Android preview evidence covers the full flow; visual parity is close, with typography/spacing polish remaining before calling pixel parity complete.**
+
+Decision: **keep `Union Square` as the canonical destination for this flow.** The Claude references mix a `Union Square` map marker with `Work` / `to Work` captions; that is treated as a reference inconsistency. Native runtime copy should stay internally consistent as `Union Square`.
 
 Covered states:
 
@@ -40,14 +42,13 @@ Covered states:
 
 Observed mismatches / risks:
 
-- **Destination copy mismatch:** the Claude references show a `Union Square` map marker but use `to Work` / `Work · 18 min · 5.2 km` in several sheet captions. The Android runtime keeps the destination internally consistent as `Union Square`. This should be resolved as a design/product decision rather than blindly implementing inconsistent copy.
+- **Destination copy:** resolved by product decision above. Android is intentionally kept consistent as `Union Square` instead of copying the inconsistent `Work` captions from the Claude source images.
 - **Platform payment method:** Android correctly shows `Google Pay`; the Claude reference shows `Apple Pay`. This is acceptable platform adaptation, not a defect.
 - **Platform chrome:** Android captures include Android status/navigation bars and Pixel camera cutout, while Claude references are iOS-styled. This is expected for native Android evidence.
 - **Typography/spacing scale:** Android is close, but some line breaks and text sizing differ from the iOS-style Claude reference, especially CTA text spacing and compact card text truncation.
-- **SOS button label:** Claude reference says `SOS HELP`; Android currently shows `SOS`. Consider updating Android label if exact visual parity is required.
+- **SOS button label:** Android and iOS native components already render `SOS` plus the smaller `HELP` label; if a capture only makes `SOS` legible at thumbnail size, preserve the current component rather than enlarging text at the expense of the circular control geometry.
 
 ## Next gates
 
-- Decide whether destination copy should be logically consistent (`Union Square`) or should exactly mirror the current Claude screenshots (`Work` text with a `Union Square` marker).
-- Polish Android typography/spacing/SOS label if exact visual parity is required.
+- Polish Android typography/spacing if exact pixel parity is required.
 - Repeat the same Appetize-style interactive capture for iOS simulator preview if/when iOS Appetize upload is added.
