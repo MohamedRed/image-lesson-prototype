@@ -338,6 +338,23 @@ func TestComputeDriverScore_RejectsExcessiveRouteDetour(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_DoesNotRejectSparseDirectPolylineAsDetour(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "1")
+	req := corridorRequest()
+	driver := corridorDriver("sparse-direct-route", 0, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0.10},
+		{Latitude: 0, Longitude: 0.90},
+		{Latitude: 0, Longitude: 1.10},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected sparse direct polyline to use interpolated route positions instead of vertex overhang detour")
+	}
+}
+
 func TestPickBestDriverFromProfiles_RetriesNextCandidateWhenReservationFails(t *testing.T) {
 	req := corridorRequest()
 	drivers := []DriverProfile{

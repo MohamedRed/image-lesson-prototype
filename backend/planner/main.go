@@ -426,18 +426,83 @@ func routeInsertionDetourKm(req RideRequest, encodedPolyline string, directRideK
 		return 0, false
 	}
 
-	originIdx, originSnapKm := nearestRoutePointIndex(points, req.Origin)
-	destinationIdx, destinationSnapKm := nearestRoutePointIndex(points, req.Destination)
-	if originIdx < 0 || destinationIdx < 0 || destinationIdx < originIdx {
+	originProjection, ok := nearestRouteProjection(points, req.Origin)
+	if !ok {
+		return 0, false
+	}
+	destinationProjection, ok := nearestRouteProjection(points, req.Destination)
+	if !ok || destinationProjection.position < originProjection.position {
 		return 0, false
 	}
 
-	routeSegmentKm := routeDistanceBetweenIndexes(points, originIdx, destinationIdx)
-	detourKm := routeSegmentKm - directRideKm + originSnapKm + destinationSnapKm
+	routeSegmentKm := routeDistanceBetweenPositions(points, originProjection.position, destinationProjection.position)
+	detourKm := routeSegmentKm - directRideKm + originProjection.snapKm + destinationProjection.snapKm
 	if detourKm < 0 {
 		return 0, true
 	}
 	return detourKm, true
+}
+
+type routeProjection struct {
+	point    GeoPoint
+	position float64
+	snapKm   float64
+}
+
+func nearestRouteProjection(points []GeoPoint, target GeoPoint) (routeProjection, bool) {
+	if len(points) == 0 {
+		return routeProjection{}, false
+	}
+	best := routeProjection{snapKm: math.MaxFloat64}
+	consider := func(point GeoPoint, position float64) {
+		distanceKm := haversineKm(point.Latitude, point.Longitude, target.Latitude, target.Longitude)
+		if distanceKm < best.snapKm {
+			best = routeProjection{point: point, position: position, snapKm: distanceKm}
+		}
+	}
+	for i, point := range points {
+		consider(point, float64(i))
+	}
+	for i := 0; i < len(points)-1; i++ {
+		point, fraction := nearestPointOnSegment(points[i], points[i+1], target)
+		consider(point, float64(i)+fraction)
+	}
+	return best, best.snapKm < math.MaxFloat64
+}
+
+func routeDistanceBetweenPositions(points []GeoPoint, startPos, endPos float64) float64 {
+	if len(points) < 2 || startPos < 0 || endPos > float64(len(points)-1) || endPos <= startPos {
+		return 0
+	}
+	startPoint := routePointAtPosition(points, startPos)
+	endPoint := routePointAtPosition(points, endPos)
+	startIdx := int(math.Floor(startPos))
+	endIdx := int(math.Floor(endPos))
+	if startIdx == endIdx {
+		return haversineKm(startPoint.Latitude, startPoint.Longitude, endPoint.Latitude, endPoint.Longitude)
+	}
+	distanceKm := haversineKm(startPoint.Latitude, startPoint.Longitude, points[startIdx+1].Latitude, points[startIdx+1].Longitude)
+	for i := startIdx + 1; i < endIdx; i++ {
+		distanceKm += haversineKm(points[i].Latitude, points[i].Longitude, points[i+1].Latitude, points[i+1].Longitude)
+	}
+	distanceKm += haversineKm(points[endIdx].Latitude, points[endIdx].Longitude, endPoint.Latitude, endPoint.Longitude)
+	return distanceKm
+}
+
+func routePointAtPosition(points []GeoPoint, position float64) GeoPoint {
+	if position <= 0 {
+		return points[0]
+	}
+	last := len(points) - 1
+	if position >= float64(last) {
+		return points[last]
+	}
+	idx := int(math.Floor(position))
+	fraction := position - float64(idx)
+	return GeoPoint{
+		Latitude:  points[idx].Latitude + fraction*(points[idx+1].Latitude-points[idx].Latitude),
+		Longitude: points[idx].Longitude + fraction*(points[idx+1].Longitude-points[idx].Longitude),
+	}
 }
 
 func nearestRoutePointIndex(points []GeoPoint, target GeoPoint) (int, float64) {
