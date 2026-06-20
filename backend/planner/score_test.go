@@ -221,6 +221,20 @@ func TestComputeDriverScore_CorridorIntersectsDestinationWalkZone(t *testing.T) 
 	}
 }
 
+func TestComputeDriverScore_CorridorIntersectsMultiPolygonWalkZone(t *testing.T) {
+	req := corridorRequest()
+	req.OriWalkIso = multiPolygon(
+		rectRing(10, 10, 11, 11),
+		rectRing(-0.01, -0.01, 0.01, 0.01),
+	)
+	driver := corridorDriver("multipolygon-route-match", 0.05, 0, routeCorridor())
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected driver route corridor intersecting a later MultiPolygon walk-zone part to be accepted")
+	}
+}
+
 func TestComputeDriverScore_RejectsCorridorMissingOriginWalkZone(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("miss-origin", 0, 0.1, rectPolygon(-0.005, 0.20, 0.005, 1.01))
@@ -921,6 +935,24 @@ func corridorDriverWithPickupZone(id string, lat, lon float64, buffer GeoJSONGeo
 
 func routeCorridor() GeoJSONGeometry {
 	return rectPolygon(-0.005, -0.01, 0.005, 1.01)
+}
+
+func multiPolygon(rings ...[][]float64) GeoJSONGeometry {
+	polygons := make([][][][]float64, 0, len(rings))
+	for _, ring := range rings {
+		polygons = append(polygons, [][][]float64{ring})
+	}
+	return GeoJSONGeometry{Type: "MultiPolygon", Coordinates: polygons}
+}
+
+func rectRing(minLat, minLon, maxLat, maxLon float64) [][]float64 {
+	return [][]float64{
+		{minLon, minLat},
+		{maxLon, minLat},
+		{maxLon, maxLat},
+		{minLon, maxLat},
+		{minLon, minLat},
+	}
 }
 
 func rectPolygon(minLat, minLon, maxLat, maxLon float64) GeoJSONGeometry {

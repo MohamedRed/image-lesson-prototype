@@ -954,19 +954,21 @@ func polylineIntersectsPolygon(encoded string, polygon GeoJSONGeometry) bool {
 	if !ok || len(line) == 0 {
 		return false
 	}
-	ring, ok := polygonOuterRing(polygon)
-	if !ok || len(ring) < 3 {
+	rings, ok := polygonOuterRings(polygon)
+	if !ok {
 		return false
 	}
-	for _, point := range line {
-		if pointInPolygon(point, ring) {
-			return true
-		}
-	}
-	for i := 0; i < len(line)-1; i++ {
-		for j := 0; j < len(ring)-1; j++ {
-			if segmentsIntersect(line[i], line[i+1], ring[j], ring[j+1]) {
+	for _, ring := range rings {
+		for _, point := range line {
+			if pointInPolygon(point, ring) {
 				return true
+			}
+		}
+		for i := 0; i < len(line)-1; i++ {
+			for j := 0; j < len(ring)-1; j++ {
+				if segmentsIntersect(line[i], line[i+1], ring[j], ring[j+1]) {
+					return true
+				}
 			}
 		}
 	}
@@ -974,11 +976,16 @@ func polylineIntersectsPolygon(encoded string, polygon GeoJSONGeometry) bool {
 }
 
 func pointInGeoJSONPolygon(point GeoPoint, polygon GeoJSONGeometry) bool {
-	ring, ok := polygonOuterRing(polygon)
-	if !ok || len(ring) < 3 {
+	rings, ok := polygonOuterRings(polygon)
+	if !ok {
 		return false
 	}
-	return pointInPolygon(point, ring)
+	for _, ring := range rings {
+		if pointInPolygon(point, ring) {
+			return true
+		}
+	}
+	return false
 }
 
 func decodePolyline(encoded string) ([]GeoPoint, bool) {
@@ -1021,12 +1028,25 @@ func decodePolylineValue(encoded string, index *int) (int, bool) {
 }
 
 func geoJSONPolygonsIntersect(a, b GeoJSONGeometry) bool {
-	aRing, okA := polygonOuterRing(a)
-	bRing, okB := polygonOuterRing(b)
-	if !okA || !okB || len(aRing) < 3 || len(bRing) < 3 {
+	aRings, okA := polygonOuterRings(a)
+	bRings, okB := polygonOuterRings(b)
+	if !okA || !okB {
 		return false
 	}
+	for _, aRing := range aRings {
+		for _, bRing := range bRings {
+			if polygonRingsIntersect(aRing, bRing) {
+				return true
+			}
+		}
+	}
+	return false
+}
 
+func polygonRingsIntersect(aRing, bRing []GeoPoint) bool {
+	if len(aRing) < 3 || len(bRing) < 3 {
+		return false
+	}
 	for _, p := range aRing {
 		if pointInPolygon(p, bRing) {
 			return true
@@ -1048,14 +1068,55 @@ func geoJSONPolygonsIntersect(a, b GeoJSONGeometry) bool {
 }
 
 func polygonOuterRing(g GeoJSONGeometry) ([]GeoPoint, bool) {
-	if g.Type != "Polygon" || g.Coordinates == nil {
+	rings, ok := polygonOuterRings(g)
+	if !ok || len(rings) == 0 {
 		return nil, false
 	}
-	coords, ok := firstRingCoordinates(g.Coordinates)
-	if !ok || len(coords) < 3 {
+	return rings[0], true
+}
+
+func polygonOuterRings(g GeoJSONGeometry) ([][]GeoPoint, bool) {
+	coordinateSets, ok := outerRingCoordinateSets(g)
+	if !ok || len(coordinateSets) == 0 {
 		return nil, false
 	}
-	ring := make([]GeoPoint, 0, len(coords))
+	rings := make([][]GeoPoint, 0, len(coordinateSets))
+	for _, coords := range coordinateSets {
+		ring, ok := geoPointsFromRingCoordinates(coords)
+		if !ok {
+			continue
+		}
+		rings = append(rings, ring)
+	}
+	if len(rings) == 0 {
+		return nil, false
+	}
+	return rings, true
+}
+
+func outerRingCoordinateSets(g GeoJSONGeometry) ([][][]float64, bool) {
+	if g.Coordinates == nil {
+		return nil, false
+	}
+	switch g.Type {
+	case "Polygon":
+		coords, ok := firstRingCoordinates(g.Coordinates)
+		if !ok {
+			return nil, false
+		}
+		return [][][]float64{coords}, true
+	case "MultiPolygon":
+		return multiPolygonOuterRingCoordinates(g.Coordinates)
+	default:
+		return nil, false
+	}
+}
+
+func geoPointsFromRingCoordinates(coords [][]float64) ([]GeoPoint, bool) {
+	if len(coords) < 3 {
+		return nil, false
+	}
+	ring := make([]GeoPoint, 0, len(coords)+1)
 	for _, pair := range coords {
 		if len(pair) < 2 {
 			return nil, false
@@ -1088,6 +1149,66 @@ func firstRingCoordinates(coords any) ([][]float64, bool) {
 	default:
 		return nil, false
 	}
+}
+
+func multiPolygonOuterRingCoordinates(coords any) ([][][]float64, bool) {
+	rings := [][][]float64{}
+	appendRing := func(rawPolygon any) bool {
+		switch polygon := rawPolygon.(type) {
+		case [][][]float64:
+			if len(polygon) == 0 {
+				return true
+			}
+			rings = append(rings, polygon[0])
+			return true
+		case [][][]interface{}:
+			if len(polygon) == 0 {
+				return true
+			}
+			ring, ok := coordinatePairsFromAny(polygon[0])
+			if !ok {
+				return false
+			}
+			rings = append(rings, ring)
+			return true
+		case []interface{}:
+			if len(polygon) == 0 {
+				return true
+			}
+			ring, ok := coordinatePairsFromAny(polygon[0])
+			if !ok {
+				return false
+			}
+			rings = append(rings, ring)
+			return true
+		default:
+			return false
+		}
+	}
+
+	switch c := coords.(type) {
+	case [][][][]float64:
+		for _, polygon := range c {
+			if !appendRing(polygon) {
+				return nil, false
+			}
+		}
+	case [][][][]interface{}:
+		for _, polygon := range c {
+			if !appendRing(polygon) {
+				return nil, false
+			}
+		}
+	case []interface{}:
+		for _, polygon := range c {
+			if !appendRing(polygon) {
+				return nil, false
+			}
+		}
+	default:
+		return nil, false
+	}
+	return rings, len(rings) > 0
 }
 
 func coordinatePairsFromAny(value any) ([][]float64, bool) {
