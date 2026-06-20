@@ -284,17 +284,20 @@ func routeAwareLegETASeconds(req RideRequest, driver DriverProfile, pickupEtaSec
 func build3HopJourney(req RideRequest, transfer1 TransferPoint, transfer2 TransferPoint, driver1 DriverProfile, eta1 int, driver2 DriverProfile, eta2 int, driver3 DriverProfile, eta3 int) Journey {
 	leg1Req := buildLegRequest(req, req.Origin, transfer1.Location)
 	leg1Pickup, leg1Dropoff := selectedSingleHopPickupDropoff(leg1Req, driver1)
+	leg1Eta := routeAwareLegETASeconds(leg1Req, driver1, eta1)
 	leg2Req := buildLegRequest(req, transfer1.Location, transfer2.Location)
 	leg2Pickup, leg2Dropoff := selectedSingleHopPickupDropoff(leg2Req, driver2)
+	leg2Eta := routeAwareLegETASeconds(leg2Req, driver2, eta2)
 	leg3Req := buildLegRequest(req, transfer2.Location, req.Destination)
 	leg3Pickup, leg3Dropoff := selectedSingleHopPickupDropoff(leg3Req, driver3)
+	leg3Eta := routeAwareLegETASeconds(leg3Req, driver3, eta3)
 
-	totalTime := eta1 + eta2 + eta3 + transfer1.TransferTimeSeconds + transfer2.TransferTimeSeconds
+	totalTime := leg1Eta + leg2Eta + leg3Eta + transfer1.TransferTimeSeconds + transfer2.TransferTimeSeconds
 	return Journey{
 		Legs: []Leg{
-			buildJourneyLeg(driver1, leg1Pickup, leg1Dropoff, eta1),
-			buildJourneyLeg(driver2, leg2Pickup, leg2Dropoff, eta2),
-			buildJourneyLeg(driver3, leg3Pickup, leg3Dropoff, eta3),
+			buildJourneyLeg(driver1, leg1Pickup, leg1Dropoff, leg1Eta),
+			buildJourneyLeg(driver2, leg2Pickup, leg2Dropoff, leg2Eta),
+			buildJourneyLeg(driver3, leg3Pickup, leg3Dropoff, leg3Eta),
 		},
 		TotalEstimatedTimeSeconds: totalTime,
 	}

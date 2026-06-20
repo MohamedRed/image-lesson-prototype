@@ -1184,6 +1184,40 @@ func TestBuild2HopJourneyUsesBackendSelectedRoutePickupAndDropoffPerLeg(t *testi
 	assertGeoPointNear(t, journey.Legs[1].Dropoff, GeoPoint{Latitude: 0, Longitude: 0.998})
 }
 
+func TestBuild3HopJourneyUsesRouteRideEtaPerLeg(t *testing.T) {
+	req := corridorRequest()
+	transfer1 := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.33}, TransferTimeSeconds: 7}
+	transfer2 := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.66}, TransferTimeSeconds: 8}
+	driver1 := corridorDriver("driver-leg-1-route-eta", 0, -0.10, routeCorridor())
+	driver1.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 0.33},
+	})
+	driver1.RouteETAProfileSeconds = []int{0, 30, 330}
+	driver2 := corridorDriver("driver-leg-2-route-eta", 0, 0.33, routeCorridor())
+	driver2.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.33},
+		{Latitude: 0, Longitude: 0.66},
+	})
+	driver2.RouteETAProfileSeconds = []int{0, 360}
+	driver3 := corridorDriver("driver-leg-3-route-eta", 0, 0.66, routeCorridor())
+	driver3.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.66},
+		{Latitude: 0, Longitude: 1},
+	})
+	driver3.RouteETAProfileSeconds = []int{0, 420}
+
+	journey := build3HopJourney(req, transfer1, transfer2, driver1, 30, driver2, 40, driver3, 50)
+
+	if len(journey.Legs) != 3 {
+		t.Fatalf("expected three legs, got %d", len(journey.Legs))
+	}
+	if journey.Legs[0].EstimatedTimeSeconds != 330 || journey.Legs[1].EstimatedTimeSeconds != 400 || journey.Legs[2].EstimatedTimeSeconds != 470 || journey.TotalEstimatedTimeSeconds != 1215 {
+		t.Fatalf("expected per-leg route ETAs 330/400/470 and total 1215, got legs=%#v total=%d", journey.Legs, journey.TotalEstimatedTimeSeconds)
+	}
+}
+
 func TestBuild3HopJourneyUsesBackendSelectedRoutePickupAndDropoffPerLeg(t *testing.T) {
 	req := corridorRequest()
 	transfer1 := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.33}, TransferTimeSeconds: 7}
