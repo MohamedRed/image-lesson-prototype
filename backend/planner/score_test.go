@@ -532,6 +532,37 @@ func TestPickBestDriverFromProfiles_RanksRouteEtaProfileAboveEqualGeometry(t *te
 	}
 }
 
+func TestPickBestDriverFromProfiles_RanksShorterRiderWalkAboveEqualEta(t *testing.T) {
+	req := corridorRequest()
+	req.WalkRadiusM = 1000
+	req.OriWalkIso = rectPolygon(-0.01, -0.02, 0.01, 0.02)
+	req.DestWalkIso = rectPolygon(-0.01, 0.98, 0.01, 1.02)
+	req.OriDriveIso = GeoJSONGeometry{}
+
+	farWalk := corridorDriverWithPickupZone("aaa-far-walk", 0.006, -0.10, GeoJSONGeometry{}, "zone-far-walk")
+	farWalk.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0.006, Longitude: -0.10},
+		{Latitude: 0.006, Longitude: 0},
+		{Latitude: 0.006, Longitude: 1},
+	})
+	farWalk.RouteETAProfileSeconds = []int{0, 60, 600}
+	nearWalk := corridorDriverWithPickupZone("zzz-near-walk", 0, -0.10, GeoJSONGeometry{}, "zone-near-walk")
+	nearWalk.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+	nearWalk.RouteETAProfileSeconds = []int{0, 60, 600}
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{farWalk, nearWalk}, nil, scoreWeights{ETA: 1, Walk: 1, Curb: 1})
+	if err != nil {
+		t.Fatalf("expected rider-walk ranking winner, got error: %v", err)
+	}
+	if driverID != "zzz-near-walk" {
+		t.Fatalf("expected lower rider walk to beat equal ETA lower ID, got %q", driverID)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RanksShorterRoutePickupEtaAboveNearestCurrentLocation(t *testing.T) {
 	req := corridorRequest()
 	nearButLatePickup := corridorDriverWithPickupZone("aaa-nearest-but-late-pickup", 0, 0.02, routeCorridor(), "zone-late")

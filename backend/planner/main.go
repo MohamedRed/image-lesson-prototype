@@ -654,6 +654,22 @@ func routeInsertionDetourKm(req RideRequest, encodedPolyline string, directRideK
 	return detourKm, true
 }
 
+func riderWalkScore(req RideRequest, driver DriverProfile) float64 {
+	if driver.RoutePolyline == "" {
+		return 0
+	}
+	points, ok := decodePolyline(driver.RoutePolyline)
+	if !ok || len(points) < 2 {
+		return 0
+	}
+	pickupProjection, dropoffProjection, ok := routeInsertionProjections(req, points)
+	if !ok {
+		return 0
+	}
+	walkKm := pickupProjection.snapKm + dropoffProjection.snapKm
+	return walkKm * 12.0 // approximate walking minutes at 5 km/h
+}
+
 func routeInsertionProjections(req RideRequest, points []GeoPoint) (routeProjection, routeProjection, bool) {
 	lastPos := float64(len(points) - 1)
 	originCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originWalkGeometry(), 0, lastPos)
@@ -818,6 +834,7 @@ func effectiveSingleHopWalkMeters(req RideRequest) float64 {
 type scoreWeights struct {
 	Detour float64
 	ETA    float64
+	Walk   float64
 	Curb   float64
 }
 
@@ -828,7 +845,7 @@ type scoredDriver struct {
 }
 
 func defaultScoreWeights() scoreWeights {
-	return scoreWeights{Detour: 0.7, ETA: 0.3, Curb: 1.0}
+	return scoreWeights{Detour: 0.7, ETA: 0.3, Walk: 0.1, Curb: 1.0}
 }
 
 func pickBestDriverFromProfiles(req RideRequest, drivers []DriverProfile, exclude []string, weights scoreWeights) (string, int, error) {
@@ -859,7 +876,7 @@ func pickBestDriverFromProfilesWithReservation(req RideRequest, drivers []Driver
 }
 
 func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []string, weights scoreWeights) []scoredDriver {
-	if weights.Detour == 0 && weights.ETA == 0 {
+	if weights.Detour == 0 && weights.ETA == 0 && weights.Walk == 0 {
 		weights = defaultScoreWeights()
 	}
 	if weights.Curb == 0 {
@@ -882,6 +899,7 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 		if !ok {
 			continue
 		}
+		score += weights.Walk * riderWalkScore(req, driver)
 		ranked = append(ranked, scoredDriver{driver: driver, score: score, etaSec: etaSec})
 	}
 
@@ -1855,6 +1873,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 	// Weights via env or default
 	wDetour := 0.7
 	wEta := 0.3
+	wWalk := 0.1
 	wCurb := 1.0 // multiplicative weight, 1 means neutral
 	if v := os.Getenv("WEIGHT_DETOUR"); v != "" {
 		if f, err := strconv.ParseFloat(v, 64); err == nil {
@@ -1864,6 +1883,11 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 	if v := os.Getenv("WEIGHT_ETA"); v != "" {
 		if f, err := strconv.ParseFloat(v, 64); err == nil {
 			wEta = f
+		}
+	}
+	if v := os.Getenv("WEIGHT_WALK"); v != "" {
+		if f, err := strconv.ParseFloat(v, 64); err == nil {
+			wWalk = f
 		}
 	}
 	if v := os.Getenv("WEIGHT_CURB"); v != "" {
@@ -1947,7 +1971,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		profiles = append(profiles, prof)
 	}
 
-	return pickBestDriverProfileFromProfiles(req, profiles, nil, scoreWeights{Detour: wDetour, ETA: wEta, Curb: wCurb})
+	return pickBestDriverProfileFromProfiles(req, profiles, nil, scoreWeights{Detour: wDetour, ETA: wEta, Walk: wWalk, Curb: wCurb})
 }
 
 // haversineKm returns great-circle distance between two lat/lon in km.
