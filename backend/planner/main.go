@@ -172,6 +172,48 @@ func sumReservedSeats(legs []struct {
 	return total
 }
 
+type cargoLedgerEntry struct {
+	Items map[string]int `firestore:"items"`
+}
+
+type petLedgerEntry struct {
+	Pets map[string]int `firestore:"pets"`
+}
+
+type childSeatLedgerEntry struct {
+	Seats map[string]int `firestore:"seats"`
+}
+
+func sumCargoLedger(entries []cargoLedgerEntry) map[string]int {
+	total := map[string]int{}
+	for _, entry := range entries {
+		addResourceTotals(total, entry.Items)
+	}
+	return total
+}
+
+func sumPetLedger(entries []petLedgerEntry) map[string]int {
+	total := map[string]int{}
+	for _, entry := range entries {
+		addResourceTotals(total, entry.Pets)
+	}
+	return total
+}
+
+func sumChildSeatLedger(entries []childSeatLedgerEntry) map[string]int {
+	total := map[string]int{}
+	for _, entry := range entries {
+		addResourceTotals(total, entry.Seats)
+	}
+	return total
+}
+
+func addResourceTotals(total map[string]int, values map[string]int) {
+	for key, value := range values {
+		total[key] += value
+	}
+}
+
 // DriverProfile is an in-memory representation of driver attributes used for matching.
 type DriverProfile struct {
 	ID                  string
@@ -184,8 +226,11 @@ type DriverProfile struct {
 	BufferPolygon       GeoJSONGeometry
 	CurbFactor          float64
 	LuggageCapacity     map[string]int
+	ReservedLuggage     map[string]int
 	PetLimits           map[string]int
+	ReservedPets        map[string]int
 	ChildSeatInventory  map[string]int
+	ReservedChildSeats  map[string]int
 	PremiumCapabilities map[string]any
 }
 
@@ -226,7 +271,8 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	// Luggage filter
 	if req.LuggageManifest != nil {
 		for k, v := range req.LuggageManifest {
-			if cap, ok := driver.LuggageCapacity[k]; !ok || cap < v {
+			available := driver.LuggageCapacity[k] - driver.ReservedLuggage[k]
+			if available < v {
 				return 0, 0, false
 			}
 		}
@@ -235,7 +281,8 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	// Pet filter
 	if req.Pet != nil {
 		for k, v := range req.Pet {
-			if lim, ok := driver.PetLimits[k]; !ok || lim < v {
+			available := driver.PetLimits[k] - driver.ReservedPets[k]
+			if available < v {
 				return 0, 0, false
 			}
 		}
@@ -245,7 +292,8 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	if len(req.ChildPassengers) > 0 {
 		childSeatNeeds := calculateChildSeatRequirements(req.ChildPassengers)
 		for seatType, needed := range childSeatNeeds {
-			if driver.ChildSeatInventory[seatType] < needed {
+			available := driver.ChildSeatInventory[seatType] - driver.ReservedChildSeats[seatType]
+			if available < needed {
 				return 0, 0, false
 			}
 		}
@@ -926,13 +974,16 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			Legs            []struct {
 				Seats int `firestore:"seats"`
 			} `firestore:"legs"`
-			PickupZoneID        string          `firestore:"pickupZoneId"`
-			RoutePolyline       string          `firestore:"routePolyline"`
-			BufferPolygon       GeoJSONGeometry `firestore:"bufferPolygon"`
-			LuggageCapacity     map[string]int  `firestore:"luggageCapacity"`
-			PetLimits           map[string]int  `firestore:"petLimits"`
-			ChildSeatInventory  map[string]int  `firestore:"childSeatInventory"`
-			PremiumCapabilities map[string]any  `firestore:"premiumCapabilities"`
+			PickupZoneID        string                 `firestore:"pickupZoneId"`
+			RoutePolyline       string                 `firestore:"routePolyline"`
+			BufferPolygon       GeoJSONGeometry        `firestore:"bufferPolygon"`
+			LuggageCapacity     map[string]int         `firestore:"luggageCapacity"`
+			CargoLedger         []cargoLedgerEntry     `firestore:"cargoLedger"`
+			PetLimits           map[string]int         `firestore:"petLimits"`
+			PetLedger           []petLedgerEntry       `firestore:"petLedger"`
+			ChildSeatInventory  map[string]int         `firestore:"childSeatInventory"`
+			ChildSeatLedger     []childSeatLedgerEntry `firestore:"childSeatLedger"`
+			PremiumCapabilities map[string]any         `firestore:"premiumCapabilities"`
 		}
 		if err := d.DataTo(&data); err != nil {
 			continue
@@ -972,8 +1023,11 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			BufferPolygon:       data.BufferPolygon,
 			CurbFactor:          curbFactor,
 			LuggageCapacity:     data.LuggageCapacity,
+			ReservedLuggage:     sumCargoLedger(data.CargoLedger),
 			PetLimits:           data.PetLimits,
+			ReservedPets:        sumPetLedger(data.PetLedger),
 			ChildSeatInventory:  data.ChildSeatInventory,
+			ReservedChildSeats:  sumChildSeatLedger(data.ChildSeatLedger),
 			PremiumCapabilities: data.PremiumCapabilities,
 		}
 

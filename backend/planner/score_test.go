@@ -24,6 +24,68 @@ func TestComputeDriverScore_LuggageReject(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_UsesLuggageLedgerForCapacity(t *testing.T) {
+	req := RideRequest{
+		Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1,
+		LuggageManifest: map[string]int{"suitcase": 1},
+	}
+
+	driver := DriverProfile{
+		CapacitySeats:   4,
+		LuggageCapacity: map[string]int{"suitcase": 2},
+		ReservedLuggage: map[string]int{"suitcase": 2},
+		CurrentLocation: GeoPoint{0, 0},
+	}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected luggage ledger usage to reject a driver with no suitcase capacity left")
+	}
+}
+
+func TestComputeDriverScore_UsesPetLedgerForCapacity(t *testing.T) {
+	req := RideRequest{
+		Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1,
+		Pet: map[string]int{"small": 1},
+	}
+
+	driver := DriverProfile{
+		CapacitySeats:   4,
+		PetLimits:       map[string]int{"small": 1},
+		ReservedPets:    map[string]int{"small": 1},
+		CurrentLocation: GeoPoint{0, 0},
+	}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected pet ledger usage to reject a driver with no small-pet capacity left")
+	}
+}
+
+func TestComputeDriverScore_UsesChildSeatLedgerForCapacity(t *testing.T) {
+	req := RideRequest{
+		Origin:         GeoPoint{0, 0},
+		Destination:    GeoPoint{1, 1},
+		PassengerCount: 1,
+		ChildPassengers: []struct {
+			AgeYears int `json:"ageYears"`
+			WeightKg int `json:"weightKg"`
+		}{{AgeYears: 3, WeightKg: 15}},
+	}
+
+	driver := DriverProfile{
+		CapacitySeats:      4,
+		ChildSeatInventory: map[string]int{"forward": 1},
+		ReservedChildSeats: map[string]int{"forward": 1},
+		CurrentLocation:    GeoPoint{0, 0},
+	}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected child-seat ledger usage to reject a driver with no forward seats left")
+	}
+}
+
 func TestComputeDriverScore_CurbPenalty(t *testing.T) {
 	req := RideRequest{Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1}
 	driver := DriverProfile{CapacitySeats: 4, CurrentLocation: GeoPoint{0, 0}}
