@@ -210,6 +210,8 @@ func TestComputeDriverScore_CorridorIntersectsDestinationWalkZone(t *testing.T) 
 	req := corridorRequest()
 	req.OriWalkIso = GeoJSONGeometry{}
 	req.OriginWalkIso = GeoJSONGeometry{}
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
 	driver := corridorDriver("destination-route-match", 0.05, 1, rectPolygon(-0.005, 0.90, 0.005, 1.01))
 
 	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
@@ -249,6 +251,20 @@ func TestComputeDriverScore_RejectsRouteThatHitsDestinationBeforeOrigin(t *testi
 	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
 	if ok {
 		t.Fatalf("expected reverse-direction route to be rejected even when its corridor intersects both walk zones")
+	}
+}
+
+func TestComputeDriverScore_RejectsRouteThatNeverEntersOriginDriveGeo(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("never-enters-origin-drive-geo", 0, 0.20, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.20},
+		{Latitude: 0, Longitude: 1.20},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected route that never enters rider origin drive geofence to be rejected")
 	}
 }
 

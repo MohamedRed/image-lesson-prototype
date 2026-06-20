@@ -455,10 +455,30 @@ func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) boo
 	if !destinationIso.isZero() && !driverRouteIntersectsGeometry(driver, destinationIso) {
 		return false
 	}
+	if !driverEntersOriginDriveGeo(req, driver) {
+		return false
+	}
 	if driver.RoutePolyline != "" && !routePolylineTravelsOriginBeforeDestination(req, driver.RoutePolyline) {
 		return false
 	}
 	return true
+}
+
+func driverEntersOriginDriveGeo(req RideRequest, driver DriverProfile) bool {
+	originDrive := req.originDriveGeometry()
+	if originDrive.isZero() {
+		return true
+	}
+	if pointInGeoJSONPolygon(driver.CurrentLocation, originDrive) {
+		return true
+	}
+	if driver.RoutePolyline != "" {
+		return polylineIntersectsPolygon(driver.RoutePolyline, originDrive)
+	}
+	if !driver.BufferPolygon.isZero() {
+		return geoJSONPolygonsIntersect(driver.BufferPolygon, originDrive)
+	}
+	return false
 }
 
 func routePolylineTravelsOriginBeforeDestination(req RideRequest, encodedPolyline string) bool {
@@ -507,6 +527,16 @@ func (req RideRequest) destinationWalkGeometry() GeoJSONGeometry {
 	return GeoJSONGeometry{}
 }
 
+func (req RideRequest) originDriveGeometry() GeoJSONGeometry {
+	if !req.OriDriveIso.isZero() {
+		return req.OriDriveIso
+	}
+	if !req.OriginDriveGeo.isZero() {
+		return req.OriginDriveGeo
+	}
+	return GeoJSONGeometry{}
+}
+
 func circlePolygon(center GeoPoint, radiusMeters float64, points int) GeoJSONGeometry {
 	if points < 8 {
 		points = 8
@@ -549,6 +579,14 @@ func polylineIntersectsPolygon(encoded string, polygon GeoJSONGeometry) bool {
 		}
 	}
 	return false
+}
+
+func pointInGeoJSONPolygon(point GeoPoint, polygon GeoJSONGeometry) bool {
+	ring, ok := polygonOuterRing(polygon)
+	if !ok || len(ring) < 3 {
+		return false
+	}
+	return pointInPolygon(point, ring)
 }
 
 func decodePolyline(encoded string) ([]GeoPoint, bool) {
