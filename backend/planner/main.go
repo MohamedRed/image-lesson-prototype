@@ -120,7 +120,7 @@ func selectedSingleHopPickupDropoff(req RideRequest, driver DriverProfile) (GeoP
 
 	dropoff, dropoffPos, ok := nearestRoutePointInGeometry(points, req.Destination, req.destinationWalkGeometry(), pickupPos, lastPos)
 	if !ok {
-		projection, ok := nearestRouteProjection(points, req.Destination)
+		projection, ok := nearestRouteProjectionInRange(points, req.Destination, pickupPos, lastPos)
 		if !ok {
 			return req.Origin, req.Destination
 		}
@@ -579,11 +579,18 @@ type routeProjection struct {
 }
 
 func nearestRouteProjection(points []GeoPoint, target GeoPoint) (routeProjection, bool) {
-	if len(points) == 0 {
+	return nearestRouteProjectionInRange(points, target, 0, float64(len(points)-1))
+}
+
+func nearestRouteProjectionInRange(points []GeoPoint, target GeoPoint, minPos, maxPos float64) (routeProjection, bool) {
+	if len(points) == 0 || minPos > maxPos {
 		return routeProjection{}, false
 	}
 	best := routeProjection{snapKm: math.MaxFloat64}
 	consider := func(point GeoPoint, position float64) {
+		if position < minPos || position > maxPos {
+			return
+		}
 		distanceKm := haversineKm(point.Latitude, point.Longitude, target.Latitude, target.Longitude)
 		if distanceKm < best.snapKm {
 			best = routeProjection{point: point, position: position, snapKm: distanceKm}
@@ -801,8 +808,8 @@ func routePositionForOrder(points []GeoPoint, target GeoPoint, geometry GeoJSONG
 	if pos, ok := firstRoutePositionInGeometry(points, target, geometry, minPos); ok {
 		return pos, true
 	}
-	projection, ok := nearestRouteProjection(points, target)
-	if !ok || projection.position < minPos {
+	projection, ok := nearestRouteProjectionInRange(points, target, minPos, float64(len(points)-1))
+	if !ok {
 		return 0, false
 	}
 	return projection.position, true

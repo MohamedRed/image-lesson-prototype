@@ -286,6 +286,23 @@ func TestComputeDriverScore_AllowsRouteOrderWhenDestinationWalkZoneMissing(t *te
 	}
 }
 
+func TestComputeDriverScore_UsesLaterDestinationProjectionWhenEarlierDestinationPrecedesOrigin(t *testing.T) {
+	req := corridorRequest()
+	req.DestWalkIso = GeoJSONGeometry{}
+	req.DestinationWalkIso = GeoJSONGeometry{}
+	driver := corridorDriver("later-destination-after-origin", 0, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 1.00},
+		{Latitude: 0, Longitude: 0.00},
+		{Latitude: 0, Longitude: 1.10},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected route order to ignore destination projections before pickup and use the later destination pass")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteThatNeverEntersOriginDriveGeo(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("never-enters-origin-drive-geo", 0, 0.20, routeCorridor())
@@ -664,6 +681,27 @@ func TestBuildSingleHopJourneyUsesWalkZoneOrderForRouteThatContinuesNearOrigin(t
 		math.Abs(leg.Dropoff.Latitude) > 0.000001 || math.Abs(leg.Dropoff.Longitude-1) > 0.000001 {
 		t.Fatalf("expected pickup/dropoff selected from first origin→destination route pass, got pickup=%#v dropoff=%#v", leg.Pickup, leg.Dropoff)
 	}
+}
+
+func TestBuildSingleHopJourneyUsesLaterDropoffProjectionWhenDestinationWalkZoneMissing(t *testing.T) {
+	req := corridorRequest()
+	req.Destination = GeoPoint{Latitude: 0.004, Longitude: 1}
+	req.DestWalkIso = GeoJSONGeometry{}
+	req.DestinationWalkIso = GeoJSONGeometry{}
+	driver := corridorDriver("driver-later-destination-projection", 0.01, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 1.00},
+		{Latitude: 0, Longitude: 0.00},
+		{Latitude: 0, Longitude: 1.10},
+	})
+
+	journey := buildSingleHopJourney(req, driver, 90)
+	if len(journey.Legs) != 1 {
+		t.Fatalf("expected one leg, got %d", len(journey.Legs))
+	}
+	leg := journey.Legs[0]
+	assertGeoPointNear(t, leg.Pickup, GeoPoint{Latitude: 0, Longitude: 0})
+	assertGeoPointNear(t, leg.Dropoff, GeoPoint{Latitude: 0, Longitude: 1.00})
 }
 
 func TestBuild2HopJourneyIncludesPickupZoneIDs(t *testing.T) {
