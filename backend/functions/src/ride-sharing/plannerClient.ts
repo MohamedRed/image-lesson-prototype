@@ -136,7 +136,10 @@ export async function planJourneyWithSingleLegReservationRetry({
 
     const firstLeg = journey.legs[0];
     const driverId = firstLeg.driverId;
-    const pickupZoneId = firstLeg.pickupZoneId || "default-zone";
+    if (!firstLeg.pickupZoneId) {
+      throw new Error(`Planner leg missing pickupZoneId for driver ${driverId}`);
+    }
+    const pickupZoneId = firstLeg.pickupZoneId;
     attemptedDriverIds.push(driverId);
 
     const reservation = await reserveResources(driverId, pickupZoneId, resourceRequirements);
