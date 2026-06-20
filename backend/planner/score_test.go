@@ -750,6 +750,27 @@ func TestComputeDriverScore_RejectsRoutePickupEtaAboveDefaultThreshold(t *testin
 	}
 }
 
+func TestComputeDriverScore_RejectsRouteSnapOutsideWalkThreshold(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "500")
+	req := corridorRequest()
+	req.OriWalkIso = GeoJSONGeometry{}
+	req.OriginWalkIso = GeoJSONGeometry{}
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	req.DestWalkIso = GeoJSONGeometry{}
+	req.DestinationWalkIso = GeoJSONGeometry{}
+	driver := corridorDriver("too-far-to-walk", 0, 0.01, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.01},
+		{Latitude: 0, Longitude: 1.01},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected route snap outside rider walk threshold to be rejected")
+	}
+}
+
 func TestPickBestDriverFromProfiles_RetriesNextCandidateWhenReservationFails(t *testing.T) {
 	req := corridorRequest()
 	drivers := []DriverProfile{

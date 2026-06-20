@@ -435,6 +435,9 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	if !driverSatisfiesSingleHopCorridor(req, driver) {
 		return 0, 0, false
 	}
+	if !driverRouteWalkSnapsWithinThreshold(req, driver) {
+		return 0, 0, false
+	}
 
 	// Compute distances/score
 	straightLinePickupKm := haversineKm(driver.CurrentLocation.Latitude, driver.CurrentLocation.Longitude, req.Origin.Latitude, req.Origin.Longitude)
@@ -569,6 +572,22 @@ func driverPickupDistanceKm(req RideRequest, driver DriverProfile, fallbackKm fl
 	}
 	routeStartKm := haversineKm(driver.CurrentLocation.Latitude, driver.CurrentLocation.Longitude, points[0].Latitude, points[0].Longitude)
 	return routeStartKm + routeDistanceBetweenPositions(points, 0, pickupProjection.position) + pickupProjection.snapKm
+}
+
+func driverRouteWalkSnapsWithinThreshold(req RideRequest, driver DriverProfile) bool {
+	if driver.RoutePolyline == "" {
+		return true
+	}
+	points, ok := decodePolyline(driver.RoutePolyline)
+	if !ok || len(points) < 2 {
+		return true
+	}
+	pickupProjection, dropoffProjection, ok := routeInsertionProjections(req, points)
+	if !ok {
+		return true
+	}
+	maxWalkKm := maxSingleHopWalkMeters() / 1000.0
+	return pickupProjection.snapKm <= maxWalkKm && dropoffProjection.snapKm <= maxWalkKm
 }
 
 func driverDetourKm(req RideRequest, driver DriverProfile, pickupKm, directRideKm float64) float64 {
@@ -741,6 +760,15 @@ func maxSingleHopPickupETASeconds() int {
 		}
 	}
 	return 1800
+}
+
+func maxSingleHopWalkMeters() float64 {
+	if value := os.Getenv("MAX_SINGLE_HOP_WALK_METERS"); value != "" {
+		if parsed, err := strconv.ParseFloat(value, 64); err == nil && parsed > 0 {
+			return parsed
+		}
+	}
+	return 1000.0
 }
 
 type scoreWeights struct {
