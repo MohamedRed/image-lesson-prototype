@@ -374,6 +374,25 @@ func TestPickBestDriverFromProfiles_RanksLowerCargoLoadAboveTiedCandidate(t *tes
 	}
 }
 
+func TestPickBestDriverFromProfiles_RanksLowerPetLoadAboveTiedCandidate(t *testing.T) {
+	req := corridorRequest()
+	req.Pet = map[string]int{"small": 1}
+	lowLoad := corridorDriverWithPickupZone("zzz-low-pet-load", 0, 0, routeCorridor(), "zone-low-pet")
+	lowLoad.PetLimits = map[string]int{"small": 4}
+	lowLoad.ReservedPets = map[string]int{"small": 0}
+	highLoad := corridorDriverWithPickupZone("aaa-high-pet-load", 0, 0, routeCorridor(), "zone-high-pet")
+	highLoad.PetLimits = map[string]int{"small": 4}
+	highLoad.ReservedPets = map[string]int{"small": 3}
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{highLoad, lowLoad}, nil, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected valid corridor driver, got error: %v", err)
+	}
+	if driverID != "zzz-low-pet-load" {
+		t.Fatalf("expected lower pet-load driver to win tied corridor match, got %q", driverID)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RequiresPickupZoneIDForReservation(t *testing.T) {
 	req := corridorRequest()
 	missingZone := corridorDriver("nearest-valid-but-missing-zone", 0.001, 0, routeCorridor())

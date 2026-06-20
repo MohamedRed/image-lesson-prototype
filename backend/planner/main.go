@@ -399,7 +399,7 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	}
 	detourKm := driverDetourKm(req, driver, pickupKm, rideDistKm)
 
-	baseScore := wDetour*detourKm + wEta*(float64(etaSec)/60.0) + seatLoadScore(driver, seatsUsed) + cargoLoadScore(req, driver)
+	baseScore := wDetour*detourKm + wEta*(float64(etaSec)/60.0) + seatLoadScore(driver, seatsUsed) + cargoLoadScore(req, driver) + petLoadScore(req, driver)
 	if curbFactor <= 0 {
 		curbFactor = 1
 	}
@@ -438,6 +438,31 @@ func cargoLoadScore(req RideRequest, driver DriverProfile) float64 {
 			continue
 		}
 		reserved := driver.ReservedLuggage[luggageType]
+		if reserved <= 0 {
+			count++
+			continue
+		}
+		totalLoad += float64(reserved) / float64(capacity)
+		count++
+	}
+	if count == 0 {
+		return 0
+	}
+	return totalLoad / count
+}
+
+func petLoadScore(req RideRequest, driver DriverProfile) float64 {
+	if len(req.Pet) == 0 {
+		return 0
+	}
+	totalLoad := 0.0
+	count := 0.0
+	for petType := range req.Pet {
+		capacity := driver.PetLimits[petType]
+		if capacity <= 0 {
+			continue
+		}
+		reserved := driver.ReservedPets[petType]
 		if reserved <= 0 {
 			count++
 			continue
