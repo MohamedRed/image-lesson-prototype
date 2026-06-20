@@ -483,6 +483,22 @@ func TestPickBestDriverFromProfiles_RanksCorridorMatchAboveNearestWrongDirection
 	}
 }
 
+func TestDriverDetourUsesRouteInsertionDetourNotPickupDistance(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("direct-route-detour", 0, -0.10, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+	directRideKm := haversineKm(req.Origin.Latitude, req.Origin.Longitude, req.Destination.Latitude, req.Destination.Longitude)
+
+	got := driverDetourKm(req, driver, 10, directRideKm)
+	if got != 0 {
+		t.Fatalf("expected direct route insertion detour to ignore separate pickup distance, got %.6f", got)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RanksLowerRouteDetourAboveLoopingCorridor(t *testing.T) {
 	req := corridorRequest()
 	direct := corridorDriverWithPickupZone("zzz-direct-corridor", 0, 0, routeCorridor(), "zone-direct")

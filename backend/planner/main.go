@@ -698,7 +698,7 @@ func driverRouteWalkSnapsWithinThreshold(req RideRequest, driver DriverProfile) 
 func driverDetourKm(req RideRequest, driver DriverProfile, pickupKm, directRideKm float64) float64 {
 	if driver.RoutePolyline != "" {
 		if routeDetourKm, ok := routeInsertionDetourKm(req, driver.RoutePolyline, directRideKm); ok {
-			return pickupKm + routeDetourKm
+			return routeDetourKm
 		}
 	}
 	return pickupKm + directRideKm
