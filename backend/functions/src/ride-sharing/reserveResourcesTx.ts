@@ -220,12 +220,24 @@ export async function reserveResourcesTransaction(
   }
 }
 
+export function calculateAvailableSeats(driverData: any): number {
+  const capacitySeats = driverData.capacitySeats || 4;
+  const reservedSeats = getCurrentSeatUsage(driverData.legs || []);
+  const seatsUsed = reservedSeats > 0 ? reservedSeats : (driverData.activePickups || 0);
+  return capacitySeats - seatsUsed;
+}
+
+function getCurrentSeatUsage(legs: any[]): number {
+  return legs.reduce((total, leg) => total + (leg.seats || 0), 0);
+}
+
 function validateDriverResources(
   driverData: any,
   requirements: ResourceRequirements
 ): { valid: boolean; error?: string } {
-  // Check seat capacity
-  const availableSeats = (driverData.capacitySeats || 4) - (driverData.activePickups || 0);
+  // Check seat capacity using reserved seat ledger. activePickups counts cars at
+  // pickup, not passenger seats, so it is only a backwards-compatible fallback.
+  const availableSeats = calculateAvailableSeats(driverData);
   if (availableSeats < requirements.passengerCount) {
     return {
       valid: false,

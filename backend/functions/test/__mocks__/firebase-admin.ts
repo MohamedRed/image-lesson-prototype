@@ -51,7 +51,9 @@ const messagingImpl = () => ({
 });
 
 export { firestoreImpl as firestore, messagingImpl as messaging };
+export const app = () => ({ name: "mock-app" });
+export const initializeApp = () => ({ name: "mock-app" });
 export const ___seedDoc = (path: string, data: any) => { (docs as any)[path] = data; };
-export default { firestore: firestoreImpl, messaging: messagingImpl, ___seedDoc } as any;
+export default { firestore: firestoreImpl, messaging: messagingImpl, app, initializeApp, ___seedDoc } as any;
 
 

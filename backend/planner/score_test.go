@@ -41,6 +41,21 @@ func TestComputeDriverScore_CurbPenalty(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_UsesReservedSeatLedgerForCapacity(t *testing.T) {
+	req := RideRequest{Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 2}
+	driver := DriverProfile{
+		CapacitySeats:   4,
+		ActivePickups:   1,
+		ReservedSeats:   3,
+		CurrentLocation: GeoPoint{0, 0},
+	}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected driver with only one seat left to reject a two-passenger request")
+	}
+}
+
 func TestComputeDriverScore_ToddlerRequiresForwardChildSeat(t *testing.T) {
 	req := RideRequest{
 		Origin:         GeoPoint{0, 0},
