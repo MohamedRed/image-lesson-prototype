@@ -133,6 +133,27 @@ func TestBuildSingleHopJourneyIncludesPickupZoneID(t *testing.T) {
 	}
 }
 
+func TestBuild2HopJourneyIncludesPickupZoneIDs(t *testing.T) {
+	req := corridorRequest()
+	transfer := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.5}, TransferTimeSeconds: 7}
+	driver1 := corridorDriver("driver-leg-1", 0.01, 0, routeCorridor())
+	driver1.PickupZoneID = "zone-leg-1"
+	driver2 := corridorDriver("driver-leg-2", 0.01, 0.5, routeCorridor())
+	driver2.PickupZoneID = "zone-leg-2"
+
+	journey := build2HopJourney(req, transfer, driver1, 30, driver2, 40)
+
+	if len(journey.Legs) != 2 {
+		t.Fatalf("expected two legs, got %d", len(journey.Legs))
+	}
+	if journey.Legs[0].PickupZoneID != "zone-leg-1" || journey.Legs[1].PickupZoneID != "zone-leg-2" {
+		t.Fatalf("expected both pickupZoneIds to be preserved, got %#v", journey.Legs)
+	}
+	if journey.TotalEstimatedTimeSeconds != 77 {
+		t.Fatalf("expected total time with transfer wait, got %d", journey.TotalEstimatedTimeSeconds)
+	}
+}
+
 func corridorRequest() RideRequest {
 	return RideRequest{
 		Origin:         GeoPoint{Latitude: 0, Longitude: 0},

@@ -80,16 +80,43 @@ type Leg struct {
 	EstimatedTimeSeconds int      `json:"etaSeconds"`
 }
 
+func buildJourneyLeg(driver DriverProfile, pickup, dropoff GeoPoint, etaSec int) Leg {
+	return Leg{
+		DriverID:             driver.ID,
+		PickupZoneID:         driver.PickupZoneID,
+		Pickup:               pickup,
+		Dropoff:              dropoff,
+		EstimatedTimeSeconds: etaSec,
+	}
+}
+
 func buildSingleHopJourney(req RideRequest, driver DriverProfile, etaSec int) Journey {
 	return Journey{
-		Legs: []Leg{{
-			DriverID:             driver.ID,
-			PickupZoneID:         driver.PickupZoneID,
-			Pickup:               req.Origin,
-			Dropoff:              req.Destination,
-			EstimatedTimeSeconds: etaSec,
-		}},
+		Legs:                      []Leg{buildJourneyLeg(driver, req.Origin, req.Destination, etaSec)},
 		TotalEstimatedTimeSeconds: etaSec,
+	}
+}
+
+func build2HopJourney(req RideRequest, transfer TransferPoint, driver1 DriverProfile, eta1 int, driver2 DriverProfile, eta2 int) Journey {
+	totalTime := eta1 + eta2 + transfer.TransferTimeSeconds
+	return Journey{
+		Legs: []Leg{
+			buildJourneyLeg(driver1, req.Origin, transfer.Location, eta1),
+			buildJourneyLeg(driver2, transfer.Location, req.Destination, eta2),
+		},
+		TotalEstimatedTimeSeconds: totalTime,
+	}
+}
+
+func build3HopJourney(req RideRequest, transfer1 TransferPoint, transfer2 TransferPoint, driver1 DriverProfile, eta1 int, driver2 DriverProfile, eta2 int, driver3 DriverProfile, eta3 int) Journey {
+	totalTime := eta1 + eta2 + eta3 + transfer1.TransferTimeSeconds + transfer2.TransferTimeSeconds
+	return Journey{
+		Legs: []Leg{
+			buildJourneyLeg(driver1, req.Origin, transfer1.Location, eta1),
+			buildJourneyLeg(driver2, transfer1.Location, transfer2.Location, eta2),
+			buildJourneyLeg(driver3, transfer2.Location, req.Destination, eta3),
+		},
+		TotalEstimatedTimeSeconds: totalTime,
 	}
 }
 
@@ -702,13 +729,13 @@ func plan2HopWithTransfers(ctx context.Context, req RideRequest, transferPoints 
 		leg2Req := req
 		leg2Req.Origin = transfer.Location
 
-		driver2, eta2, err := pickBestDriverForLeg(ctx, leg2Req, []string{driver1}, 2)
+		driver2, eta2, err := pickBestDriverForLeg(ctx, leg2Req, []string{driver1.ID}, 2)
 		if err != nil {
 			continue
 		}
 
 		// Validate gender pool consistency across legs
-		if !validateGenderConsistency(req.RiderGender, []string{driver1, driver2}) {
+		if !validateGenderConsistency(req.RiderGender, []string{driver1.ID, driver2.ID}) {
 			continue
 		}
 
@@ -717,13 +744,7 @@ func plan2HopWithTransfers(ctx context.Context, req RideRequest, transferPoints 
 
 		if score < bestScore {
 			bestScore = score
-			bestJourney = Journey{
-				Legs: []Leg{
-					{DriverID: driver1, Pickup: req.Origin, Dropoff: transfer.Location, EstimatedTimeSeconds: eta1},
-					{DriverID: driver2, Pickup: transfer.Location, Dropoff: req.Destination, EstimatedTimeSeconds: eta2},
-				},
-				TotalEstimatedTimeSeconds: totalTime,
-			}
+			bestJourney = build2HopJourney(req, transfer, driver1, eta1, driver2, eta2)
 		}
 	}
 
@@ -759,7 +780,7 @@ func plan3HopWithTransfers(ctx context.Context, req RideRequest, transferPoints 
 			leg2Req.Origin = transfer1.Location
 			leg2Req.Destination = transfer2.Location
 
-			driver2, eta2, err := pickBestDriverForLeg(ctx, leg2Req, []string{driver1}, 2)
+			driver2, eta2, err := pickBestDriverForLeg(ctx, leg2Req, []string{driver1.ID}, 2)
 			if err != nil {
 				continue
 			}
@@ -768,13 +789,13 @@ func plan3HopWithTransfers(ctx context.Context, req RideRequest, transferPoints 
 			leg3Req := req
 			leg3Req.Origin = transfer2.Location
 
-			driver3, eta3, err := pickBestDriverForLeg(ctx, leg3Req, []string{driver1, driver2}, 3)
+			driver3, eta3, err := pickBestDriverForLeg(ctx, leg3Req, []string{driver1.ID, driver2.ID}, 3)
 			if err != nil {
 				continue
 			}
 
 			// Validate gender pool consistency across all legs
-			if !validateGenderConsistency(req.RiderGender, []string{driver1, driver2, driver3}) {
+			if !validateGenderConsistency(req.RiderGender, []string{driver1.ID, driver2.ID, driver3.ID}) {
 				continue
 			}
 
@@ -784,14 +805,7 @@ func plan3HopWithTransfers(ctx context.Context, req RideRequest, transferPoints 
 
 			if score < bestScore {
 				bestScore = score
-				bestJourney = Journey{
-					Legs: []Leg{
-						{DriverID: driver1, Pickup: req.Origin, Dropoff: transfer1.Location, EstimatedTimeSeconds: eta1},
-						{DriverID: driver2, Pickup: transfer1.Location, Dropoff: transfer2.Location, EstimatedTimeSeconds: eta2},
-						{DriverID: driver3, Pickup: transfer2.Location, Dropoff: req.Destination, EstimatedTimeSeconds: eta3},
-					},
-					TotalEstimatedTimeSeconds: totalTime,
-				}
+				bestJourney = build3HopJourney(req, transfer1, transfer2, driver1, eta1, driver2, eta2, driver3, eta3)
 			}
 		}
 	}
@@ -1044,16 +1058,16 @@ func getMaxStopCapacity(data map[string]interface{}) int {
 }
 
 // pickBestDriverForLeg finds the best driver for a specific leg with resource validation
-func pickBestDriverForLeg(ctx context.Context, req RideRequest, exclude []string, legNumber int) (string, int, error) {
+func pickBestDriverForLeg(ctx context.Context, req RideRequest, exclude []string, legNumber int) (DriverProfile, int, error) {
 	// Use existing pickBestDriver but add leg-specific validation
 	driver, eta, err := pickBestDriver(ctx, req, exclude)
 	if err != nil {
-		return "", 0, fmt.Errorf("leg %d driver selection failed: %v", legNumber, err)
+		return DriverProfile{}, 0, fmt.Errorf("leg %d driver selection failed: %v", legNumber, err)
 	}
 
 	// Additional validation for multi-leg constraints could be added here
 	// For now, use the existing driver selection logic
-	return driver.ID, eta, nil
+	return driver, eta, nil
 }
 
 // validateGenderConsistency ensures all drivers support the same gender pool
