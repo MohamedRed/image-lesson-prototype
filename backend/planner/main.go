@@ -440,6 +440,9 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	straightLinePickupKm := haversineKm(driver.CurrentLocation.Latitude, driver.CurrentLocation.Longitude, req.Origin.Latitude, req.Origin.Longitude)
 	pickupKm := driverPickupDistanceKm(req, driver, straightLinePickupKm)
 	etaSec := int(pickupKm / 40.0 * 3600)
+	if etaSec > maxSingleHopPickupETASeconds() {
+		return 0, 0, false
+	}
 
 	rideDistKm := haversineKm(req.Origin.Latitude, req.Origin.Longitude, req.Destination.Latitude, req.Destination.Longitude)
 	if driver.RoutePolyline != "" {
@@ -729,6 +732,15 @@ func maxSingleHopRouteDetourKm() float64 {
 		}
 	}
 	return 25.0
+}
+
+func maxSingleHopPickupETASeconds() int {
+	if value := os.Getenv("MAX_SINGLE_HOP_PICKUP_ETA_SECONDS"); value != "" {
+		if parsed, err := strconv.Atoi(value); err == nil && parsed > 0 {
+			return parsed
+		}
+	}
+	return 28800
 }
 
 type scoreWeights struct {

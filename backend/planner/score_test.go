@@ -686,6 +686,24 @@ func TestComputeDriverScore_DoesNotRejectSparseDirectPolylineAsDetour(t *testing
 	}
 }
 
+func TestComputeDriverScore_RejectsRoutePickupEtaAboveThreshold(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_PICKUP_ETA_SECONDS", "300")
+	req := corridorRequest()
+	driver := corridorDriver("late-route-pickup", 0, 0.02, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.02},
+		{Latitude: 2, Longitude: 0.02},
+		{Latitude: 2, Longitude: 0},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected route pickup ETA above threshold to be rejected")
+	}
+}
+
 func TestPickBestDriverFromProfiles_RetriesNextCandidateWhenReservationFails(t *testing.T) {
 	req := corridorRequest()
 	drivers := []DriverProfile{
