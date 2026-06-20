@@ -337,6 +337,24 @@ func TestPickBestDriverFromProfiles_RanksLowerRouteDetourAboveLoopingCorridor(t 
 	}
 }
 
+func TestPickBestDriverFromProfiles_RanksLowerSeatLoadAboveTiedCandidate(t *testing.T) {
+	req := corridorRequest()
+	lowLoad := corridorDriverWithPickupZone("zzz-low-seat-load", 0, 0, routeCorridor(), "zone-low-load")
+	lowLoad.HasSeatLedger = true
+	lowLoad.ReservedSeats = 0
+	highLoad := corridorDriverWithPickupZone("aaa-high-seat-load", 0, 0, routeCorridor(), "zone-high-load")
+	highLoad.HasSeatLedger = true
+	highLoad.ReservedSeats = 3
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{highLoad, lowLoad}, nil, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected valid corridor driver, got error: %v", err)
+	}
+	if driverID != "zzz-low-seat-load" {
+		t.Fatalf("expected lower seat-load driver to win tied corridor match, got %q", driverID)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RequiresPickupZoneIDForReservation(t *testing.T) {
 	req := corridorRequest()
 	missingZone := corridorDriver("nearest-valid-but-missing-zone", 0.001, 0, routeCorridor())

@@ -335,13 +335,7 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 		passCnt = 1
 	}
 
-	seatsUsed := driver.ReservedSeats
-	if !driver.HasSeatLedger && seatsUsed == 0 && driver.ActivePickups > 0 {
-		// Backward compatibility for older driver documents that only tracked
-		// pickup count. New documents use the seat ledger so multi-passenger
-		// groups consume all reserved seats.
-		seatsUsed = driver.ActivePickups
-	}
+	seatsUsed := reservedSeatCount(driver)
 	seatsLeft := driver.CapacitySeats - seatsUsed
 	if seatsLeft < passCnt {
 		return 0, 0, false
@@ -405,13 +399,31 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	}
 	detourKm := driverDetourKm(req, driver, pickupKm, rideDistKm)
 
-	baseScore := wDetour*detourKm + wEta*(float64(etaSec)/60.0)
+	baseScore := wDetour*detourKm + wEta*(float64(etaSec)/60.0) + seatLoadScore(driver, seatsUsed)
 	if curbFactor <= 0 {
 		curbFactor = 1
 	}
 	score := baseScore * math.Pow(curbFactor, wCurb)
 
 	return score, etaSec, true
+}
+
+func reservedSeatCount(driver DriverProfile) int {
+	seatsUsed := driver.ReservedSeats
+	if !driver.HasSeatLedger && seatsUsed == 0 && driver.ActivePickups > 0 {
+		// Backward compatibility for older driver documents that only tracked
+		// pickup count. New documents use the seat ledger so multi-passenger
+		// groups consume all reserved seats.
+		seatsUsed = driver.ActivePickups
+	}
+	return seatsUsed
+}
+
+func seatLoadScore(driver DriverProfile, seatsUsed int) float64 {
+	if driver.CapacitySeats <= 0 || seatsUsed <= 0 {
+		return 0
+	}
+	return float64(seatsUsed) / float64(driver.CapacitySeats)
 }
 
 func driverDetourKm(req RideRequest, driver DriverProfile, pickupKm, directRideKm float64) float64 {
