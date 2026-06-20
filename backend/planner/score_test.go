@@ -429,6 +429,20 @@ func TestPickBestDriverFromProfiles_RequiresPickupZoneIDForReservation(t *testin
 	}
 }
 
+func TestPickBestDriverProfileFromProfiles_RequiresPickupZoneIDForProductionSelection(t *testing.T) {
+	req := corridorRequest()
+	missingZone := corridorDriver("nearest-valid-but-missing-zone", 0.001, 0, routeCorridor())
+	withZone := corridorDriverWithPickupZone("farther-valid-with-zone", 0.02, 0, routeCorridor(), "zone-reservable")
+
+	driver, _, err := pickBestDriverProfileFromProfiles(req, []DriverProfile{missingZone, withZone}, nil, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected planner to choose reservable corridor driver, got error: %v", err)
+	}
+	if driver.ID != "farther-valid-with-zone" {
+		t.Fatalf("expected production profile selector to filter missing pickupZoneId, got %q", driver.ID)
+	}
+}
+
 func TestComputeDriverScore_RejectsExcessiveRouteDetour(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("excessive-detour", 0, 0, routeCorridor())

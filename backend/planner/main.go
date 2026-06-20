@@ -684,7 +684,19 @@ func defaultScoreWeights() scoreWeights {
 }
 
 func pickBestDriverFromProfiles(req RideRequest, drivers []DriverProfile, exclude []string, weights scoreWeights) (string, int, error) {
-	return pickBestDriverFromProfilesWithReservation(req, drivers, exclude, weights, nil)
+	driver, etaSec, err := pickBestDriverProfileFromProfiles(req, drivers, exclude, weights)
+	if err != nil {
+		return "", 0, err
+	}
+	return driver.ID, etaSec, nil
+}
+
+func pickBestDriverProfileFromProfiles(req RideRequest, drivers []DriverProfile, exclude []string, weights scoreWeights) (DriverProfile, int, error) {
+	ranked := rankDriverProfiles(req, drivers, exclude, weights)
+	if len(ranked) == 0 {
+		return DriverProfile{}, 0, fmt.Errorf("no suitable driver scored")
+	}
+	return ranked[0].driver, ranked[0].etaSec, nil
 }
 
 func pickBestDriverFromProfilesWithReservation(req RideRequest, drivers []DriverProfile, exclude []string, weights scoreWeights, reserve func(DriverProfile) bool) (string, int, error) {
@@ -1383,9 +1395,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		}
 	}
 
-	bestScore := math.MaxFloat64
-	bestDriver := DriverProfile{}
-	bestEta := 0
+	profiles := make([]DriverProfile, 0, len(docs))
 
 	for _, d := range docs {
 		raw := d.Data()
@@ -1455,22 +1465,10 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			PremiumCapabilities: data.PremiumCapabilities,
 		}
 
-		score, etaSec, ok := computeDriverScore(req, prof, curbFactor, wDetour, wEta, wCurb)
-		if !ok {
-			continue
-		}
-
-		if score < bestScore {
-			bestScore = score
-			bestDriver = prof
-			bestEta = etaSec
-		}
+		profiles = append(profiles, prof)
 	}
 
-	if bestDriver.ID == "" {
-		return DriverProfile{}, 0, fmt.Errorf("no suitable driver scored")
-	}
-	return bestDriver, bestEta, nil
+	return pickBestDriverProfileFromProfiles(req, profiles, nil, scoreWeights{Detour: wDetour, ETA: wEta, Curb: wCurb})
 }
 
 // haversineKm returns great-circle distance between two lat/lon in km.
