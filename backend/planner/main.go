@@ -142,8 +142,10 @@ func routeProjectionCandidatesInGeometryOrRange(points []GeoPoint, target GeoPoi
 				snapKm:   haversineKm(point.Latitude, point.Longitude, target.Latitude, target.Longitude),
 			})
 		}
-		for i, point := range points {
-			consider(point, float64(i))
+		if requireGeometry {
+			for i, point := range points {
+				consider(point, float64(i))
+			}
 		}
 		for i := 0; i < len(points)-1; i++ {
 			point, fraction := nearestPointOnSegment(points[i], points[i+1], target)
@@ -160,10 +162,10 @@ func routeProjectionCandidatesInGeometryOrRange(points []GeoPoint, target GeoPoi
 		candidates = collect(false)
 	}
 	sort.SliceStable(candidates, func(i, j int) bool {
-		if candidates[i].snapKm == candidates[j].snapKm {
-			return candidates[i].position < candidates[j].position
+		if candidates[i].position == candidates[j].position {
+			return candidates[i].snapKm < candidates[j].snapKm
 		}
-		return candidates[i].snapKm < candidates[j].snapKm
+		return candidates[i].position < candidates[j].position
 	})
 	return candidates
 }

@@ -723,6 +723,29 @@ func TestBuildSingleHopJourneyUsesWalkZoneOrderForRouteThatContinuesNearOrigin(t
 	}
 }
 
+func TestBuildSingleHopJourneyUsesFirstValidPassEvenWhenLaterPassIsCloser(t *testing.T) {
+	req := corridorRequest()
+	req.Origin = GeoPoint{Latitude: 0.004, Longitude: 0}
+	req.Destination = GeoPoint{Latitude: 0.004, Longitude: 1}
+	req.OriWalkIso = rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	req.DestWalkIso = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	driver := corridorDriver("driver-has-later-closer-valid-pass", 0.01, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 1.10},
+		{Latitude: 0.004, Longitude: 0.00},
+		{Latitude: 0.004, Longitude: 1.00},
+	})
+
+	journey := buildSingleHopJourney(req, driver, 90)
+	if len(journey.Legs) != 1 {
+		t.Fatalf("expected one leg, got %d", len(journey.Legs))
+	}
+	leg := journey.Legs[0]
+	assertGeoPointNear(t, leg.Pickup, GeoPoint{Latitude: 0, Longitude: 0})
+	assertGeoPointNear(t, leg.Dropoff, GeoPoint{Latitude: 0, Longitude: 1})
+}
+
 func TestBuildSingleHopJourneyUsesLaterDropoffProjectionWhenDestinationWalkZoneMissing(t *testing.T) {
 	req := corridorRequest()
 	req.Destination = GeoPoint{Latitude: 0.004, Longitude: 1}
