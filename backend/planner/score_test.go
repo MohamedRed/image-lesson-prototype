@@ -393,6 +393,28 @@ func TestPickBestDriverFromProfiles_RanksLowerPetLoadAboveTiedCandidate(t *testi
 	}
 }
 
+func TestPickBestDriverFromProfiles_RanksLowerChildSeatLoadAboveTiedCandidate(t *testing.T) {
+	req := corridorRequest()
+	req.ChildPassengers = []struct {
+		AgeYears int `json:"ageYears"`
+		WeightKg int `json:"weightKg"`
+	}{{AgeYears: 3, WeightKg: 15}}
+	lowLoad := corridorDriverWithPickupZone("zzz-low-child-seat-load", 0, 0, routeCorridor(), "zone-low-child-seat")
+	lowLoad.ChildSeatInventory = map[string]int{"forward": 4}
+	lowLoad.ReservedChildSeats = map[string]int{"forward": 0}
+	highLoad := corridorDriverWithPickupZone("aaa-high-child-seat-load", 0, 0, routeCorridor(), "zone-high-child-seat")
+	highLoad.ChildSeatInventory = map[string]int{"forward": 4}
+	highLoad.ReservedChildSeats = map[string]int{"forward": 3}
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{highLoad, lowLoad}, nil, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected valid corridor driver, got error: %v", err)
+	}
+	if driverID != "zzz-low-child-seat-load" {
+		t.Fatalf("expected lower child-seat-load driver to win tied corridor match, got %q", driverID)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RequiresPickupZoneIDForReservation(t *testing.T) {
 	req := corridorRequest()
 	missingZone := corridorDriver("nearest-valid-but-missing-zone", 0.001, 0, routeCorridor())
