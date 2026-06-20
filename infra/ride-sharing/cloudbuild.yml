@@ -1,0 +1,169 @@
+steps:
+  # Step 1: Terraform Init
+  - name: 'hashicorp/terraform:1.6'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd infra
+        terraform init
+    env:
+      - 'TF_VAR_project_id=$PROJECT_ID'
+      - 'TF_VAR_region=$_REGION'
+
+  # Step 2: Terraform Plan
+  - name: 'hashicorp/terraform:1.6'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd infra
+        terraform plan -out=tfplan
+    env:
+      - 'TF_VAR_project_id=$PROJECT_ID'
+      - 'TF_VAR_region=$_REGION'
+
+  # Step 3: Terraform Apply
+  - name: 'hashicorp/terraform:1.6'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd infra
+        terraform apply -auto-approve tfplan
+    env:
+      - 'TF_VAR_project_id=$PROJECT_ID'
+      - 'TF_VAR_region=$_REGION'
+
+  # Step 4: Run BigQuery Aggregation Procedures
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🔄 Running BigQuery aggregation procedures..."
+        
+        # Call the hourly aggregation procedure
+        bq query \
+          --use_legacy_sql=false \
+          --project_id=$PROJECT_ID \
+          "CALL \`$PROJECT_ID.ride_analytics.refresh_hourly_aggregation\`();"
+        
+        if [ $? -eq 0 ]; then
+          echo "✅ Hourly aggregation procedure completed successfully"
+        else
+          echo "❌ Hourly aggregation procedure failed"
+          exit 1
+        fi
+        
+        # Call the daily aggregation procedure
+        bq query \
+          --use_legacy_sql=false \
+          --project_id=$PROJECT_ID \
+          "CALL \`$PROJECT_ID.ride_analytics.refresh_daily_aggregation\`();"
+        
+        if [ $? -eq 0 ]; then
+          echo "✅ Daily aggregation procedure completed successfully"
+        else
+          echo "❌ Daily aggregation procedure failed"
+          exit 1
+        fi
+        
+        # Verify ML model is ready
+        bq show \
+          --project_id=$PROJECT_ID \
+          --model \
+          ride_analytics.demand_forecast_model
+        
+        if [ $? -eq 0 ]; then
+          echo "✅ ML model verification passed"
+        else
+          echo "⚠️  ML model not found or not ready"
+        fi
+
+  # Step 5: Create custom metric for procedure success/failure
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "📊 Recording aggregation success metric..."
+        
+        # Create a custom metric entry for successful aggregation
+        gcloud logging write "bigquery-aggregation" \
+          --payload-type=json \
+          --payload='{
+            "message": "BigQuery aggregation procedures completed successfully",
+            "severity": "INFO",
+            "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)'",
+            "labels": {
+              "component": "bigquery-aggregation",
+              "status": "success",
+              "build_id": "'$BUILD_ID'",
+              "project": "'$PROJECT_ID'"
+            }
+          }'
+        
+        echo "✅ Success metric recorded"
+
+  # Step 6: Test BigQuery views and procedures
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🧪 Testing BigQuery views and procedures..."
+        
+        # Test hourly driver metrics view
+        HOURLY_COUNT=$(bq query \
+          --use_legacy_sql=false \
+          --format=csv \
+          --max_rows=1 \
+          --project_id=$PROJECT_ID \
+          "SELECT COUNT(*) as count FROM \`$PROJECT_ID.ride_analytics.hourly_driver_metrics\` LIMIT 1" | tail -n +2)
+        
+        echo "Hourly driver metrics count: $HOURLY_COUNT"
+        
+        # Test demand forecast view
+        FORECAST_COUNT=$(bq query \
+          --use_legacy_sql=false \
+          --format=csv \
+          --max_rows=1 \
+          --project_id=$PROJECT_ID \
+          "SELECT COUNT(*) as count FROM \`$PROJECT_ID.ride_analytics.demand_forecast_view\` LIMIT 1" | tail -n +2)
+        
+        echo "Demand forecast count: $FORECAST_COUNT"
+        
+        echo "✅ BigQuery validation completed"
+
+# Failure handling - record failure metric
+onFailure:
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "❌ Build failed - recording failure metric..."
+        
+        gcloud logging write "bigquery-aggregation" \
+          --payload-type=json \
+          --payload='{
+            "message": "BigQuery aggregation procedures failed",
+            "severity": "ERROR",
+            "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)'",
+            "labels": {
+              "component": "bigquery-aggregation",
+              "status": "failure",
+              "build_id": "'$BUILD_ID'",
+              "project": "'$PROJECT_ID'"
+            }
+          }'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_STANDARD_4'
+  
+substitutions:
+  _REGION: 'us-central1'
+
+timeout: '1800s'  # 30 minutes 

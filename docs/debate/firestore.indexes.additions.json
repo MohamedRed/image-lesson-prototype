@@ -1,0 +1,43 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "debates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isLive", "order": "ASCENDING" },
+        { "fieldPath": "startTime", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "debates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "topicTags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "startTime", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "events",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "historicalDate", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "comments",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "clusterId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "debateRequests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "targetDebaterUids", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,228 @@
+name: Nightly Load Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_users:
+        description: 'Total number of users (default: 25000)'
+        required: false
+        default: '25000'
+      duration:
+        description: 'Test duration in minutes (default: 30)'
+        required: false
+        default: '30'
+      environment:
+        description: 'Target environment'
+        required: false
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  GOOGLE_CLOUD_PROJECT: liive-ride-sharing-staging
+  GOOGLE_CLOUD_REGION: us-central1
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ env.GOOGLE_CLOUD_PROJECT }}
+        
+    - name: Configure Docker for Artifact Registry
+      run: |
+        gcloud auth configure-docker us-central1-docker.pkg.dev
+        
+    - name: Build load test image
+      run: |
+        cd backend/load-test
+        docker build -t us-central1-docker.pkg.dev/${{ env.GOOGLE_CLOUD_PROJECT }}/load-test/locust:${{ github.sha }} .
+        docker push us-central1-docker.pkg.dev/${{ env.GOOGLE_CLOUD_PROJECT }}/load-test/locust:${{ github.sha }}
+        
+    - name: Deploy load test to Cloud Run
+      run: |
+        gcloud run deploy load-test-runner \
+          --image us-central1-docker.pkg.dev/${{ env.GOOGLE_CLOUD_PROJECT }}/load-test/locust:${{ github.sha }} \
+          --platform managed \
+          --region ${{ env.GOOGLE_CLOUD_REGION }} \
+          --allow-unauthenticated \
+          --memory 4Gi \
+          --cpu 2 \
+          --max-instances 1 \
+          --port 8089 \
+          --set-env-vars="TARGET_HOST=https://${{ env.GOOGLE_CLOUD_REGION }}-${{ env.GOOGLE_CLOUD_PROJECT }}.cloudfunctions.net"
+          
+    - name: Get Cloud Run URL
+      id: get-url
+      run: |
+        URL=$(gcloud run services describe load-test-runner --region=${{ env.GOOGLE_CLOUD_REGION }} --format='value(status.url)')
+        echo "LOAD_TEST_URL=$URL" >> $GITHUB_OUTPUT
+        
+    - name: Wait for service to be ready
+      run: |
+        echo "Waiting for load test service to be ready..."
+        sleep 30
+        
+    - name: Start load test
+      id: start-test
+      run: |
+        USERS=${{ github.event.inputs.target_users || '25000' }}
+        DURATION=${{ github.event.inputs.duration || '30' }}
+        
+        echo "Starting load test with $USERS users for ${DURATION} minutes"
+        
+        # Start the load test via API
+        curl -X POST "${{ steps.get-url.outputs.LOAD_TEST_URL }}/swarm" \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          -d "user_count=$USERS&spawn_rate=100&host=https://${{ env.GOOGLE_CLOUD_REGION }}-${{ env.GOOGLE_CLOUD_PROJECT }}.cloudfunctions.net"
+          
+        echo "Load test started. Waiting for ${DURATION} minutes..."
+        sleep $((DURATION * 60))
+        
+    - name: Stop load test and collect results
+      id: collect-results
+      run: |
+        # Stop the test
+        curl -X GET "${{ steps.get-url.outputs.LOAD_TEST_URL }}/stop"
+        
+        # Wait a bit for results to be ready
+        sleep 10
+        
+        # Get test statistics
+        STATS=$(curl -s "${{ steps.get-url.outputs.LOAD_TEST_URL }}/stats/requests")
+        echo "LOAD_TEST_STATS<<EOF" >> $GITHUB_OUTPUT
+        echo "$STATS" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        # Get CSV report
+        curl -s "${{ steps.get-url.outputs.LOAD_TEST_URL }}/stats/requests/csv" > load_test_results.csv
+        
+    - name: Parse results and check SLA
+      id: check-sla
+      run: |
+        python3 << 'EOF'
+        import json
+        import sys
+        
+        # Parse JSON stats
+        stats_json = '''${{ steps.collect-results.outputs.LOAD_TEST_STATS }}'''
+        
+        try:
+            stats = json.loads(stats_json)
+            
+            # Find ride matching stats
+            match_stats = None
+            for stat in stats.get('stats', []):
+                if stat.get('name') == 'ride_matching' and stat.get('method') == 'MATCH_LATENCY':
+                    match_stats = stat
+                    break
+            
+            if match_stats:
+                avg_response_time = match_stats.get('avg_response_time', 0)
+                p95_response_time = match_stats.get('95%', 0)
+                failure_rate = match_stats.get('num_failures', 0) / max(match_stats.get('num_requests', 1), 1)
+                
+                print(f"Average match time: {avg_response_time:.2f}ms")
+                print(f"95th percentile match time: {p95_response_time:.2f}ms")
+                print(f"Failure rate: {failure_rate:.2%}")
+                
+                # Check SLA compliance
+                sla_pass = p95_response_time < 2000 and failure_rate < 0.05
+                
+                print(f"SLA_PASS={str(sla_pass).lower()}")
+                print(f"P95_MATCH_TIME={p95_response_time}")
+                print(f"FAILURE_RATE={failure_rate:.4f}")
+                
+                # Set GitHub outputs
+                with open('$GITHUB_OUTPUT', 'a') as f:
+                    f.write(f"SLA_PASS={str(sla_pass).lower()}\n")
+                    f.write(f"P95_MATCH_TIME={p95_response_time}\n")
+                    f.write(f"FAILURE_RATE={failure_rate:.4f}\n")
+                    f.write(f"AVG_MATCH_TIME={avg_response_time}\n")
+                
+                if not sla_pass:
+                    print("❌ SLA VIOLATION: Load test failed to meet performance requirements")
+                    sys.exit(1)
+                else:
+                    print("✅ SLA PASSED: All performance requirements met")
+            else:
+                print("⚠️  No matching statistics found")
+                sys.exit(1)
+                
+        except Exception as e:
+            print(f"Error parsing results: {e}")
+            sys.exit(1)
+        EOF
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: load-test-results-${{ github.run_number }}
+        path: |
+          load_test_results.csv
+          
+    - name: Send Slack notification on failure
+      if: failure()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        channel: '#engineering-alerts'
+        text: |
+          🚨 Load Test Failed
+          
+          Environment: ${{ github.event.inputs.environment || 'staging' }}
+          Users: ${{ github.event.inputs.target_users || '25000' }}
+          Duration: ${{ github.event.inputs.duration || '30' }}m
+          
+          P95 Match Time: ${{ steps.check-sla.outputs.P95_MATCH_TIME }}ms
+          Failure Rate: ${{ steps.check-sla.outputs.FAILURE_RATE }}
+          
+          Action: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Details>
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        
+    - name: Send Slack notification on success
+      if: success()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: success
+        channel: '#engineering'
+        text: |
+          ✅ Load Test Passed
+          
+          Environment: ${{ github.event.inputs.environment || 'staging' }}
+          Users: ${{ github.event.inputs.target_users || '25000' }}
+          Duration: ${{ github.event.inputs.duration || '30' }}m
+          
+          Avg Match Time: ${{ steps.check-sla.outputs.AVG_MATCH_TIME }}ms
+          P95 Match Time: ${{ steps.check-sla.outputs.P95_MATCH_TIME }}ms
+          Failure Rate: ${{ steps.check-sla.outputs.FAILURE_RATE }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        
+    - name: Clean up Cloud Run service
+      if: always()
+      run: |
+        gcloud run services delete load-test-runner \
+          --region ${{ env.GOOGLE_CLOUD_REGION }} \
+          --quiet || true 
