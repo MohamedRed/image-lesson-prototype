@@ -106,23 +106,26 @@ func selectedSingleHopPickupDropoff(req RideRequest, driver DriverProfile) (GeoP
 	if !ok || len(points) < 2 {
 		return req.Origin, req.Destination
 	}
-	originIdx, _ := nearestRoutePointIndex(points, req.Origin)
-	destinationIdx, _ := nearestRoutePointIndex(points, req.Destination)
-	if originIdx < 0 || destinationIdx <= originIdx {
-		return req.Origin, req.Destination
+
+	lastPos := float64(len(points) - 1)
+	pickup, pickupPos, ok := nearestRoutePointInGeometry(points, req.Origin, req.originWalkGeometry(), 0, lastPos)
+	if !ok {
+		projection, ok := nearestRouteProjection(points, req.Origin)
+		if !ok {
+			return req.Origin, req.Destination
+		}
+		pickup = projection.point
+		pickupPos = projection.position
 	}
 
-	pickup := points[originIdx]
-	dropoff := points[destinationIdx]
-	pickupPos := float64(originIdx)
-	dropoffPos := float64(destinationIdx)
-	if point, pos, ok := nearestRoutePointInGeometry(points, req.Origin, req.originWalkGeometry(), 0, dropoffPos); ok {
-		pickup = point
-		pickupPos = pos
-	}
-	if point, pos, ok := nearestRoutePointInGeometry(points, req.Destination, req.destinationWalkGeometry(), pickupPos, float64(len(points)-1)); ok {
-		dropoff = point
-		dropoffPos = pos
+	dropoff, dropoffPos, ok := nearestRoutePointInGeometry(points, req.Destination, req.destinationWalkGeometry(), pickupPos, lastPos)
+	if !ok {
+		projection, ok := nearestRouteProjection(points, req.Destination)
+		if !ok {
+			return req.Origin, req.Destination
+		}
+		dropoff = projection.point
+		dropoffPos = projection.position
 	}
 	if dropoffPos <= pickupPos {
 		return req.Origin, req.Destination
