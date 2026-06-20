@@ -364,6 +364,24 @@ func TestComputeDriverScore_EnforcesOriginDriveGeoWithoutWalkZones(t *testing.T)
 	}
 }
 
+func TestComputeDriverScore_RejectsDriverInsideOriginDriveGeoHole(t *testing.T) {
+	req := RideRequest{
+		Origin:         GeoPoint{Latitude: 0, Longitude: 0},
+		Destination:    GeoPoint{Latitude: 0, Longitude: 1},
+		PassengerCount: 1,
+		OriDriveIso: polygonWithHole(
+			rectRing(-0.05, -0.05, 0.05, 0.05),
+			rectRing(-0.01, -0.01, 0.01, 0.01),
+		),
+	}
+	driver := corridorDriver("inside-origin-drive-hole", 0, 0, GeoJSONGeometry{})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected driver inside an originDriveGeo interior hole to be rejected")
+	}
+}
+
 func TestComputeDriverScore_RejectsPolylineMissingWalkZoneDespiteBroadBuffer(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("stale-broad-buffer", 0, 0, routeCorridor())
@@ -935,6 +953,13 @@ func corridorDriverWithPickupZone(id string, lat, lon float64, buffer GeoJSONGeo
 
 func routeCorridor() GeoJSONGeometry {
 	return rectPolygon(-0.005, -0.01, 0.005, 1.01)
+}
+
+func polygonWithHole(outer [][]float64, holes ...[][]float64) GeoJSONGeometry {
+	rings := make([][][]float64, 0, len(holes)+1)
+	rings = append(rings, outer)
+	rings = append(rings, holes...)
+	return GeoJSONGeometry{Type: "Polygon", Coordinates: rings}
 }
 
 func multiPolygon(rings ...[][]float64) GeoJSONGeometry {

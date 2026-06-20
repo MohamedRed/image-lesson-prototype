@@ -976,12 +976,22 @@ func polylineIntersectsPolygon(encoded string, polygon GeoJSONGeometry) bool {
 }
 
 func pointInGeoJSONPolygon(point GeoPoint, polygon GeoJSONGeometry) bool {
-	rings, ok := polygonOuterRings(polygon)
+	parts, ok := polygonParts(polygon)
 	if !ok {
 		return false
 	}
-	for _, ring := range rings {
-		if pointInPolygon(point, ring) {
+	for _, part := range parts {
+		if !pointInPolygon(point, part.outer) {
+			continue
+		}
+		insideHole := false
+		for _, hole := range part.holes {
+			if pointInPolygon(point, hole) {
+				insideHole = true
+				break
+			}
+		}
+		if !insideHole {
 			return true
 		}
 	}
@@ -1127,6 +1137,125 @@ func geoPointsFromRingCoordinates(coords [][]float64) ([]GeoPoint, bool) {
 		ring = append(ring, ring[0])
 	}
 	return ring, true
+}
+
+type geoPolygonPart struct {
+	outer []GeoPoint
+	holes [][]GeoPoint
+}
+
+func polygonParts(g GeoJSONGeometry) ([]geoPolygonPart, bool) {
+	if g.Coordinates == nil {
+		return nil, false
+	}
+	switch g.Type {
+	case "Polygon":
+		return polygonPartsFromRingCoordinateSets(g.Coordinates)
+	case "MultiPolygon":
+		return multiPolygonParts(g.Coordinates)
+	default:
+		return nil, false
+	}
+}
+
+func polygonPartsFromRingCoordinateSets(coords any) ([]geoPolygonPart, bool) {
+	ringCoordinateSets, ok := ringCoordinateSets(coords)
+	if !ok || len(ringCoordinateSets) == 0 {
+		return nil, false
+	}
+	part, ok := geoPolygonPartFromCoordinateSets(ringCoordinateSets)
+	if !ok {
+		return nil, false
+	}
+	return []geoPolygonPart{part}, true
+}
+
+func multiPolygonParts(coords any) ([]geoPolygonPart, bool) {
+	parts := []geoPolygonPart{}
+	appendPart := func(rawPolygon any) bool {
+		part, ok := geoPolygonPartFromAny(rawPolygon)
+		if !ok {
+			return false
+		}
+		parts = append(parts, part)
+		return true
+	}
+	switch c := coords.(type) {
+	case [][][][]float64:
+		for _, polygon := range c {
+			if !appendPart(polygon) {
+				return nil, false
+			}
+		}
+	case [][][][]interface{}:
+		for _, polygon := range c {
+			if !appendPart(polygon) {
+				return nil, false
+			}
+		}
+	case []interface{}:
+		for _, polygon := range c {
+			if !appendPart(polygon) {
+				return nil, false
+			}
+		}
+	default:
+		return nil, false
+	}
+	return parts, len(parts) > 0
+}
+
+func geoPolygonPartFromAny(value any) (geoPolygonPart, bool) {
+	ringCoordinateSets, ok := ringCoordinateSets(value)
+	if !ok {
+		return geoPolygonPart{}, false
+	}
+	return geoPolygonPartFromCoordinateSets(ringCoordinateSets)
+}
+
+func geoPolygonPartFromCoordinateSets(ringCoordinateSets [][][]float64) (geoPolygonPart, bool) {
+	outer, ok := geoPointsFromRingCoordinates(ringCoordinateSets[0])
+	if !ok {
+		return geoPolygonPart{}, false
+	}
+	part := geoPolygonPart{outer: outer, holes: [][]GeoPoint{}}
+	for _, holeCoords := range ringCoordinateSets[1:] {
+		hole, ok := geoPointsFromRingCoordinates(holeCoords)
+		if !ok {
+			continue
+		}
+		part.holes = append(part.holes, hole)
+	}
+	return part, true
+}
+
+func ringCoordinateSets(coords any) ([][][]float64, bool) {
+	switch c := coords.(type) {
+	case [][][]float64:
+		return c, len(c) > 0
+	case [][][]interface{}:
+		rings := make([][][]float64, 0, len(c))
+		for _, rawRing := range c {
+			ring, ok := coordinatePairsFromAny(rawRing)
+			if !ok {
+				return nil, false
+			}
+			rings = append(rings, ring)
+		}
+		return rings, len(rings) > 0
+	case []interface{}:
+		rings := make([][][]float64, 0, len(c))
+		for _, rawRing := range c {
+			ring, ok := coordinatePairsFromAny(rawRing)
+			if !ok {
+				return nil, false
+			}
+			rings = append(rings, ring)
+		}
+		return rings, len(rings) > 0
+	default:
+		return nil, false
+	}
 }
 
 func firstRingCoordinates(coords any) ([][]float64, bool) {
