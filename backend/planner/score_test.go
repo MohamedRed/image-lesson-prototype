@@ -872,6 +872,25 @@ func TestPickBestDriverFromProfiles_RetriesNextCandidateWhenReservationFails(t *
 	}
 }
 
+func TestBuildSingleHopJourneyUsesRouteEtaProfileForTotalLegEta(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("driver-with-route-eta-profile", 0, -0.10, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+	driver.RouteETAProfileSeconds = []int{0, 90, 690}
+
+	journey := buildSingleHopJourney(req, driver, 90)
+	if len(journey.Legs) != 1 {
+		t.Fatalf("expected one leg, got %d", len(journey.Legs))
+	}
+	if journey.Legs[0].EstimatedTimeSeconds != 690 || journey.TotalEstimatedTimeSeconds != 690 {
+		t.Fatalf("expected route ETA profile total 690 seconds, got leg=%d total=%d", journey.Legs[0].EstimatedTimeSeconds, journey.TotalEstimatedTimeSeconds)
+	}
+}
+
 func TestBuildSingleHopJourneyIncludesPickupZoneID(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("driver-with-zone", 0.01, 0, routeCorridor())

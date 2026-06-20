@@ -92,10 +92,32 @@ func buildJourneyLeg(driver DriverProfile, pickup, dropoff GeoPoint, etaSec int)
 
 func buildSingleHopJourney(req RideRequest, driver DriverProfile, etaSec int) Journey {
 	pickup, dropoff := selectedSingleHopPickupDropoff(req, driver)
+	legEtaSec := singleHopTotalETASeconds(req, driver, etaSec)
 	return Journey{
-		Legs:                      []Leg{buildJourneyLeg(driver, pickup, dropoff, etaSec)},
-		TotalEstimatedTimeSeconds: etaSec,
+		Legs:                      []Leg{buildJourneyLeg(driver, pickup, dropoff, legEtaSec)},
+		TotalEstimatedTimeSeconds: legEtaSec,
 	}
+}
+
+func singleHopTotalETASeconds(req RideRequest, driver DriverProfile, pickupEtaSec int) int {
+	if driver.RoutePolyline == "" || len(driver.RouteETAProfileSeconds) == 0 {
+		return pickupEtaSec
+	}
+	points, ok := decodePolyline(driver.RoutePolyline)
+	if !ok || len(points) < 2 || len(driver.RouteETAProfileSeconds) != len(points) {
+		return pickupEtaSec
+	}
+	pickupProjection, dropoffProjection, ok := routeInsertionProjections(req, points)
+	if !ok || dropoffProjection.position <= pickupProjection.position {
+		return pickupEtaSec
+	}
+	pickupRouteEtaSec := routeETASecondsAtPosition(driver.RouteETAProfileSeconds, pickupProjection.position)
+	dropoffRouteEtaSec := routeETASecondsAtPosition(driver.RouteETAProfileSeconds, dropoffProjection.position)
+	rideEtaSec := dropoffRouteEtaSec - pickupRouteEtaSec
+	if rideEtaSec < 0 {
+		return pickupEtaSec
+	}
+	return pickupEtaSec + rideEtaSec
 }
 
 func selectedSingleHopPickupDropoff(req RideRequest, driver DriverProfile) (GeoPoint, GeoPoint) {
