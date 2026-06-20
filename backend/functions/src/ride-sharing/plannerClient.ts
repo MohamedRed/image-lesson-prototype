@@ -63,7 +63,7 @@ export interface PlannerReservationRetryResult {
 export function buildPlannerRequest(
   rideRequest: any,
   geoUpdates: Record<string, any> = {},
-  excludedDriverIds: string[] = []
+  excludedDriverIds: string[] = rideRequest.excludedDriverIds || []
 ): PlannerRideRequest {
   const oriWalkIso = rideRequest.oriWalkIso ?? geoUpdates.oriWalkIso;
   const destWalkIso = rideRequest.destWalkIso ?? geoUpdates.destWalkIso;
@@ -182,7 +182,7 @@ export async function planJourneyWithSingleLegReservationRetry({
   fetchImpl = fetch as unknown as FetchLike,
   maxAttempts = 3,
 }: PlannerReservationRetryParams): Promise<PlannerReservationRetryResult> {
-  const excludedDriverIds: string[] = [];
+  const excludedDriverIds: string[] = [...(rideRequest.excludedDriverIds || [])];
   const attemptedDriverIds: string[] = [];
   const reservationErrors: string[] = [];
 

@@ -147,6 +147,49 @@ describe("planner client", () => {
     expect(fetchBodies[0].oriDriveIso).toEqual(oriDriveIso);
   });
 
+  it("preserves existing excluded drivers while retrying reservation failures", async () => {
+    const fetchBodies: any[] = [];
+    const fetchImpl = jest.fn(async (_url: string, init: any) => {
+      const body = JSON.parse(init.body);
+      fetchBodies.push(body);
+      const excluded = body.excludedDriverIds || [];
+      const driverId = excluded.includes("driverA") ? "driverB" : "driverA";
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          legs: [{ driverId, pickupZoneId: "zone-1", pickup: origin, dropoff: destination, etaSeconds: 120 }],
+          totalEtaSeconds: 120,
+        }),
+      };
+    });
+
+    const reserve = jest.fn(async (driverId: string) => ({
+      success: driverId === "driverB",
+      error: driverId === "driverB" ? undefined : "driver full",
+      driverId,
+      pickupZoneId: "zone-1",
+      reservedResources: { seats: 1, cargo: {}, pets: {}, childSeats: {} },
+    }));
+
+    const result = await planJourneyWithSingleLegReservationRetry({
+      plannerUrl: "https://planner.example",
+      rideRequest: { origin, destination, passengerCount: 1, riderGender: "female", excludedDriverIds: ["previously-failed"] },
+      resourceRequirements: { passengerCount: 1, riderGender: "female" },
+      reserveResources: reserve,
+      fetchImpl,
+      maxAttempts: 3,
+    });
+
+    expect(result.journey.legs[0].driverId).toBe("driverB");
+    expect(result.attemptedDriverIds).toEqual(["driverA", "driverB"]);
+    expect(result.excludedDriverIds).toEqual(["previously-failed", "driverA"]);
+    expect(fetchBodies.map((body) => body.excludedDriverIds)).toEqual([
+      ["previously-failed"],
+      ["previously-failed", "driverA"],
+    ]);
+  });
+
   it("builds multi-leg reservation requirements only from planner-provided pickup zones", () => {
     const requirements = buildMultiLegReservationRequirements(
       {
