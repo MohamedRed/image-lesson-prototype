@@ -308,6 +308,22 @@ func TestPickBestDriverFromProfiles_RanksLowerRouteDetourAboveLoopingCorridor(t 
 	}
 }
 
+func TestComputeDriverScore_RejectsExcessiveRouteDetour(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("excessive-detour", 0, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 3, Longitude: 0},
+		{Latitude: 3, Longitude: 1},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected route with excessive insertion detour to be rejected")
+	}
+}
+
 func TestPickBestDriverFromProfiles_RetriesNextCandidateWhenReservationFails(t *testing.T) {
 	req := corridorRequest()
 	drivers := []DriverProfile{

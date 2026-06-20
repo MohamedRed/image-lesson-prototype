@@ -370,6 +370,11 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	etaSec := int(pickupKm / 40.0 * 3600)
 
 	rideDistKm := haversineKm(req.Origin.Latitude, req.Origin.Longitude, req.Destination.Latitude, req.Destination.Longitude)
+	if driver.RoutePolyline != "" {
+		if routeDetourKm, ok := routeInsertionDetourKm(req, driver.RoutePolyline, rideDistKm); ok && routeDetourKm > maxSingleHopRouteDetourKm() {
+			return 0, 0, false
+		}
+	}
 	detourKm := driverDetourKm(req, driver, pickupKm, rideDistKm)
 
 	baseScore := wDetour*detourKm + wEta*(float64(etaSec)/60.0)
@@ -432,6 +437,15 @@ func routeDistanceBetweenIndexes(points []GeoPoint, startIdx, endIdx int) float6
 		distanceKm += haversineKm(points[i].Latitude, points[i].Longitude, points[i+1].Latitude, points[i+1].Longitude)
 	}
 	return distanceKm
+}
+
+func maxSingleHopRouteDetourKm() float64 {
+	if value := os.Getenv("MAX_SINGLE_HOP_DETOUR_KM"); value != "" {
+		if parsed, err := strconv.ParseFloat(value, 64); err == nil && parsed > 0 {
+			return parsed
+		}
+	}
+	return 25.0
 }
 
 type scoreWeights struct {
