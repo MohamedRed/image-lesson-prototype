@@ -648,9 +648,37 @@ func routePolylineTravelsOriginBeforeDestination(req RideRequest, encodedPolylin
 	if !ok || len(points) < 2 {
 		return false
 	}
-	originIdx, _ := nearestRoutePointIndex(points, req.Origin)
-	destinationIdx, _ := nearestRoutePointIndex(points, req.Destination)
-	return originIdx >= 0 && destinationIdx > originIdx
+	if originPos, ok := firstRoutePositionInGeometry(points, req.Origin, req.originWalkGeometry(), 0); ok {
+		if destinationPos, ok := firstRoutePositionInGeometry(points, req.Destination, req.destinationWalkGeometry(), originPos); ok {
+			return destinationPos > originPos
+		}
+		return false
+	}
+	originProjection, originOk := nearestRouteProjection(points, req.Origin)
+	destinationProjection, destinationOk := nearestRouteProjection(points, req.Destination)
+	return originOk && destinationOk && destinationProjection.position > originProjection.position
+}
+
+func firstRoutePositionInGeometry(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos float64) (float64, bool) {
+	if geometry.isZero() || len(points) == 0 {
+		return 0, false
+	}
+	consider := func(point GeoPoint, pos float64) (float64, bool) {
+		if pos >= minPos && pointInGeoJSONPolygon(point, geometry) {
+			return pos, true
+		}
+		return 0, false
+	}
+	for i := 0; i < len(points)-1; i++ {
+		if pos, ok := consider(points[i], float64(i)); ok {
+			return pos, true
+		}
+		point, fraction := nearestPointOnSegment(points[i], points[i+1], target)
+		if pos, ok := consider(point, float64(i)+fraction); ok {
+			return pos, true
+		}
+	}
+	return consider(points[len(points)-1], float64(len(points)-1))
 }
 
 func driverRouteIntersectsGeometry(driver DriverProfile, geometry GeoJSONGeometry) bool {

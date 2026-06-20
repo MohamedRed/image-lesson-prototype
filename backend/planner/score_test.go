@@ -254,6 +254,21 @@ func TestComputeDriverScore_RejectsRouteThatHitsDestinationBeforeOrigin(t *testi
 	}
 }
 
+func TestComputeDriverScore_AllowsRouteThatContinuesAfterDestinationNearOrigin(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("continues-after-destination", 0, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 1.10},
+		{Latitude: 0, Longitude: 0.005},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected route that reaches origin before destination to remain valid even if it later continues near origin")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteThatNeverEntersOriginDriveGeo(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("never-enters-origin-drive-geo", 0, 0.20, routeCorridor())
