@@ -641,6 +641,64 @@ func TestBuild2HopJourneyIncludesPickupZoneIDs(t *testing.T) {
 	}
 }
 
+func TestBuild2HopJourneyUsesBackendSelectedRoutePickupAndDropoffPerLeg(t *testing.T) {
+	req := corridorRequest()
+	transfer := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.5}, TransferTimeSeconds: 7}
+	driver1 := corridorDriver("driver-leg-1-route-points", 0.01, 0, routeCorridor())
+	driver1.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.002},
+		{Latitude: 0, Longitude: 0.498},
+	})
+	driver2 := corridorDriver("driver-leg-2-route-points", 0.01, 0.5, routeCorridor())
+	driver2.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.502},
+		{Latitude: 0, Longitude: 0.998},
+	})
+
+	journey := build2HopJourney(req, transfer, driver1, 30, driver2, 40)
+
+	if len(journey.Legs) != 2 {
+		t.Fatalf("expected two legs, got %d", len(journey.Legs))
+	}
+	assertGeoPointNear(t, journey.Legs[0].Pickup, GeoPoint{Latitude: 0, Longitude: 0.002})
+	assertGeoPointNear(t, journey.Legs[0].Dropoff, GeoPoint{Latitude: 0, Longitude: 0.498})
+	assertGeoPointNear(t, journey.Legs[1].Pickup, GeoPoint{Latitude: 0, Longitude: 0.502})
+	assertGeoPointNear(t, journey.Legs[1].Dropoff, GeoPoint{Latitude: 0, Longitude: 0.998})
+}
+
+func TestBuild3HopJourneyUsesBackendSelectedRoutePickupAndDropoffPerLeg(t *testing.T) {
+	req := corridorRequest()
+	transfer1 := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.33}, TransferTimeSeconds: 7}
+	transfer2 := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.66}, TransferTimeSeconds: 8}
+	driver1 := corridorDriver("driver-leg-1-route-points", 0.01, 0, routeCorridor())
+	driver1.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.002},
+		{Latitude: 0, Longitude: 0.328},
+	})
+	driver2 := corridorDriver("driver-leg-2-route-points", 0.01, 0.33, routeCorridor())
+	driver2.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.332},
+		{Latitude: 0, Longitude: 0.658},
+	})
+	driver3 := corridorDriver("driver-leg-3-route-points", 0.01, 0.66, routeCorridor())
+	driver3.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.662},
+		{Latitude: 0, Longitude: 0.998},
+	})
+
+	journey := build3HopJourney(req, transfer1, transfer2, driver1, 30, driver2, 40, driver3, 50)
+
+	if len(journey.Legs) != 3 {
+		t.Fatalf("expected three legs, got %d", len(journey.Legs))
+	}
+	assertGeoPointNear(t, journey.Legs[0].Pickup, GeoPoint{Latitude: 0, Longitude: 0.002})
+	assertGeoPointNear(t, journey.Legs[0].Dropoff, GeoPoint{Latitude: 0, Longitude: 0.328})
+	assertGeoPointNear(t, journey.Legs[1].Pickup, GeoPoint{Latitude: 0, Longitude: 0.332})
+	assertGeoPointNear(t, journey.Legs[1].Dropoff, GeoPoint{Latitude: 0, Longitude: 0.658})
+	assertGeoPointNear(t, journey.Legs[2].Pickup, GeoPoint{Latitude: 0, Longitude: 0.662})
+	assertGeoPointNear(t, journey.Legs[2].Dropoff, GeoPoint{Latitude: 0, Longitude: 0.998})
+}
+
 func TestBuildLegRequestRebindsWalkZonesToLegEndpoints(t *testing.T) {
 	req := corridorRequest()
 	req.WalkRadiusM = 1000
@@ -695,6 +753,13 @@ func rectPolygon(minLat, minLon, maxLat, maxLon float64) GeoJSONGeometry {
 			{minLon, maxLat},
 			{minLon, minLat},
 		}},
+	}
+}
+
+func assertGeoPointNear(t *testing.T, got, want GeoPoint) {
+	t.Helper()
+	if math.Abs(got.Latitude-want.Latitude) > 0.000001 || math.Abs(got.Longitude-want.Longitude) > 0.000001 {
+		t.Fatalf("expected point near %#v, got %#v", want, got)
 	}
 }
 

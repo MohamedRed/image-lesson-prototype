@@ -181,23 +181,35 @@ func nearestPointOnSegment(start, end, target GeoPoint) (GeoPoint, float64) {
 }
 
 func build2HopJourney(req RideRequest, transfer TransferPoint, driver1 DriverProfile, eta1 int, driver2 DriverProfile, eta2 int) Journey {
+	leg1Req := buildLegRequest(req, req.Origin, transfer.Location)
+	leg1Pickup, leg1Dropoff := selectedSingleHopPickupDropoff(leg1Req, driver1)
+	leg2Req := buildLegRequest(req, transfer.Location, req.Destination)
+	leg2Pickup, leg2Dropoff := selectedSingleHopPickupDropoff(leg2Req, driver2)
+
 	totalTime := eta1 + eta2 + transfer.TransferTimeSeconds
 	return Journey{
 		Legs: []Leg{
-			buildJourneyLeg(driver1, req.Origin, transfer.Location, eta1),
-			buildJourneyLeg(driver2, transfer.Location, req.Destination, eta2),
+			buildJourneyLeg(driver1, leg1Pickup, leg1Dropoff, eta1),
+			buildJourneyLeg(driver2, leg2Pickup, leg2Dropoff, eta2),
 		},
 		TotalEstimatedTimeSeconds: totalTime,
 	}
 }
 
 func build3HopJourney(req RideRequest, transfer1 TransferPoint, transfer2 TransferPoint, driver1 DriverProfile, eta1 int, driver2 DriverProfile, eta2 int, driver3 DriverProfile, eta3 int) Journey {
+	leg1Req := buildLegRequest(req, req.Origin, transfer1.Location)
+	leg1Pickup, leg1Dropoff := selectedSingleHopPickupDropoff(leg1Req, driver1)
+	leg2Req := buildLegRequest(req, transfer1.Location, transfer2.Location)
+	leg2Pickup, leg2Dropoff := selectedSingleHopPickupDropoff(leg2Req, driver2)
+	leg3Req := buildLegRequest(req, transfer2.Location, req.Destination)
+	leg3Pickup, leg3Dropoff := selectedSingleHopPickupDropoff(leg3Req, driver3)
+
 	totalTime := eta1 + eta2 + eta3 + transfer1.TransferTimeSeconds + transfer2.TransferTimeSeconds
 	return Journey{
 		Legs: []Leg{
-			buildJourneyLeg(driver1, req.Origin, transfer1.Location, eta1),
-			buildJourneyLeg(driver2, transfer1.Location, transfer2.Location, eta2),
-			buildJourneyLeg(driver3, transfer2.Location, req.Destination, eta3),
+			buildJourneyLeg(driver1, leg1Pickup, leg1Dropoff, eta1),
+			buildJourneyLeg(driver2, leg2Pickup, leg2Dropoff, eta2),
+			buildJourneyLeg(driver3, leg3Pickup, leg3Dropoff, eta3),
 		},
 		TotalEstimatedTimeSeconds: totalTime,
 	}
