@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"encoding/json"
+	"strings"
+	"testing"
+)
 
 func TestComputeDriverScore_LuggageReject(t *testing.T) {
 	req := RideRequest{
@@ -103,6 +107,29 @@ func TestPickBestDriverFromProfiles_RetriesNextCandidateWhenReservationFails(t *
 	}
 	if len(attempted) != 2 || attempted[0] != "best-but-reservation-fails" || attempted[1] != "second-reservation-succeeds" {
 		t.Fatalf("expected reservation attempts in score order, got %#v", attempted)
+	}
+}
+
+func TestBuildSingleHopJourneyIncludesPickupZoneID(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("driver-with-zone", 0.01, 0, routeCorridor())
+	driver.PickupZoneID = "zone-123"
+
+	journey := buildSingleHopJourney(req, driver, 90)
+
+	if len(journey.Legs) != 1 {
+		t.Fatalf("expected one leg, got %d", len(journey.Legs))
+	}
+	if journey.Legs[0].PickupZoneID != "zone-123" {
+		t.Fatalf("expected leg pickupZoneId to preserve driver zone, got %q", journey.Legs[0].PickupZoneID)
+	}
+
+	payload, err := json.Marshal(journey)
+	if err != nil {
+		t.Fatalf("marshal journey: %v", err)
+	}
+	if !json.Valid(payload) || !strings.Contains(string(payload), `"pickupZoneId":"zone-123"`) {
+		t.Fatalf("expected JSON payload to expose pickupZoneId, got %s", payload)
 	}
 }
 

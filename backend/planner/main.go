@@ -74,9 +74,23 @@ type Journey struct {
 
 type Leg struct {
 	DriverID             string   `json:"driverId"`
+	PickupZoneID         string   `json:"pickupZoneId,omitempty"`
 	Pickup               GeoPoint `json:"pickup"`
 	Dropoff              GeoPoint `json:"dropoff"`
 	EstimatedTimeSeconds int      `json:"etaSeconds"`
+}
+
+func buildSingleHopJourney(req RideRequest, driver DriverProfile, etaSec int) Journey {
+	return Journey{
+		Legs: []Leg{{
+			DriverID:             driver.ID,
+			PickupZoneID:         driver.PickupZoneID,
+			Pickup:               req.Origin,
+			Dropoff:              req.Destination,
+			EstimatedTimeSeconds: etaSec,
+		}},
+		TotalEstimatedTimeSeconds: etaSec,
+	}
 }
 
 // DriverProfile is an in-memory representation of driver attributes used for matching.
@@ -609,19 +623,11 @@ func planHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	driverID, etaSec, err := pickBestDriver(r.Context(), req, req.ExcludedDriverIDs)
+	driver, etaSec, err := pickBestDriver(r.Context(), req, req.ExcludedDriverIDs)
 
 	var journey Journey
 	if err == nil {
-		journey = Journey{
-			Legs: []Leg{{
-				DriverID:             driverID,
-				Pickup:               req.Origin,
-				Dropoff:              req.Destination,
-				EstimatedTimeSeconds: etaSec,
-			}},
-			TotalEstimatedTimeSeconds: etaSec,
-		}
+		journey = buildSingleHopJourney(req, driver, etaSec)
 	} else {
 		// Attempt multi-hop fallback (2-3 legs)
 		log.Printf("single-hop failed: %v – trying multi-hop", err)
@@ -798,10 +804,10 @@ func plan3HopWithTransfers(ctx context.Context, req RideRequest, transferPoints 
 }
 
 // pickBestDriver queries Firestore for drivers matching constraints, computes a simple score and returns best.
-func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (string, int, error) {
+func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (DriverProfile, int, error) {
 	projectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
 	if projectID == "" {
-		return "", 0, fmt.Errorf("GOOGLE_CLOUD_PROJECT env var not set")
+		return DriverProfile{}, 0, fmt.Errorf("GOOGLE_CLOUD_PROJECT env var not set")
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -809,7 +815,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (str
 
 	client, err := firestore.NewClient(ctx, projectID)
 	if err != nil {
-		return "", 0, err
+		return DriverProfile{}, 0, err
 	}
 	defer client.Close()
 
@@ -825,10 +831,10 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (str
 
 	docs, err := q.Documents(ctx).GetAll()
 	if err != nil {
-		return "", 0, err
+		return DriverProfile{}, 0, err
 	}
 	if len(docs) == 0 {
-		return "", 0, fmt.Errorf("no drivers available")
+		return DriverProfile{}, 0, fmt.Errorf("no drivers available")
 	}
 
 	// (removed precomputed rideDistKm; now computed inside score helper)
@@ -854,7 +860,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (str
 	}
 
 	bestScore := math.MaxFloat64
-	bestDriver := ""
+	bestDriver := DriverProfile{}
 	bestEta := 0
 
 	for _, d := range docs {
@@ -919,13 +925,13 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (str
 
 		if score < bestScore {
 			bestScore = score
-			bestDriver = d.Ref.ID
+			bestDriver = prof
 			bestEta = etaSec
 		}
 	}
 
-	if bestDriver == "" {
-		return "", 0, fmt.Errorf("no suitable driver scored")
+	if bestDriver.ID == "" {
+		return DriverProfile{}, 0, fmt.Errorf("no suitable driver scored")
 	}
 	return bestDriver, bestEta, nil
 }
@@ -1040,14 +1046,14 @@ func getMaxStopCapacity(data map[string]interface{}) int {
 // pickBestDriverForLeg finds the best driver for a specific leg with resource validation
 func pickBestDriverForLeg(ctx context.Context, req RideRequest, exclude []string, legNumber int) (string, int, error) {
 	// Use existing pickBestDriver but add leg-specific validation
-	driverID, eta, err := pickBestDriver(ctx, req, exclude)
+	driver, eta, err := pickBestDriver(ctx, req, exclude)
 	if err != nil {
 		return "", 0, fmt.Errorf("leg %d driver selection failed: %v", legNumber, err)
 	}
 
 	// Additional validation for multi-leg constraints could be added here
 	// For now, use the existing driver selection logic
-	return driverID, eta, nil
+	return driver.ID, eta, nil
 }
 
 // validateGenderConsistency ensures all drivers support the same gender pool
