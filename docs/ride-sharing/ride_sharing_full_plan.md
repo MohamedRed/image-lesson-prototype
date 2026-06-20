@@ -1,5 +1,7 @@
 # Live, In-City Ride-Sharing – Full Architecture & Algorithm Plan
 
+> Canonical matching source: [`canonical_algorithm.md`](./canonical_algorithm.md). If this older plan or code disagrees with the canonical algorithm, update them to match the canonical spec.
+
 A blueprint for an iOS-first, Firebase-backed, LiveKit-enabled platform that guarantees:
 • legal curb-side pick-ups / drop-offs (no congestion)
 • single-gender safety pools

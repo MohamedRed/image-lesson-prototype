@@ -1,5 +1,7 @@
 # 🚗 Live Ride Sharing iOS Feature - Complete Implementation Plan
 
+> Canonical matching source: [`canonical_algorithm.md`](./canonical_algorithm.md). Use that file for the latest intended matching algorithm; this document is supporting implementation context.
+
 ## 📋 **Executive Summary**
 
 This plan follows your existing **modular SPM architecture** (Feature + Service packages) and **MVVM patterns** to implement a sophisticated live ride sharing system with:
