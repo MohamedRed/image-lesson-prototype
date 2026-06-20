@@ -477,6 +477,32 @@ func TestPickBestDriverFromProfiles_RanksLowerRouteDetourAboveLoopingCorridor(t 
 	}
 }
 
+func TestPickBestDriverFromProfiles_RanksShorterRoutePickupEtaAboveNearestCurrentLocation(t *testing.T) {
+	req := corridorRequest()
+	nearButLatePickup := corridorDriverWithPickupZone("aaa-nearest-but-late-pickup", 0, 0.02, routeCorridor(), "zone-late")
+	nearButLatePickup.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.02},
+		{Latitude: 2, Longitude: 0.02},
+		{Latitude: 2, Longitude: 0},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+	fartherButSoonerPickup := corridorDriverWithPickupZone("zzz-farther-but-sooner-pickup", 0, -0.04, routeCorridor(), "zone-sooner")
+	fartherButSoonerPickup.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.04},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{nearButLatePickup, fartherButSoonerPickup}, nil, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected valid corridor driver, got error: %v", err)
+	}
+	if driverID != "zzz-farther-but-sooner-pickup" {
+		t.Fatalf("expected route pickup ETA to beat nearest current location, got %q", driverID)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RanksLowerSeatLoadAboveTiedCandidate(t *testing.T) {
 	req := corridorRequest()
 	lowLoad := corridorDriverWithPickupZone("zzz-low-seat-load", 0, 0, routeCorridor(), "zone-low-load")

@@ -437,7 +437,8 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	}
 
 	// Compute distances/score
-	pickupKm := haversineKm(driver.CurrentLocation.Latitude, driver.CurrentLocation.Longitude, req.Origin.Latitude, req.Origin.Longitude)
+	straightLinePickupKm := haversineKm(driver.CurrentLocation.Latitude, driver.CurrentLocation.Longitude, req.Origin.Latitude, req.Origin.Longitude)
+	pickupKm := driverPickupDistanceKm(req, driver, straightLinePickupKm)
 	etaSec := int(pickupKm / 40.0 * 3600)
 
 	rideDistKm := haversineKm(req.Origin.Latitude, req.Origin.Longitude, req.Destination.Latitude, req.Destination.Longitude)
@@ -549,6 +550,22 @@ func childSeatLoadScore(req RideRequest, driver DriverProfile) float64 {
 		return 0
 	}
 	return totalLoad / count
+}
+
+func driverPickupDistanceKm(req RideRequest, driver DriverProfile, fallbackKm float64) float64 {
+	if driver.RoutePolyline == "" {
+		return fallbackKm
+	}
+	points, ok := decodePolyline(driver.RoutePolyline)
+	if !ok || len(points) < 2 {
+		return fallbackKm
+	}
+	pickupProjection, _, ok := routeInsertionProjections(req, points)
+	if !ok {
+		return fallbackKm
+	}
+	routeStartKm := haversineKm(driver.CurrentLocation.Latitude, driver.CurrentLocation.Longitude, points[0].Latitude, points[0].Longitude)
+	return routeStartKm + routeDistanceBetweenPositions(points, 0, pickupProjection.position) + pickupProjection.snapKm
 }
 
 func driverDetourKm(req RideRequest, driver DriverProfile, pickupKm, directRideKm float64) float64 {
