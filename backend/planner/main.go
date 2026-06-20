@@ -258,17 +258,27 @@ func nearestPointOnSegment(start, end, target GeoPoint) (GeoPoint, float64) {
 func build2HopJourney(req RideRequest, transfer TransferPoint, driver1 DriverProfile, eta1 int, driver2 DriverProfile, eta2 int) Journey {
 	leg1Req := buildLegRequest(req, req.Origin, transfer.Location)
 	leg1Pickup, leg1Dropoff := selectedSingleHopPickupDropoff(leg1Req, driver1)
+	leg1Eta := routeAwareLegETASeconds(leg1Req, driver1, eta1)
 	leg2Req := buildLegRequest(req, transfer.Location, req.Destination)
 	leg2Pickup, leg2Dropoff := selectedSingleHopPickupDropoff(leg2Req, driver2)
+	leg2Eta := routeAwareLegETASeconds(leg2Req, driver2, eta2)
 
-	totalTime := eta1 + eta2 + transfer.TransferTimeSeconds
+	totalTime := leg1Eta + leg2Eta + transfer.TransferTimeSeconds
 	return Journey{
 		Legs: []Leg{
-			buildJourneyLeg(driver1, leg1Pickup, leg1Dropoff, eta1),
-			buildJourneyLeg(driver2, leg2Pickup, leg2Dropoff, eta2),
+			buildJourneyLeg(driver1, leg1Pickup, leg1Dropoff, leg1Eta),
+			buildJourneyLeg(driver2, leg2Pickup, leg2Dropoff, leg2Eta),
 		},
 		TotalEstimatedTimeSeconds: totalTime,
 	}
+}
+
+func routeAwareLegETASeconds(req RideRequest, driver DriverProfile, pickupEtaSec int) int {
+	rideEtaSec, ok := singleHopRouteRideETASeconds(req, driver)
+	if !ok {
+		return pickupEtaSec
+	}
+	return pickupEtaSec + rideEtaSec
 }
 
 func build3HopJourney(req RideRequest, transfer1 TransferPoint, transfer2 TransferPoint, driver1 DriverProfile, eta1 int, driver2 DriverProfile, eta2 int, driver3 DriverProfile, eta3 int) Journey {

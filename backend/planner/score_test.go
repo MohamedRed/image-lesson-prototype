@@ -1132,6 +1132,33 @@ func TestBuild2HopJourneyIncludesPickupZoneIDs(t *testing.T) {
 	}
 }
 
+func TestBuild2HopJourneyUsesRouteRideEtaPerLeg(t *testing.T) {
+	req := corridorRequest()
+	transfer := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.5}, TransferTimeSeconds: 7}
+	driver1 := corridorDriver("driver-leg-1-route-eta", 0, -0.10, routeCorridor())
+	driver1.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 0.5},
+	})
+	driver1.RouteETAProfileSeconds = []int{0, 30, 330}
+	driver2 := corridorDriver("driver-leg-2-route-eta", 0, 0.5, routeCorridor())
+	driver2.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.5},
+		{Latitude: 0, Longitude: 1},
+	})
+	driver2.RouteETAProfileSeconds = []int{0, 600}
+
+	journey := build2HopJourney(req, transfer, driver1, 30, driver2, 40)
+
+	if len(journey.Legs) != 2 {
+		t.Fatalf("expected two legs, got %d", len(journey.Legs))
+	}
+	if journey.Legs[0].EstimatedTimeSeconds != 330 || journey.Legs[1].EstimatedTimeSeconds != 640 || journey.TotalEstimatedTimeSeconds != 977 {
+		t.Fatalf("expected per-leg route ETAs 330/640 and total 977, got legs=%#v total=%d", journey.Legs, journey.TotalEstimatedTimeSeconds)
+	}
+}
+
 func TestBuild2HopJourneyUsesBackendSelectedRoutePickupAndDropoffPerLeg(t *testing.T) {
 	req := corridorRequest()
 	transfer := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.5}, TransferTimeSeconds: 7}
