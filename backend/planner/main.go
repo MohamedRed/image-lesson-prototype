@@ -1491,6 +1491,25 @@ func contains(arr []string, v string) bool {
 	return false
 }
 
+func legExcludedDriverIDs(req RideRequest, additional ...string) []string {
+	excluded := make([]string, 0, len(req.ExcludedDriverIDs)+len(additional))
+	seen := map[string]bool{}
+	appendUnique := func(driverID string) {
+		if driverID == "" || seen[driverID] {
+			return
+		}
+		seen[driverID] = true
+		excluded = append(excluded, driverID)
+	}
+	for _, driverID := range req.ExcludedDriverIDs {
+		appendUnique(driverID)
+	}
+	for _, driverID := range additional {
+		appendUnique(driverID)
+	}
+	return excluded
+}
+
 // getAvailableTransferPoints finds suitable curb segments for passenger transfers
 func getAvailableTransferPoints(ctx context.Context, origin, destination GeoPoint) ([]TransferPoint, error) {
 	projectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
@@ -1580,8 +1599,9 @@ func getMaxStopCapacity(data map[string]interface{}) int {
 
 // pickBestDriverForLeg finds the best driver for a specific leg with resource validation
 func pickBestDriverForLeg(ctx context.Context, req RideRequest, exclude []string, legNumber int) (DriverProfile, int, error) {
-	// Use existing pickBestDriver but add leg-specific validation
-	driver, eta, err := pickBestDriver(ctx, req, exclude)
+	// Use existing pickBestDriver but preserve request-level retry exclusions in
+	// addition to drivers already assigned to earlier legs.
+	driver, eta, err := pickBestDriver(ctx, req, legExcludedDriverIDs(req, exclude...))
 	if err != nil {
 		return DriverProfile{}, 0, fmt.Errorf("leg %d driver selection failed: %v", legNumber, err)
 	}

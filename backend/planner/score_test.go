@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"math"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -739,6 +740,18 @@ func TestBuildLegRequestRebindsWalkZonesToLegEndpoints(t *testing.T) {
 	_, _, ok := computeDriverScore(legReq, validLegDriver, 1, 0.7, 0.3, 1)
 	if !ok {
 		t.Fatalf("expected leg request to use transfer as destination walk zone instead of original trip destination")
+	}
+}
+
+func TestLegExcludedDriverIDsMergesReservationRetryAndPriorLegDrivers(t *testing.T) {
+	req := corridorRequest()
+	req.ExcludedDriverIDs = []string{"failed-reservation", "already-filtered"}
+
+	excluded := legExcludedDriverIDs(req, "leg-1-driver", "failed-reservation")
+
+	want := []string{"failed-reservation", "already-filtered", "leg-1-driver"}
+	if !reflect.DeepEqual(excluded, want) {
+		t.Fatalf("expected merged exclusions %#v, got %#v", want, excluded)
 	}
 }
 
