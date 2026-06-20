@@ -118,17 +118,9 @@ func selectedSingleHopPickupDropoff(req RideRequest, driver DriverProfile) (GeoP
 func selectedOrderedPickupDropoff(points []GeoPoint, req RideRequest, minPos, maxPos float64) (GeoPoint, float64, GeoPoint, float64, bool) {
 	pickupCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originWalkGeometry(), minPos, maxPos)
 	for _, pickup := range pickupCandidates {
-		dropoff, dropoffPos, ok := nearestRoutePointInGeometry(points, req.Destination, req.destinationWalkGeometry(), pickup.position, maxPos)
-		if !ok {
-			dropoffProjection, projectionOK := nearestRouteProjectionInRange(points, req.Destination, pickup.position, maxPos)
-			if !projectionOK {
-				continue
-			}
-			dropoff = dropoffProjection.point
-			dropoffPos = dropoffProjection.position
-		}
-		if dropoffPos > pickup.position {
-			return pickup.point, pickup.position, dropoff, dropoffPos, true
+		dropoffProjection, ok := routeProjectionInGeometryOrRangeAfter(points, req.Destination, req.destinationWalkGeometry(), pickup.position, maxPos)
+		if ok && dropoffProjection.position > pickup.position {
+			return pickup.point, pickup.position, dropoffProjection.point, dropoffProjection.position, true
 		}
 	}
 	return GeoPoint{}, 0, GeoPoint{}, 0, false
@@ -586,24 +578,27 @@ func routeInsertionDetourKm(req RideRequest, encodedPolyline string, directRideK
 }
 
 func routeInsertionProjections(req RideRequest, points []GeoPoint) (routeProjection, routeProjection, bool) {
-	if originPos, ok := firstRoutePositionInGeometry(points, req.Origin, req.originWalkGeometry(), 0); ok {
-		originProjection := routeProjectionAtPosition(points, originPos, req.Origin)
-		destinationPos, ok := firstRoutePositionInGeometry(points, req.Destination, req.destinationWalkGeometry(), originPos)
-		if !ok {
-			return routeProjection{}, routeProjection{}, false
+	lastPos := float64(len(points) - 1)
+	originCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originWalkGeometry(), 0, lastPos)
+	for _, originProjection := range originCandidates {
+		destinationProjection, ok := routeProjectionInGeometryOrRangeAfter(points, req.Destination, req.destinationWalkGeometry(), originProjection.position, lastPos)
+		if ok && destinationProjection.position > originProjection.position {
+			return originProjection, destinationProjection, true
 		}
-		return originProjection, routeProjectionAtPosition(points, destinationPos, req.Destination), true
 	}
+	return routeProjection{}, routeProjection{}, false
+}
 
-	originProjection, ok := nearestRouteProjection(points, req.Origin)
-	if !ok {
-		return routeProjection{}, routeProjection{}, false
+func routeProjectionInGeometryOrRangeAfter(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos, maxPos float64) (routeProjection, bool) {
+	if !geometry.isZero() {
+		if pos, ok := firstRoutePositionInGeometry(points, target, geometry, minPos); ok && pos <= maxPos {
+			return routeProjectionAtPosition(points, pos, target), true
+		}
+		if _, existsBeforeRange := firstRoutePositionInGeometry(points, target, geometry, 0); existsBeforeRange {
+			return routeProjection{}, false
+		}
 	}
-	destinationProjection, ok := nearestRouteProjection(points, req.Destination)
-	if !ok {
-		return routeProjection{}, routeProjection{}, false
-	}
-	return originProjection, destinationProjection, true
+	return nearestRouteProjectionInRange(points, target, minPos, maxPos)
 }
 
 func routeProjectionAtPosition(points []GeoPoint, position float64, target GeoPoint) routeProjection {
@@ -851,8 +846,11 @@ func routePolylineTravelsOriginBeforeDestination(req RideRequest, encodedPolylin
 }
 
 func routePositionForOrder(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos float64) (float64, bool) {
-	if pos, ok := firstRoutePositionInGeometry(points, target, geometry, minPos); ok {
-		return pos, true
+	if !geometry.isZero() {
+		if pos, ok := firstRoutePositionInGeometry(points, target, geometry, minPos); ok {
+			return pos, true
+		}
+		return 0, false
 	}
 	projection, ok := nearestRouteProjectionInRange(points, target, minPos, float64(len(points)-1))
 	if !ok {

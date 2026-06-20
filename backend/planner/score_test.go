@@ -526,6 +526,28 @@ func TestComputeDriverScore_RejectsExcessiveRouteDetour(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsExcessiveDetourWhenLaterOriginProjectionIsNearest(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "1")
+	req := corridorRequest()
+	req.OriWalkIso = GeoJSONGeometry{}
+	req.OriginWalkIso = GeoJSONGeometry{}
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	driver := corridorDriver("excessive-detour-later-origin", 0, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 3, Longitude: -0.10},
+		{Latitude: 3, Longitude: 1.00},
+		{Latitude: 0, Longitude: 1.00},
+		{Latitude: 0.004, Longitude: 0.00},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected excessive detour to be measured from the first valid origin→destination pass, not skipped by a later nearest origin projection")
+	}
+}
+
 func TestComputeDriverScore_RejectsExcessiveDetourBeforeRouteContinuesNearOrigin(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "1")
 	req := corridorRequest()
