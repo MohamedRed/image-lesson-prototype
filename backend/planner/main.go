@@ -586,10 +586,10 @@ func routePolylineTravelsOriginBeforeDestination(req RideRequest, encodedPolylin
 }
 
 func driverRouteIntersectsGeometry(driver DriverProfile, geometry GeoJSONGeometry) bool {
-	if !driver.BufferPolygon.isZero() && geoJSONPolygonsIntersect(driver.BufferPolygon, geometry) {
-		return true
+	if driver.RoutePolyline != "" {
+		return polylineIntersectsPolygon(driver.RoutePolyline, geometry)
 	}
-	if driver.RoutePolyline != "" && polylineIntersectsPolygon(driver.RoutePolyline, geometry) {
+	if !driver.BufferPolygon.isZero() && geoJSONPolygonsIntersect(driver.BufferPolygon, geometry) {
 		return true
 	}
 	return false
