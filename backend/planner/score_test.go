@@ -154,6 +154,20 @@ func TestBuild2HopJourneyIncludesPickupZoneIDs(t *testing.T) {
 	}
 }
 
+func TestBuildLegRequestRebindsWalkZonesToLegEndpoints(t *testing.T) {
+	req := corridorRequest()
+	req.WalkRadiusM = 1000
+	transfer := GeoPoint{Latitude: 0, Longitude: 0.5}
+
+	legReq := buildLegRequest(req, req.Origin, transfer)
+	validLegDriver := corridorDriver("origin-to-transfer", 0.005, 0, rectPolygon(-0.005, -0.01, 0.005, 0.51))
+
+	_, _, ok := computeDriverScore(legReq, validLegDriver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected leg request to use transfer as destination walk zone instead of original trip destination")
+	}
+}
+
 func corridorRequest() RideRequest {
 	return RideRequest{
 		Origin:         GeoPoint{Latitude: 0, Longitude: 0},

@@ -120,6 +120,31 @@ func build3HopJourney(req RideRequest, transfer1 TransferPoint, transfer2 Transf
 	}
 }
 
+func buildLegRequest(req RideRequest, origin, destination GeoPoint) RideRequest {
+	legReq := req
+	legReq.Origin = origin
+	legReq.Destination = destination
+
+	walkRadiusM := legReq.WalkRadiusM
+	if walkRadiusM <= 0 {
+		walkRadiusM = 500
+		legReq.WalkRadiusM = walkRadiusM
+	}
+
+	originWalk := circlePolygon(origin, float64(walkRadiusM), 32)
+	destinationWalk := circlePolygon(destination, float64(walkRadiusM), 32)
+	legReq.OriWalkIso = originWalk
+	legReq.OriginWalkIso = originWalk
+	legReq.DestWalkIso = destinationWalk
+	legReq.DestinationWalkIso = destinationWalk
+
+	originDrive := circlePolygon(origin, 5000, 32)
+	legReq.OriDriveIso = originDrive
+	legReq.OriginDriveGeo = originDrive
+
+	return legReq
+}
+
 // DriverProfile is an in-memory representation of driver attributes used for matching.
 type DriverProfile struct {
 	ID                  string
@@ -717,8 +742,7 @@ func plan2HopWithTransfers(ctx context.Context, req RideRequest, transferPoints 
 
 	for _, transfer := range transferPoints {
 		// Create leg 1: origin → transfer
-		leg1Req := req
-		leg1Req.Destination = transfer.Location
+		leg1Req := buildLegRequest(req, req.Origin, transfer.Location)
 
 		driver1, eta1, err := pickBestDriverForLeg(ctx, leg1Req, nil, 1)
 		if err != nil {
@@ -726,8 +750,7 @@ func plan2HopWithTransfers(ctx context.Context, req RideRequest, transferPoints 
 		}
 
 		// Create leg 2: transfer → destination
-		leg2Req := req
-		leg2Req.Origin = transfer.Location
+		leg2Req := buildLegRequest(req, transfer.Location, req.Destination)
 
 		driver2, eta2, err := pickBestDriverForLeg(ctx, leg2Req, []string{driver1.ID}, 2)
 		if err != nil {
@@ -767,8 +790,7 @@ func plan3HopWithTransfers(ctx context.Context, req RideRequest, transferPoints 
 			}
 
 			// Create leg 1: origin → transfer1
-			leg1Req := req
-			leg1Req.Destination = transfer1.Location
+			leg1Req := buildLegRequest(req, req.Origin, transfer1.Location)
 
 			driver1, eta1, err := pickBestDriverForLeg(ctx, leg1Req, nil, 1)
 			if err != nil {
@@ -776,9 +798,7 @@ func plan3HopWithTransfers(ctx context.Context, req RideRequest, transferPoints 
 			}
 
 			// Create leg 2: transfer1 → transfer2
-			leg2Req := req
-			leg2Req.Origin = transfer1.Location
-			leg2Req.Destination = transfer2.Location
+			leg2Req := buildLegRequest(req, transfer1.Location, transfer2.Location)
 
 			driver2, eta2, err := pickBestDriverForLeg(ctx, leg2Req, []string{driver1.ID}, 2)
 			if err != nil {
@@ -786,8 +806,7 @@ func plan3HopWithTransfers(ctx context.Context, req RideRequest, transferPoints 
 			}
 
 			// Create leg 3: transfer2 → destination
-			leg3Req := req
-			leg3Req.Origin = transfer2.Location
+			leg3Req := buildLegRequest(req, transfer2.Location, req.Destination)
 
 			driver3, eta3, err := pickBestDriverForLeg(ctx, leg3Req, []string{driver1.ID, driver2.ID}, 3)
 			if err != nil {
