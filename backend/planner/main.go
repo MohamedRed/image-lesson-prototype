@@ -749,9 +749,6 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) bool {
 	originIso := req.originWalkGeometry()
 	destinationIso := req.destinationWalkGeometry()
-	if originIso.isZero() && destinationIso.isZero() {
-		return true
-	}
 	if !originIso.isZero() && !driverRouteIntersectsGeometry(driver, originIso) {
 		return false
 	}
@@ -760,6 +757,9 @@ func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) boo
 	}
 	if !driverEntersOriginDriveGeo(req, driver) {
 		return false
+	}
+	if originIso.isZero() && destinationIso.isZero() {
+		return true
 	}
 	if driver.RoutePolyline != "" && !routePolylineTravelsOriginBeforeDestination(req, driver.RoutePolyline) {
 		return false

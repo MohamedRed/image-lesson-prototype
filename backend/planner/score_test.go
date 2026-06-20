@@ -283,6 +283,21 @@ func TestComputeDriverScore_RejectsRouteThatNeverEntersOriginDriveGeo(t *testing
 	}
 }
 
+func TestComputeDriverScore_EnforcesOriginDriveGeoWithoutWalkZones(t *testing.T) {
+	req := RideRequest{
+		Origin:         GeoPoint{Latitude: 0, Longitude: 0},
+		Destination:    GeoPoint{Latitude: 0, Longitude: 1},
+		PassengerCount: 1,
+		OriDriveIso:    rectPolygon(-0.05, -0.05, 0.05, 0.05),
+	}
+	driver := corridorDriver("outside-origin-drive-only", 0, 0.20, GeoJSONGeometry{})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected origin drive geofence to be enforced even when walk-zone geometry is unavailable")
+	}
+}
+
 func TestComputeDriverScore_RejectsPolylineMissingWalkZoneDespiteBroadBuffer(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("stale-broad-buffer", 0, 0, routeCorridor())
