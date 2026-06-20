@@ -834,6 +834,9 @@ func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) boo
 	if !driverEntersOriginDriveGeo(req, driver) {
 		return false
 	}
+	if !driverEntersDestinationDriveGeo(req, driver) {
+		return false
+	}
 	if originIso.isZero() && destinationIso.isZero() {
 		return true
 	}
@@ -856,6 +859,23 @@ func driverEntersOriginDriveGeo(req RideRequest, driver DriverProfile) bool {
 	}
 	if !driver.BufferPolygon.isZero() {
 		return geoJSONPolygonsIntersect(driver.BufferPolygon, originDrive)
+	}
+	return false
+}
+
+func driverEntersDestinationDriveGeo(req RideRequest, driver DriverProfile) bool {
+	destinationDrive := req.destinationDriveGeometry()
+	if destinationDrive.isZero() {
+		return true
+	}
+	if pointInGeoJSONPolygon(driver.CurrentLocation, destinationDrive) {
+		return true
+	}
+	if driver.RoutePolyline != "" {
+		return polylineIntersectsPolygon(driver.RoutePolyline, destinationDrive)
+	}
+	if !driver.BufferPolygon.isZero() {
+		return geoJSONPolygonsIntersect(driver.BufferPolygon, destinationDrive)
 	}
 	return false
 }
@@ -954,6 +974,13 @@ func (req RideRequest) originDriveGeometry() GeoJSONGeometry {
 	}
 	if !req.OriginDriveGeo.isZero() {
 		return req.OriginDriveGeo
+	}
+	return GeoJSONGeometry{}
+}
+
+func (req RideRequest) destinationDriveGeometry() GeoJSONGeometry {
+	if !req.DestinationDriveGeo.isZero() {
+		return req.DestinationDriveGeo
 	}
 	return GeoJSONGeometry{}
 }

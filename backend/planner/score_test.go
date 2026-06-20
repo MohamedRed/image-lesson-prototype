@@ -354,6 +354,31 @@ func TestComputeDriverScore_RejectsRouteThatNeverEntersOriginDriveGeo(t *testing
 	}
 }
 
+func TestComputeDriverScore_RejectsRouteInsideDestinationDriveGeoHole(t *testing.T) {
+	req := corridorRequest()
+	req.Origin = GeoPoint{Latitude: 0, Longitude: 0.999}
+	req.Destination = GeoPoint{Latitude: 0, Longitude: 1}
+	req.OriWalkIso = GeoJSONGeometry{}
+	req.OriginWalkIso = GeoJSONGeometry{}
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	req.DestWalkIso = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	req.DestinationDriveGeo = polygonWithHole(
+		rectRing(-0.05, 0.95, 0.05, 1.05),
+		rectRing(-0.01, 0.99, 0.01, 1.01),
+	)
+	driver := corridorDriver("inside-destination-drive-hole", 0, 0.999, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.999},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected route only inside a destinationDriveGeo interior hole to be rejected")
+	}
+}
+
 func TestComputeDriverScore_EnforcesOriginDriveGeoWithoutWalkZones(t *testing.T) {
 	req := RideRequest{
 		Origin:         GeoPoint{Latitude: 0, Longitude: 0},
