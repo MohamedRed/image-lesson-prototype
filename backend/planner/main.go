@@ -466,11 +466,7 @@ func routeInsertionDetourKm(req RideRequest, encodedPolyline string, directRideK
 		return 0, false
 	}
 
-	originProjection, ok := nearestRouteProjection(points, req.Origin)
-	if !ok {
-		return 0, false
-	}
-	destinationProjection, ok := nearestRouteProjection(points, req.Destination)
+	originProjection, destinationProjection, ok := routeInsertionProjections(req, points)
 	if !ok || destinationProjection.position < originProjection.position {
 		return 0, false
 	}
@@ -481,6 +477,36 @@ func routeInsertionDetourKm(req RideRequest, encodedPolyline string, directRideK
 		return 0, true
 	}
 	return detourKm, true
+}
+
+func routeInsertionProjections(req RideRequest, points []GeoPoint) (routeProjection, routeProjection, bool) {
+	if originPos, ok := firstRoutePositionInGeometry(points, req.Origin, req.originWalkGeometry(), 0); ok {
+		originProjection := routeProjectionAtPosition(points, originPos, req.Origin)
+		destinationPos, ok := firstRoutePositionInGeometry(points, req.Destination, req.destinationWalkGeometry(), originPos)
+		if !ok {
+			return routeProjection{}, routeProjection{}, false
+		}
+		return originProjection, routeProjectionAtPosition(points, destinationPos, req.Destination), true
+	}
+
+	originProjection, ok := nearestRouteProjection(points, req.Origin)
+	if !ok {
+		return routeProjection{}, routeProjection{}, false
+	}
+	destinationProjection, ok := nearestRouteProjection(points, req.Destination)
+	if !ok {
+		return routeProjection{}, routeProjection{}, false
+	}
+	return originProjection, destinationProjection, true
+}
+
+func routeProjectionAtPosition(points []GeoPoint, position float64, target GeoPoint) routeProjection {
+	point := routePointAtPosition(points, position)
+	return routeProjection{
+		point:    point,
+		position: position,
+		snapKm:   haversineKm(point.Latitude, point.Longitude, target.Latitude, target.Longitude),
+	}
 }
 
 type routeProjection struct {

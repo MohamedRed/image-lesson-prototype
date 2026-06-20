@@ -404,6 +404,28 @@ func TestComputeDriverScore_RejectsExcessiveRouteDetour(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsExcessiveDetourBeforeRouteContinuesNearOrigin(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "1")
+	req := corridorRequest()
+	req.Origin = GeoPoint{Latitude: 0.004, Longitude: 0}
+	req.Destination = GeoPoint{Latitude: 0.004, Longitude: 1}
+	req.OriWalkIso = rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	req.DestWalkIso = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	driver := corridorDriver("excessive-first-pass-detour", 0, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 2, Longitude: 0.50},
+		{Latitude: 0, Longitude: 1},
+		{Latitude: 0.004, Longitude: 0},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected excessive detour on first valid origin→destination pass to be rejected even when route later continues near origin")
+	}
+}
+
 func TestComputeDriverScore_DoesNotRejectSparseDirectPolylineAsDetour(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "1")
 	req := corridorRequest()
