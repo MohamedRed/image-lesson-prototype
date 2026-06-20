@@ -275,13 +275,20 @@ func build2HopJourney(req RideRequest, transfer TransferPoint, driver1 DriverPro
 
 func score2HopJourney(req RideRequest, transfer TransferPoint, driver1 DriverProfile, eta1 int, driver2 DriverProfile, eta2 int) float64 {
 	journey := build2HopJourney(req, transfer, driver1, eta1, driver2, eta2)
-	return calculateJourneyScore(journey.TotalEstimatedTimeSeconds, 2, transfer.CongestionFactor)
+	return calculateJourneyScore(journey.TotalEstimatedTimeSeconds, 2, neutralCongestionFactor(transfer.CongestionFactor))
 }
 
 func score3HopJourney(req RideRequest, transfer1 TransferPoint, transfer2 TransferPoint, driver1 DriverProfile, eta1 int, driver2 DriverProfile, eta2 int, driver3 DriverProfile, eta3 int) float64 {
 	journey := build3HopJourney(req, transfer1, transfer2, driver1, eta1, driver2, eta2, driver3, eta3)
-	avgCongestion := (transfer1.CongestionFactor + transfer2.CongestionFactor) / 2
+	avgCongestion := (neutralCongestionFactor(transfer1.CongestionFactor) + neutralCongestionFactor(transfer2.CongestionFactor)) / 2
 	return calculateJourneyScore(journey.TotalEstimatedTimeSeconds, 3, avgCongestion)
+}
+
+func neutralCongestionFactor(factor float64) float64 {
+	if factor <= 0 {
+		return 1
+	}
+	return factor
 }
 
 func routeAwareLegETASeconds(req RideRequest, driver DriverProfile, pickupEtaSec int) int {
@@ -2187,9 +2194,7 @@ func validateGenderConsistency(riderGender string, driverIDs []string) bool {
 
 // calculateJourneyScore computes a score for multi-hop journeys
 func calculateJourneyScore(totalTimeSeconds, numLegs int, avgCongestionFactor float64) float64 {
-	if avgCongestionFactor <= 0 {
-		avgCongestionFactor = 1
-	}
+	avgCongestionFactor = neutralCongestionFactor(avgCongestionFactor)
 	// Base score is total time
 	baseScore := float64(totalTimeSeconds)
 

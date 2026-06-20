@@ -1242,6 +1242,23 @@ func TestBuild2HopJourneyUsesBackendSelectedRoutePickupAndDropoffPerLeg(t *testi
 	assertGeoPointNear(t, journey.Legs[1].Dropoff, GeoPoint{Latitude: 0, Longitude: 0.998})
 }
 
+func TestScore3HopJourneyDefaultsEachMissingTransferCongestionToNeutral(t *testing.T) {
+	req := corridorRequest()
+	transfer1Missing := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.33}, TransferTimeSeconds: 7, CongestionFactor: 0}
+	transfer2Neutral := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.66}, TransferTimeSeconds: 8, CongestionFactor: 1}
+	transfer1Neutral := transfer1Missing
+	transfer1Neutral.CongestionFactor = 1
+	driver1 := corridorDriver("driver-leg-1-missing-congestion", 0, 0, routeCorridor())
+	driver2 := corridorDriver("driver-leg-2-missing-congestion", 0, 0.33, routeCorridor())
+	driver3 := corridorDriver("driver-leg-3-missing-congestion", 0, 0.66, routeCorridor())
+
+	got := score3HopJourney(req, transfer1Missing, transfer2Neutral, driver1, 30, driver2, 40, driver3, 50)
+	want := score3HopJourney(req, transfer1Neutral, transfer2Neutral, driver1, 30, driver2, 40, driver3, 50)
+	if got != want {
+		t.Fatalf("expected missing per-transfer congestion to be neutral before averaging, got %f want %f", got, want)
+	}
+}
+
 func TestScore3HopJourneyUsesRouteAwareResponseEta(t *testing.T) {
 	req := corridorRequest()
 	transfer1 := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.33}, TransferTimeSeconds: 7, CongestionFactor: 1}
