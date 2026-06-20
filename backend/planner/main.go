@@ -1038,14 +1038,51 @@ func decodePolylineValue(encoded string, index *int) (int, bool) {
 }
 
 func geoJSONPolygonsIntersect(a, b GeoJSONGeometry) bool {
-	aRings, okA := polygonOuterRings(a)
-	bRings, okB := polygonOuterRings(b)
+	aParts, okA := polygonParts(a)
+	bParts, okB := polygonParts(b)
 	if !okA || !okB {
 		return false
 	}
-	for _, aRing := range aRings {
-		for _, bRing := range bRings {
-			if polygonRingsIntersect(aRing, bRing) {
+	for _, aPart := range aParts {
+		for _, point := range aPart.outer {
+			if pointInGeoJSONPolygon(point, b) {
+				return true
+			}
+		}
+	}
+	for _, bPart := range bParts {
+		for _, point := range bPart.outer {
+			if pointInGeoJSONPolygon(point, a) {
+				return true
+			}
+		}
+	}
+	for _, aRing := range ringsForSegmentIntersection(aParts) {
+		for _, bRing := range ringsForSegmentIntersection(bParts) {
+			if ringsHaveSegmentIntersection(aRing, bRing) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func ringsForSegmentIntersection(parts []geoPolygonPart) [][]GeoPoint {
+	rings := [][]GeoPoint{}
+	for _, part := range parts {
+		rings = append(rings, part.outer)
+		rings = append(rings, part.holes...)
+	}
+	return rings
+}
+
+func ringsHaveSegmentIntersection(aRing, bRing []GeoPoint) bool {
+	if len(aRing) < 2 || len(bRing) < 2 {
+		return false
+	}
+	for i := 0; i < len(aRing)-1; i++ {
+		for j := 0; j < len(bRing)-1; j++ {
+			if segmentsIntersect(aRing[i], aRing[i+1], bRing[j], bRing[j+1]) {
 				return true
 			}
 		}
