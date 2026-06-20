@@ -641,7 +641,7 @@ func driverPickupDistanceKm(req RideRequest, driver DriverProfile, fallbackKm fl
 		return fallbackKm
 	}
 	routeStartKm := haversineKm(driver.CurrentLocation.Latitude, driver.CurrentLocation.Longitude, points[0].Latitude, points[0].Longitude)
-	return routeStartKm + routeDistanceBetweenPositions(points, 0, pickupProjection.position) + pickupProjection.snapKm
+	return routeStartKm + routeDistanceBetweenPositions(points, 0, pickupProjection.position)
 }
 
 func driverPickupETASeconds(req RideRequest, driver DriverProfile, fallbackPickupKm float64) int {

@@ -563,6 +563,25 @@ func TestPickBestDriverFromProfiles_RanksShorterRiderWalkAboveEqualEta(t *testin
 	}
 }
 
+func TestDriverPickupDistanceUsesRoutePositionNotRiderWalkSnap(t *testing.T) {
+	req := corridorRequest()
+	req.WalkRadiusM = 1000
+	req.OriWalkIso = rectPolygon(-0.01, -0.02, 0.01, 0.02)
+	req.DestWalkIso = rectPolygon(-0.01, 0.98, 0.01, 1.02)
+	driver := corridorDriver("offset-route-pickup-eta", 0.006, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0.006, Longitude: -0.10},
+		{Latitude: 0.006, Longitude: 0},
+		{Latitude: 0.006, Longitude: 1},
+	})
+
+	got := driverPickupDistanceKm(req, driver, 999)
+	want := haversineKm(0.006, -0.10, 0.006, 0)
+	if math.Abs(got-want) > 0.001 {
+		t.Fatalf("expected driver pickup distance to stop at route pickup point, not include rider walk snap: got %.6f want %.6f", got, want)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RanksShorterRoutePickupEtaAboveNearestCurrentLocation(t *testing.T) {
 	req := corridorRequest()
 	nearButLatePickup := corridorDriverWithPickupZone("aaa-nearest-but-late-pickup", 0, 0.02, routeCorridor(), "zone-late")
