@@ -41,6 +41,52 @@ func TestComputeDriverScore_CurbPenalty(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_ToddlerRequiresForwardChildSeat(t *testing.T) {
+	req := RideRequest{
+		Origin:         GeoPoint{0, 0},
+		Destination:    GeoPoint{1, 1},
+		PassengerCount: 1,
+		ChildPassengers: []struct {
+			AgeYears int `json:"ageYears"`
+			WeightKg int `json:"weightKg"`
+		}{{AgeYears: 3, WeightKg: 15}},
+	}
+
+	driver := DriverProfile{
+		CapacitySeats:      4,
+		CurrentLocation:    GeoPoint{0, 0},
+		ChildSeatInventory: map[string]int{"forward": 1},
+	}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected toddler child passenger to use forward child-seat inventory")
+	}
+}
+
+func TestComputeDriverScore_RejectsToddlerWhenOnlyBoosterAvailable(t *testing.T) {
+	req := RideRequest{
+		Origin:         GeoPoint{0, 0},
+		Destination:    GeoPoint{1, 1},
+		PassengerCount: 1,
+		ChildPassengers: []struct {
+			AgeYears int `json:"ageYears"`
+			WeightKg int `json:"weightKg"`
+		}{{AgeYears: 3, WeightKg: 15}},
+	}
+
+	driver := DriverProfile{
+		CapacitySeats:      4,
+		CurrentLocation:    GeoPoint{0, 0},
+		ChildSeatInventory: map[string]int{"booster": 1},
+	}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected toddler child passenger to reject booster-only inventory")
+	}
+}
+
 func TestComputeDriverScore_CorridorIntersectsOriginWalkZone(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("route-match", 0.05, 0, routeCorridor())

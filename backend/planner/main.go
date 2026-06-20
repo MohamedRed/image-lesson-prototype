@@ -145,6 +145,23 @@ func buildLegRequest(req RideRequest, origin, destination GeoPoint) RideRequest 
 	return legReq
 }
 
+func calculateChildSeatRequirements(children []struct {
+	AgeYears int `json:"ageYears"`
+	WeightKg int `json:"weightKg"`
+}) map[string]int {
+	requirements := map[string]int{}
+	for _, child := range children {
+		if child.AgeYears <= 1 {
+			requirements["infant"]++
+		} else if child.AgeYears <= 4 {
+			requirements["forward"]++
+		} else if child.AgeYears <= 8 || child.WeightKg < 36 {
+			requirements["booster"]++
+		}
+	}
+	return requirements
+}
+
 // DriverProfile is an in-memory representation of driver attributes used for matching.
 type DriverProfile struct {
 	ID                  string
@@ -206,24 +223,11 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 		}
 	}
 
-	// Child seat filter (simple)
+	// Child seat filter mirrors the Firebase reservation ledger categories.
 	if len(req.ChildPassengers) > 0 {
-		infantCnt := 0
-		boosterCnt := 0
-		for _, c := range req.ChildPassengers {
-			if c.AgeYears <= 1 {
-				infantCnt++
-			} else if c.AgeYears <= 4 {
-				boosterCnt++
-			}
-		}
-		if infantCnt > 0 {
-			if driver.ChildSeatInventory["infant"] < infantCnt {
-				return 0, 0, false
-			}
-		}
-		if boosterCnt > 0 {
-			if driver.ChildSeatInventory["booster"] < boosterCnt {
+		childSeatNeeds := calculateChildSeatRequirements(req.ChildPassengers)
+		for seatType, needed := range childSeatNeeds {
+			if driver.ChildSeatInventory[seatType] < needed {
 				return 0, 0, false
 			}
 		}
