@@ -317,7 +317,7 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	etaSec := int(pickupKm / 40.0 * 3600)
 
 	rideDistKm := haversineKm(req.Origin.Latitude, req.Origin.Longitude, req.Destination.Latitude, req.Destination.Longitude)
-	detourKm := pickupKm + rideDistKm
+	detourKm := driverDetourKm(req, driver, pickupKm, rideDistKm)
 
 	baseScore := wDetour*detourKm + wEta*(float64(etaSec)/60.0)
 	if curbFactor <= 0 {
@@ -326,6 +326,59 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	score := baseScore * math.Pow(curbFactor, wCurb)
 
 	return score, etaSec, true
+}
+
+func driverDetourKm(req RideRequest, driver DriverProfile, pickupKm, directRideKm float64) float64 {
+	if driver.RoutePolyline != "" {
+		if routeDetourKm, ok := routeInsertionDetourKm(req, driver.RoutePolyline, directRideKm); ok {
+			return pickupKm + routeDetourKm
+		}
+	}
+	return pickupKm + directRideKm
+}
+
+func routeInsertionDetourKm(req RideRequest, encodedPolyline string, directRideKm float64) (float64, bool) {
+	points, ok := decodePolyline(encodedPolyline)
+	if !ok || len(points) < 2 {
+		return 0, false
+	}
+
+	originIdx, originSnapKm := nearestRoutePointIndex(points, req.Origin)
+	destinationIdx, destinationSnapKm := nearestRoutePointIndex(points, req.Destination)
+	if originIdx < 0 || destinationIdx < 0 || destinationIdx < originIdx {
+		return 0, false
+	}
+
+	routeSegmentKm := routeDistanceBetweenIndexes(points, originIdx, destinationIdx)
+	detourKm := routeSegmentKm - directRideKm + originSnapKm + destinationSnapKm
+	if detourKm < 0 {
+		return 0, true
+	}
+	return detourKm, true
+}
+
+func nearestRoutePointIndex(points []GeoPoint, target GeoPoint) (int, float64) {
+	bestIdx := -1
+	bestDistanceKm := math.MaxFloat64
+	for i, point := range points {
+		distanceKm := haversineKm(point.Latitude, point.Longitude, target.Latitude, target.Longitude)
+		if distanceKm < bestDistanceKm {
+			bestDistanceKm = distanceKm
+			bestIdx = i
+		}
+	}
+	return bestIdx, bestDistanceKm
+}
+
+func routeDistanceBetweenIndexes(points []GeoPoint, startIdx, endIdx int) float64 {
+	if startIdx < 0 || endIdx >= len(points) || endIdx <= startIdx {
+		return 0
+	}
+	distanceKm := 0.0
+	for i := startIdx; i < endIdx; i++ {
+		distanceKm += haversineKm(points[i].Latitude, points[i].Longitude, points[i+1].Latitude, points[i+1].Longitude)
+	}
+	return distanceKm
 }
 
 type scoreWeights struct {

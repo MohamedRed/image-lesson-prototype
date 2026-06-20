@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"math"
 	"strings"
 	"testing"
 )
@@ -174,6 +175,18 @@ func TestComputeDriverScore_CorridorIntersectsOriginWalkZone(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_CorridorIntersectsDestinationWalkZone(t *testing.T) {
+	req := corridorRequest()
+	req.OriWalkIso = GeoJSONGeometry{}
+	req.OriginWalkIso = GeoJSONGeometry{}
+	driver := corridorDriver("destination-route-match", 0.05, 1, rectPolygon(-0.005, 0.90, 0.005, 1.01))
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected driver route corridor intersecting destination walk zone to be accepted")
+	}
+}
+
 func TestComputeDriverScore_RejectsCorridorMissingOriginWalkZone(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("miss-origin", 0, 0.1, rectPolygon(-0.005, 0.20, 0.005, 1.01))
@@ -207,6 +220,30 @@ func TestPickBestDriverFromProfiles_RanksCorridorMatchAboveNearestWrongDirection
 	}
 	if driverID != "farther-valid-corridor" {
 		t.Fatalf("expected farther valid corridor driver, got %q", driverID)
+	}
+}
+
+func TestPickBestDriverFromProfiles_RanksLowerRouteDetourAboveLoopingCorridor(t *testing.T) {
+	req := corridorRequest()
+	direct := corridorDriver("zzz-direct-corridor", 0, 0, routeCorridor())
+	direct.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+	looping := corridorDriver("aaa-looping-corridor", 0, 0, routeCorridor())
+	looping.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 1, Longitude: 0},
+		{Latitude: 1, Longitude: 1},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{looping, direct}, nil, scoreWeights{Detour: 1, ETA: 0, Curb: 1})
+	if err != nil {
+		t.Fatalf("expected valid corridor driver, got error: %v", err)
+	}
+	if driverID != "zzz-direct-corridor" {
+		t.Fatalf("expected direct route with lower detour to win, got %q", driverID)
 	}
 }
 
@@ -326,4 +363,33 @@ func rectPolygon(minLat, minLon, maxLat, maxLon float64) GeoJSONGeometry {
 			{minLon, minLat},
 		}},
 	}
+}
+
+func encodePolyline(points []GeoPoint) string {
+	encoded := ""
+	prevLat := 0
+	prevLon := 0
+	for _, point := range points {
+		lat := int(math.Round(point.Latitude * 1e5))
+		lon := int(math.Round(point.Longitude * 1e5))
+		encoded += encodePolylineValue(lat - prevLat)
+		encoded += encodePolylineValue(lon - prevLon)
+		prevLat = lat
+		prevLon = lon
+	}
+	return encoded
+}
+
+func encodePolylineValue(value int) string {
+	value <<= 1
+	if value < 0 {
+		value = ^value
+	}
+	encoded := ""
+	for value >= 0x20 {
+		encoded += string(rune((0x20 | (value & 0x1f)) + 63))
+		value >>= 5
+	}
+	encoded += string(rune(value + 63))
+	return encoded
 }
