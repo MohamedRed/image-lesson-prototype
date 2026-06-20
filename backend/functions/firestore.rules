@@ -1,0 +1,384 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() { return request.auth != null; }
+    function nonNegMaxTwo(vals) { return vals.hasOnly([0,1,2]); }
+
+    // ---------------- Drivers ----------------
+    match /drivers/{driverId} {
+      allow read: if isSignedIn();
+
+      // Driver may update only specific realtime fields on their own doc
+      allow update: if isSignedIn() && request.auth.uid == driverId &&
+                    request.resource.data.diff(resource.data).changedKeys().hasOnly([
+                      'currentLocation',
+                      'isMoving',
+                      'isOnCurb',
+                      'inventoryHash',
+                      'lastSeenAt'
+                    ]);
+
+      allow create, delete: if false; // service code only
+    }
+
+    // ---------------- Ride Requests ----------------
+    match /rideRequests/{rid} {
+      // Rider creates new request in "searching" state
+      allow create: if isSignedIn() &&
+                    request.resource.data.keys().hasOnly([
+                      'origin','destination','state','createdAt','creatorUid','passengerCount','riderGender',
+                      'luggageManifest','premiumRequested','walkRadiusM','geohash','pet','childPassengers'
+                    ]) &&
+                    request.resource.data.state == 'searching' &&
+                    request.resource.data.creatorUid == request.auth.uid &&
+                    (request.resource.data.riderGender in ['female','male','nb']) &&
+                    (request.resource.data.passengerCount == null || (request.resource.data.passengerCount >=1 && request.resource.data.passengerCount <=6)) &&
+                    (!('walkRadiusM' in request.resource.data) || 
+                      (request.resource.data.walkRadiusM >= 100 && request.resource.data.walkRadiusM <= 2000)) &&
+                    (!('luggageManifest' in request.resource.data) ||
+                      request.resource.data.luggageManifest.keys().hasOnly(['backpack','suitcase','bulky']) &&
+                      nonNegMaxTwo(request.resource.data.luggageManifest.values())) &&
+                     (!('pet' in request.resource.data) ||
+                        request.resource.data.pet.keys().hasOnly(['small','large']) && nonNegMaxTwo(request.resource.data.pet.values())) &&
+                     (!('childPassengers' in request.resource.data) ||
+                        request.resource.data.childPassengers.size() <= 3);
+
+      // Rider reads own request
+      allow read: if isSignedIn() && request.auth.uid == resource.data.creatorUid;
+
+      // Rider limited updates: can cancel or accept priced ride
+      allow update: if isSignedIn() && request.auth.uid == resource.data.creatorUid &&
+                    request.resource.data.diff(resource.data).changedKeys().hasOnly(['state']) &&
+                    // Preserve immutable fare fields
+                    resource.data.fareBreakdown == request.resource.data.fareBreakdown &&
+                    // Valid state transitions only
+                    ((resource.data.state == 'searching' && request.resource.data.state in ['cancelled','accepted']) ||
+                     (resource.data.state == 'priced'    && request.resource.data.state == 'accepted'));
+
+      // Deny any other client writes
+      allow update, create: if false;
+    }
+
+    // Immutable / server-only collections
+    match /rideLegs/{document=**} {
+      allow read: if isSignedIn();
+      allow write: if false;         // backend only
+    }
+    
+    match /payouts/{document=**} {
+      allow read: if isSignedIn();
+      allow write: if false;         // backend only
+    }
+    
+    match /roadBlocks/{document=**} {
+      allow read: if isSignedIn();
+      allow write: if false;         // backend only
+    }
+    
+    match /_internal/{document=**} {
+      allow read: if isSignedIn();
+      allow write: if false;         // backend only
+    }
+    
+    match /curbSegments/{document=**} {
+      allow read: if isSignedIn();
+      allow write: if false;         // backend only
+    }
+    
+    match /pickupZones/{document=**} {
+      allow read: if isSignedIn();
+      allow write: if false;         // backend only
+    }
+
+    // ---------------- Home Services ----------------
+    
+    // Service Categories - Read only for all users
+    match /serviceCategories/{categoryId} {
+      allow read: if isSignedIn();
+      allow write: if false;         // backend only
+    }
+
+    // RFQs (Request for Quotes)
+    match /rfqs/{rfqId} {
+      // Customer can create RFQ
+      allow create: if isSignedIn() &&
+                    request.resource.data.customerId == request.auth.uid &&
+                    request.resource.data.keys().hasOnly([
+                      'customerId', 'categoryId', 'scope', 'location', 'budgetRange',
+                      'status', 'bidCount', 'viewCount', 'createdAt', 'updatedAt', 'expiresAt'
+                    ]) &&
+                    request.resource.data.status == 'open';
+
+      // Customer can read own RFQs, pros can read open RFQs
+      allow read: if isSignedIn() && 
+                  (resource.data.customerId == request.auth.uid || 
+                   resource.data.status == 'open');
+
+      // Customer can update own RFQ if still open
+      allow update: if isSignedIn() && 
+                    resource.data.customerId == request.auth.uid &&
+                    resource.data.status == 'open' &&
+                    request.resource.data.customerId == resource.data.customerId;
+
+      // No other client updates
+      allow update: if false;
+    }
+
+    // Bids
+    match /bids/{bidId} {
+      // Professional can create bid
+      allow create: if isSignedIn() &&
+                    request.resource.data.proId == request.auth.uid;
+
+      // Customer and professional can read bids for their RFQs/bids
+      allow read: if isSignedIn() && 
+                  (resource.data.customerId == request.auth.uid || 
+                   resource.data.proId == request.auth.uid);
+
+      // Professional can update own bid, customer can't update bids directly
+      allow update: if isSignedIn() && 
+                    resource.data.proId == request.auth.uid;
+
+      // No other client updates
+      allow update: if false;
+    }
+
+    // Contracts
+    match /contracts/{contractId} {
+      // Only backend can create contracts
+      allow create: if request.auth == null;
+
+      // Customer and professional can read their contracts
+      allow read: if isSignedIn() && 
+                  (resource.data.customerId == request.auth.uid || 
+                   resource.data.proId == request.auth.uid);
+
+      // Limited updates for milestone status
+      allow update: if isSignedIn() && 
+                    (resource.data.customerId == request.auth.uid || 
+                     resource.data.proId == request.auth.uid) &&
+                    request.resource.data.diff(resource.data).changedKeys().hasOnly(['milestones', 'status', 'updatedAt']);
+
+      // No other client updates
+      allow update: if false;
+    }
+
+    // Escrows (Payments)
+    match /escrows/{escrowId} {
+      // Customer and professional can read their escrows
+      allow read: if isSignedIn() && 
+                  (resource.data.customerId == request.auth.uid || 
+                   resource.data.proId == request.auth.uid);
+
+      // No client creates or updates
+      allow create, update: if false;
+    }
+
+    // Reviews
+    match /reviews/{reviewId} {
+      // Users can create reviews for their contracts
+      allow create: if isSignedIn() &&
+                    request.resource.data.reviewerId == request.auth.uid;
+
+      // Anyone can read reviews (for public profiles)
+      allow read: if isSignedIn();
+
+      // No updates to reviews once created
+      allow update: if false;
+    }
+
+    // Disputes
+    match /disputes/{disputeId} {
+      // Customer and professional can create disputes for their contracts
+      allow create: if isSignedIn() &&
+                    request.resource.data.reporterId == request.auth.uid;
+
+      // Customer and professional can read their disputes
+      allow read: if isSignedIn() && 
+                  (resource.data.customerId == request.auth.uid || 
+                   resource.data.proId == request.auth.uid);
+
+      // No other client updates
+      allow update: if false;
+    }
+
+    // Professional Profiles
+    match /proProfiles/{proId} {
+      // Professional can create and update own profile
+      allow create, update: if isSignedIn() && 
+                            request.auth.uid == proId;
+
+      // Anyone can read pro profiles
+      allow read: if isSignedIn();
+    }
+
+    // Messages (for contract communication)
+    match /messages/{messageId} {
+      // Users can create messages for their contracts
+      allow create: if isSignedIn() &&
+                    request.resource.data.senderId == request.auth.uid;
+
+      // Users can read messages for their contracts
+      allow read: if isSignedIn() && 
+                  (resource.data.customerId == request.auth.uid || 
+                   resource.data.proId == request.auth.uid);
+
+      // No updates to messages
+      allow update: if false;
+    }
+
+    // ---------------- Food Delivery ----------------
+    
+    // Restaurants
+    match /restaurants/{restaurantId} {
+      // Anyone can read restaurant info
+      allow read: if isSignedIn();
+      
+      // Restaurant owners can update their restaurant
+      allow update: if isSignedIn() && 
+                    request.auth.uid == resource.data.ownerId;
+      
+      // No client creates restaurants
+      allow create: if false;
+    }
+    
+    // Menu Items
+    match /menuItems/{itemId} {
+      // Anyone can read menu items
+      allow read: if isSignedIn();
+      
+      // Restaurant owners can manage their menu items
+      allow create, update: if isSignedIn() && 
+                           exists(/databases/$(database)/documents/restaurants/$(request.resource.data.restaurantId)) &&
+                           get(/databases/$(database)/documents/restaurants/$(request.resource.data.restaurantId)).data.ownerId == request.auth.uid;
+      
+      allow delete: if isSignedIn() && 
+                    exists(/databases/$(database)/documents/restaurants/$(resource.data.restaurantId)) &&
+                    get(/databases/$(database)/documents/restaurants/$(resource.data.restaurantId)).data.ownerId == request.auth.uid;
+    }
+    
+    // Food Delivery Orders
+    match /orders/{orderId} {
+      // Orders are created by server only
+      allow create: if false;
+      
+      // Customer can read their own orders
+      allow read: if isSignedIn() && 
+                  (resource.data.customerId == request.auth.uid ||
+                   resource.data.courierId == request.auth.uid ||
+                   (exists(/databases/$(database)/documents/restaurants/$(resource.data.restaurantId)) &&
+                    get(/databases/$(database)/documents/restaurants/$(resource.data.restaurantId)).data.ownerId == request.auth.uid));
+      
+      // No direct client updates to orders
+      allow update: if false;
+    }
+    
+    // Couriers
+    match /couriers/{courierId} {
+      // Courier can read own profile
+      allow read: if isSignedIn() && request.auth.uid == resource.data.userId;
+      // Courier limited updates: only availability and location fields
+      allow update: if isSignedIn() &&
+                    request.auth.uid == resource.data.userId &&
+                    request.resource.data.diff(resource.data).changedKeys().hasOnly([
+                      'isOnline','isAvailable','lastOnline','lastOffline',
+                      'location','currentZone','lastSeen','deviceIntegrity','appVersion'
+                    ]) &&
+                    (!('location' in request.resource.data) || (
+                      request.resource.data.location.keys().hasOnly(['latitude','longitude','lastUpdatedAt'])
+                    )) &&
+                    !('kyc' in request.resource.data) &&
+                    !('kycStatus' in request.resource.data);
+      
+      // Anyone can read courier info (for order tracking)
+      allow read: if isSignedIn();
+      
+      // No client creates couriers
+      allow create: if false;
+    }
+    
+    // Customers
+    match /customers/{customerId} {
+      // Customer can read and update their own profile
+      allow read, update: if isSignedIn() && 
+                          request.auth.uid == resource.data.userId;
+      
+      // No client creates customers
+      allow create: if false;
+    }
+    
+    // Promotions
+    match /promotions/{promotionId} {
+      // Anyone can read active promotions
+      allow read: if isSignedIn() && resource.data.isActive == true;
+      
+      // No client creates/updates/deletes promotions
+      allow create, update, delete: if false;
+    }
+    
+    // User Interactions (for AI recommendations)
+    match /userInteractions/{interactionId} {
+      // Users can create their own interactions
+      allow create: if isSignedIn() && 
+                    request.resource.data.userId == request.auth.uid;
+      
+      // No direct read/update access
+      allow read, update, delete: if false;
+    }
+    
+    // Promotion Usage
+    match /promotionUsage/{usageId} {
+      // No client access to promotion usage
+      allow read, write: if false;
+    }
+    
+    // COD Transactions
+    match /codTransactions/{transactionId} {
+      // Couriers can read their own COD transactions
+      allow read: if isSignedIn() && 
+                  resource.data.courierId == request.auth.uid;
+      
+      // No client creates/updates COD transactions
+      allow create, update: if false;
+    }
+
+    // Analytics and Audit logs - server only
+    match /analyticsEvents/{eventId} {
+      allow read, write: if false;
+    }
+    match /auditLogs/{logId} {
+      allow read, write: if false;
+    }
+    
+    // Zone Performance
+    match /zonePerformance/{zoneId} {
+      // Anyone can read zone performance
+      allow read: if isSignedIn();
+      
+      // No client updates to zone performance
+      allow write: if false;
+    }
+    
+    // Menu Categories
+    match /menuCategories/{categoryId} {
+      // Anyone can read menu categories
+      allow read: if isSignedIn();
+      
+      // Restaurant owners can manage their categories
+      allow create: if isSignedIn() &&
+                    exists(/databases/$(database)/documents/restaurants/$(request.resource.data.restaurantId)) &&
+                    get(/databases/$(database)/documents/restaurants/$(request.resource.data.restaurantId)).data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() &&
+                    exists(/databases/$(database)/documents/restaurants/$(resource.data.restaurantId)) &&
+                    get(/databases/$(database)/documents/restaurants/$(resource.data.restaurantId)).data.ownerId == request.auth.uid &&
+                    (!('restaurantId' in request.resource.data) || request.resource.data.restaurantId == resource.data.restaurantId);
+      allow delete: if isSignedIn() &&
+                    exists(/databases/$(database)/documents/restaurants/$(resource.data.restaurantId)) &&
+                    get(/databases/$(database)/documents/restaurants/$(resource.data.restaurantId)).data.ownerId == request.auth.uid;
+    }
+
+    // ---------------- Default deny ----------------
+    match /{document=**} { allow read, write: if false; }
+  }
+} 

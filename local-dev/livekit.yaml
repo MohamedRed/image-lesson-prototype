@@ -1,0 +1,42 @@
+# LiveKit local development configuration
+port: 7880
+rtc:
+  tcp_port: 7881
+  port_range_start: 50000
+  port_range_end: 60000
+  use_external_ip: false
+
+redis:
+  address: redis:6379
+
+keys:
+  # Test API key for local development
+  api_key: devkey
+  api_secret: secret
+
+# Development settings
+development: true
+log_level: debug
+
+# Room settings
+room:
+  auto_create: true
+  empty_timeout: 300s
+  departure_timeout: 20s
+
+# Turn server for WebRTC
+turn:
+  enabled: false  # Disable for local development
+
+# Webhook (optional for local testing)
+webhook:
+  urls: []
+
+# Audio/Video settings optimized for local testing
+audio:
+  # Lower quality for local testing
+  preset: speech
+  
+video:
+  # Disable video by default for faster local testing  
+  preset: none

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liive Super App - Admin Console Hub</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-tachometer-alt text-indigo-600"></i>
+                        Liive Super App Admin
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="userEmail" class="text-gray-600"></span>
+                    <button id="signOutBtn" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Auth Section -->
+        <div id="authSection" class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold mb-6 text-center">Admin Login</h2>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                    <input type="email" id="email" required 
+                           class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                    <input type="password" id="password" required 
+                           class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <button type="submit" 
+                        class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">
+                    Sign In
+                </button>
+            </form>
+            <div id="authError" class="mt-4 text-red-600 text-sm hidden"></div>
+        </div>
+
+        <!-- Admin Hub -->
+        <div id="adminHub" class="hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Admin Console Hub</h2>
+                <p class="text-gray-600">Select a feature to manage</p>
+            </div>
+
+            <!-- Feature Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Home Services -->
+                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                     onclick="window.location.href='home-services/'">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                <i class="fas fa-tools text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-semibold text-gray-900">Home Services</h3>
+                                <p class="text-gray-600">Marketplace Management</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-700">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <span>Service Categories</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <span>RFQ Moderation</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <span>Dispute Resolution</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <span>Professional Verification</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Active
+                            </span>
+                            <i class="fas fa-arrow-right text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ride Sharing (Coming Soon) -->
+                <div class="bg-white rounded-lg shadow-md opacity-75">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 rounded-full bg-gray-100 text-gray-400">
+                                <i class="fas fa-car text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-semibold text-gray-900">Ride Sharing</h3>
+                                <p class="text-gray-600">Transportation Management</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-500">
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>Driver Management</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>Trip Monitoring</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>Safety Oversight</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Coming Soon
+                            </span>
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Debate Platform (Coming Soon) -->
+                <div class="bg-white rounded-lg shadow-md opacity-75">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 rounded-full bg-gray-100 text-gray-400">
+                                <i class="fas fa-comments text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-semibold text-gray-900">Debate Platform</h3>
+                                <p class="text-gray-600">Discussion Management</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-500">
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>Content Moderation</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>Topic Management</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>User Verification</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Coming Soon
+                            </span>
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Image Lessons (Coming Soon) -->
+                <div class="bg-white rounded-lg shadow-md opacity-75">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 rounded-full bg-gray-100 text-gray-400">
+                                <i class="fas fa-image text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-semibold text-gray-900">Image Lessons</h3>
+                                <p class="text-gray-600">Educational Content</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-500">
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>Content Review</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>Instructor Management</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>Session Analytics</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Coming Soon
+                            </span>
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Platform Analytics -->
+                <div class="bg-white rounded-lg shadow-md opacity-75">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 rounded-full bg-gray-100 text-gray-400">
+                                <i class="fas fa-chart-bar text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-semibold text-gray-900">Platform Analytics</h3>
+                                <p class="text-gray-600">Cross-Feature Insights</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-500">
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>User Behavior</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>Revenue Analytics</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>Performance Metrics</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Coming Soon
+                            </span>
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Administration -->
+                <div class="bg-white rounded-lg shadow-md opacity-75">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 rounded-full bg-gray-100 text-gray-400">
+                                <i class="fas fa-cog text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-semibold text-gray-900">System Admin</h3>
+                                <p class="text-gray-600">Platform Management</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-500">
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>User Management</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>Feature Flags</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                                <span>System Health</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Coming Soon
+                            </span>
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="shared/firebase-config.js"></script>
+    <script src="shared/auth.js"></script>
+</body>
+</html>

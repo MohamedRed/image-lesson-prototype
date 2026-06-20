@@ -9,16 +9,88 @@
 /* Begin PBXBuildFile section */
 		6A1379322DFFB3A600F14437 /* GliteImageLessonService in Frameworks */ = {isa = PBXBuildFile; productRef = 6A1379312DFFB3A600F14437 /* GliteImageLessonService */; };
 		6A1379352DFFB3BA00F14437 /* GliteImageLessonFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6A1379342DFFB3BA00F14437 /* GliteImageLessonFeature */; };
-		6BFA10002EF000000016F100 /* RideSharingFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6BFA10022EF000000016F100 /* RideSharingFeature */; };
+		6A3477292E1892850016F112 /* RideSharingService in Frameworks */ = {isa = PBXBuildFile; productRef = 6A3477282E1892850016F112 /* RideSharingService */; };
+		6A34772C2E1892920016F112 /* RideSharingFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6A34772B2E1892920016F112 /* RideSharingFeature */; };
+		6A34772D2E1892930016F113 /* HomeServicesService in Frameworks */ = {isa = PBXBuildFile; productRef = 6A34772E2E1892930016F113 /* HomeServicesService */; };
+		6A34772F2E1892940016F114 /* HomeServicesFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6A3477302E1892940016F114 /* HomeServicesFeature */; };
+		6A3477352E1892990016F119 /* FoodDeliveryService in Frameworks */ = {isa = PBXBuildFile; productRef = 6A3477362E1892990016F119 /* FoodDeliveryService */; };
+		6A3477372E18929A0016F11A /* FoodDeliveryFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6A3477382E18929A0016F11A /* FoodDeliveryFeature */; };
+		6A3478062E1A01010016F113 /* RideSharingDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3478042E1A01010016F113 /* RideSharingDemoView.swift */; };
+		6A3478072E1A01010016F113 /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3478052E1A01010016F113 /* AppRootView.swift */; };
+		6A3478082E1A01020016F114 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3478092E1A01020016F114 /* SettingsView.swift */; };
+		6A3478102E1A01030016F115 /* HomeDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3478112E1A01030016F115 /* HomeDashboardView.swift */; };
+		6A3478142E1A01050016F117 /* HomeDashboardSegmentedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3478152E1A01050016F117 /* HomeDashboardSegmentedView.swift */; };
+		6A3478162E1A01060016F118 /* HomeDashboardHybridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3478172E1A01060016F118 /* HomeDashboardHybridView.swift */; };
+		6A3478122E1A01040016F116 /* FeatureNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3478132E1A01040016F116 /* FeatureNavigationView.swift */; };
 		6A70A9032DFA5AE1001D60BA /* image_lesson_prototypeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A70A9022DFA5AE1001D60BA /* image_lesson_prototypeApp.swift */; };
 		6A70A9052DFA5AE1001D60BA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A70A9042DFA5AE1001D60BA /* ContentView.swift */; };
 		6A70A9072DFA5AE3001D60BA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6A70A9062DFA5AE3001D60BA /* Assets.xcassets */; };
 		6A70A90A2DFA5AE3001D60BA /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6A70A9092DFA5AE3001D60BA /* Preview Assets.xcassets */; };
+		6A7DB0352E50D3830094BB46 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A70A9042DFA5AE1001D60BA /* ContentView.swift */; };
+		6A7DB0362E50D3830094BB46 /* image_lesson_prototypeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A70A9022DFA5AE1001D60BA /* image_lesson_prototypeApp.swift */; };
+		6A7DB0372E50D3830094BB46 /* RideSharingDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3478042E1A01010016F113 /* RideSharingDemoView.swift */; };
+		6A7DB0382E50D3830094BB46 /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3478052E1A01010016F113 /* AppRootView.swift */; };
+		6A7DB0392E50D3830094BB46 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3478092E1A01020016F114 /* SettingsView.swift */; };
+		6A7DB03A2E50D3830094BB46 /* HomeDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3478112E1A01030016F115 /* HomeDashboardView.swift */; };
+		6A7DB04C2E50D3830094BB46 /* HomeDashboardSegmentedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3478152E1A01050016F117 /* HomeDashboardSegmentedView.swift */; };
+		6A7DB04D2E50D3830094BB46 /* HomeDashboardHybridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3478172E1A01060016F118 /* HomeDashboardHybridView.swift */; };
+		6A7DB03B2E50D3830094BB46 /* FeatureNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3478132E1A01040016F116 /* FeatureNavigationView.swift */; };
+		6A7DB03D2E50D3830094BB46 /* GliteImageLessonService in Frameworks */ = {isa = PBXBuildFile; productRef = 6A7DB0302E50D3830094BB46 /* GliteImageLessonService */; };
+		6A7DB03E2E50D3830094BB46 /* GliteImageLessonFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6A7DB0312E50D3830094BB46 /* GliteImageLessonFeature */; };
+		6A7DB03F2E50D3830094BB46 /* RideSharingFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6A7DB0332E50D3830094BB46 /* RideSharingFeature */; };
+		6A7DB0402E50D3830094BB46 /* RideSharingService in Frameworks */ = {isa = PBXBuildFile; productRef = 6A7DB0322E50D3830094BB46 /* RideSharingService */; };
+		6A7DB0412E50D3860094BB49 /* HomeServicesService in Frameworks */ = {isa = PBXBuildFile; productRef = 6A7DB0342E50D3840094BB47 /* HomeServicesService */; };
+		6A7DB0422E50D3870094BB4A /* HomeServicesFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6A7DB0352E50D3850094BB48 /* HomeServicesFeature */; };
+		6A7DB0432E50D3890094BB4B /* FoodDeliveryService in Frameworks */ = {isa = PBXBuildFile; productRef = 6A7DB0362E50D3860094BB49 /* FoodDeliveryService */; };
+		6A7DB0442E50D38A0094BB4C /* FoodDeliveryFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6A7DB0372E50D3870094BB4A /* FoodDeliveryFeature */; };
+		6A7DB0422E50D3830094BB46 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6A70A9092DFA5AE3001D60BA /* Preview Assets.xcassets */; };
+		6A7DB0432E50D3830094BB46 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6A70A9062DFA5AE3001D60BA /* Assets.xcassets */; };
+		6AF1C1002E1F00010016F101 /* MarketplaceService in Frameworks */ = {isa = PBXBuildFile; productRef = 6AF1C1102E1F00010016F121 /* MarketplaceService */; };
+		6AF1C1012E1F00010016F102 /* MarketplaceFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6AF1C1112E1F00010016F122 /* MarketplaceFeature */; };
+		6AF1C1022E1F00010016F103 /* MarketplaceService in Frameworks */ = {isa = PBXBuildFile; productRef = 6AF1C1122E1F00010016F123 /* MarketplaceService */; };
+		6AF1C1032E1F00010016F104 /* MarketplaceFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6AF1C1132E1F00010016F124 /* MarketplaceFeature */; };
+		6AF1C1052E1F00010016F105 /* FriendsService in Frameworks */ = {isa = PBXBuildFile; productRef = 6AF1C1140E1F00010016F125 /* FriendsService */; };
+		6AF1C1062E1F00010016F106 /* FriendsFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6AF1C1150E1F00010016F126 /* FriendsFeature */; };
+		6AF1C1072E1F00010016F107 /* FriendsService in Frameworks */ = {isa = PBXBuildFile; productRef = 6AF1C1160E1F00010016F127 /* FriendsService */; };
+		6AF1C1082E1F00010016F108 /* FriendsFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6AF1C1170E1F00010016F128 /* FriendsFeature */; };
+		6B1000212E5A00010016F120 /* AITutorService in Frameworks */ = {isa = PBXBuildFile; productRef = 6B1000112E5A00010016F110 /* AITutorService */; };
+		6B1000222E5A00010016F121 /* AITutorFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6B1000122E5A00010016F111 /* AITutorFeature */; };
+		6B1000232E5A00010016F122 /* AITutorService in Frameworks */ = {isa = PBXBuildFile; productRef = 6B1000112E5A00010016F110 /* AITutorService */; };
+		6B1000242E5A00010016F123 /* AITutorFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6B1000122E5A00010016F111 /* AITutorFeature */; };
+ 		6C2300012E6F00010016F100 /* NewsService in Frameworks */ = {isa = PBXBuildFile; productRef = 6C2200012E6F00010016F100 /* NewsService */; };
+ 		6C2300022E6F00010016F101 /* NewsFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6C2200022E6F00010016F101 /* NewsFeature */; };
+ 		6C2300032E6F00010016F102 /* NewsService in Frameworks */ = {isa = PBXBuildFile; productRef = 6C2200032E6F00010016F102 /* NewsService */; };
+ 		6C2300042E6F00010016F103 /* NewsFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6C2200042E6F00010016F103 /* NewsFeature */; };
+        6D9A00012E7000000016F100 /* ActivitiesService in Frameworks */ = {isa = PBXBuildFile; productRef = 6D9A00112E7000000016F100 /* ActivitiesService */; };
+        6D9A00022E7000000016F100 /* ActivitiesFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6D9A00122E7000000016F100 /* ActivitiesFeature */; };
+        6D9A00032E7000000016F100 /* ActivitiesService in Frameworks */ = {isa = PBXBuildFile; productRef = 6D9A00132E7000000016F100 /* ActivitiesService */; };
+        6D9A00042E7000000016F100 /* ActivitiesFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6D9A00142E7000000016F100 /* ActivitiesFeature */; };
+        6E5E00012E8000000016F100 /* EventsService in Frameworks */ = {isa = PBXBuildFile; productRef = 6E5E00112E8000000016F100 /* EventsService */; };
+        6E5E00022E8000000016F100 /* EventsFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6E5E00122E8000000016F100 /* EventsFeature */; };
+        6E5E00032E8000000016F100 /* EventsService in Frameworks */ = {isa = PBXBuildFile; productRef = 6E5E00132E8000000016F100 /* EventsService */; };
+        6E5E00042E8000000016F100 /* EventsFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6E5E00142E8000000016F100 /* EventsFeature */; };
+		6E9000012E9000000016F100 /* MealPlanningService in Frameworks */ = {isa = PBXBuildFile; productRef = 6E9000112E9000000016F100 /* MealPlanningService */; };
+		6E9000022E9000000016F100 /* MealPlanningFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6E9000122E9000000016F100 /* MealPlanningFeature */; };
+		6E9000032E9000000016F100 /* MealPlanningService in Frameworks */ = {isa = PBXBuildFile; productRef = 6E9000132E9000000016F100 /* MealPlanningService */; };
+		6E9000042E9000000016F100 /* MealPlanningFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6E9000142E9000000016F100 /* MealPlanningFeature */; };
+		6F1000012EA000000016F100 /* TripsService in Frameworks */ = {isa = PBXBuildFile; productRef = 6F1000112EA000000016F100 /* TripsService */; };
+		6F1000022EA000000016F100 /* TripsFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6F1000122EA000000016F100 /* TripsFeature */; };
+		6F1000032EA000000016F100 /* TripsService in Frameworks */ = {isa = PBXBuildFile; productRef = 6F1000132EA000000016F100 /* TripsService */; };
+		6F1000042EA000000016F100 /* TripsFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 6F1000142EA000000016F100 /* TripsFeature */; };
+		70100021 /* AccommodationsService in Frameworks */ = {isa = PBXBuildFile; productRef = 70100011 /* AccommodationsService */; };
+		70100022 /* AccommodationsFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 70100012 /* AccommodationsFeature */; };
+		70200021 /* HealthService in Frameworks */ = {isa = PBXBuildFile; productRef = 70200011 /* HealthService */; };
+		70200022 /* HealthFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 70200012 /* HealthFeature */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		6A1379272DFFB28800F14437 /* GliteImageLessonService */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = GliteImageLessonService; path = Packages/GliteImageLessonService; sourceTree = "<group>"; };
-		6A1379282DFFB28800F14437 /* GliteImageLessonFeature */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = GliteImageLessonFeature; path = Packages/GliteImageLessonFeature; sourceTree = "<group>"; };
+		6A3478042E1A01010016F113 /* RideSharingDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideSharingDemoView.swift; sourceTree = "<group>"; };
+		6A3478052E1A01010016F113 /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
+		6A3478092E1A01020016F114 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		6A3478112E1A01030016F115 /* HomeDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDashboardView.swift; sourceTree = "<group>"; };
+		6A3478152E1A01050016F117 /* HomeDashboardSegmentedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDashboardSegmentedView.swift; sourceTree = "<group>"; };
+		6A3478172E1A01060016F118 /* HomeDashboardHybridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDashboardHybridView.swift; sourceTree = "<group>"; };
+		6A3478132E1A01040016F116 /* FeatureNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureNavigationView.swift; sourceTree = "<group>"; };
 		6A70A8FF2DFA5AE1001D60BA /* image-lesson-prototype.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "image-lesson-prototype.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6A70A9022DFA5AE1001D60BA /* image_lesson_prototypeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = image_lesson_prototypeApp.swift; sourceTree = "<group>"; };
 		6A70A9042DFA5AE1001D60BA /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -28,6 +100,7 @@
 		6A70A91D2DFA5AE3001D60BA /* image_lesson_prototypeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = image_lesson_prototypeUITests.swift; sourceTree = "<group>"; };
 		6A70A91F2DFA5AE3001D60BA /* image_lesson_prototypeUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = image_lesson_prototypeUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		6A70A9352DFB3884001D60BA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6A7DB0472E50D3830094BB46 /* image-lesson-prototype copy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "image-lesson-prototype copy.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,7 +110,63 @@
 			files = (
 				6A1379322DFFB3A600F14437 /* GliteImageLessonService in Frameworks */,
 				6A1379352DFFB3BA00F14437 /* GliteImageLessonFeature in Frameworks */,
-				6BFA10002EF000000016F100 /* RideSharingFeature in Frameworks */,
+				6A34772C2E1892920016F112 /* RideSharingFeature in Frameworks */,
+				6A3477292E1892850016F112 /* RideSharingService in Frameworks */,
+				6A34772D2E1892930016F113 /* HomeServicesService in Frameworks */,
+				6A34772F2E1892940016F114 /* HomeServicesFeature in Frameworks */,
+				6A3477352E1892990016F119 /* FoodDeliveryService in Frameworks */,
+				6A3477372E18929A0016F11A /* FoodDeliveryFeature in Frameworks */,
+				6AF1C1002E1F00010016F101 /* MarketplaceService in Frameworks */,
+				6AF1C1012E1F00010016F102 /* MarketplaceFeature in Frameworks */,
+				6AF1C1052E1F00010016F105 /* FriendsService in Frameworks */,
+				6AF1C1062E1F00010016F106 /* FriendsFeature in Frameworks */,
+				6B1000212E5A00010016F120 /* AITutorService in Frameworks */,
+				6B1000222E5A00010016F121 /* AITutorFeature in Frameworks */,
+ 				6C2300012E6F00010016F100 /* NewsService in Frameworks */,
+ 				6C2300022E6F00010016F101 /* NewsFeature in Frameworks */,
+				6E5E00012E8000000016F100 /* EventsService in Frameworks */,
+				6E5E00022E8000000016F100 /* EventsFeature in Frameworks */,
+				6E9000012E9000000016F100 /* MealPlanningService in Frameworks */,
+				6E9000022E9000000016F100 /* MealPlanningFeature in Frameworks */,
+				6F1000012EA000000016F100 /* TripsService in Frameworks */,
+				6F1000022EA000000016F100 /* TripsFeature in Frameworks */,
+				70100021 /* AccommodationsService in Frameworks */,
+				70100022 /* AccommodationsFeature in Frameworks */,
+				70200021 /* HealthService in Frameworks */,
+				70200022 /* HealthFeature in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A7DB03C2E50D3830094BB46 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6A7DB03D2E50D3830094BB46 /* GliteImageLessonService in Frameworks */,
+				6A7DB03E2E50D3830094BB46 /* GliteImageLessonFeature in Frameworks */,
+				6A7DB03F2E50D3830094BB46 /* RideSharingFeature in Frameworks */,
+				6A7DB0402E50D3830094BB46 /* RideSharingService in Frameworks */,
+				6A7DB0412E50D3860094BB49 /* HomeServicesService in Frameworks */,
+				6A7DB0422E50D3870094BB4A /* HomeServicesFeature in Frameworks */,
+				6A7DB0432E50D3890094BB4B /* FoodDeliveryService in Frameworks */,
+				6A7DB0442E50D38A0094BB4C /* FoodDeliveryFeature in Frameworks */,
+				6AF1C1022E1F00010016F103 /* MarketplaceService in Frameworks */,
+				6AF1C1032E1F00010016F104 /* MarketplaceFeature in Frameworks */,
+				6AF1C1072E1F00010016F107 /* FriendsService in Frameworks */,
+				6AF1C1082E1F00010016F108 /* FriendsFeature in Frameworks */,
+				6B1000232E5A00010016F122 /* AITutorService in Frameworks */,
+				6B1000242E5A00010016F123 /* AITutorFeature in Frameworks */,
+ 				6C2300032E6F00010016F102 /* NewsService in Frameworks */,
+ 				6C2300042E6F00010016F103 /* NewsFeature in Frameworks */,
+				6E5E00032E8000000016F100 /* EventsService in Frameworks */,
+				6E5E00042E8000000016F100 /* EventsFeature in Frameworks */,
+				6E9000032E9000000016F100 /* MealPlanningService in Frameworks */,
+				6E9000042E9000000016F100 /* MealPlanningFeature in Frameworks */,
+				6F1000032EA000000016F100 /* TripsService in Frameworks */,
+				6F1000042EA000000016F100 /* TripsFeature in Frameworks */,
+				70100021 /* AccommodationsService in Frameworks */,
+				70100022 /* AccommodationsFeature in Frameworks */,
+				70200021 /* HealthService in Frameworks */,
+				70200022 /* HealthFeature in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -60,6 +189,7 @@
 			isa = PBXGroup;
 			children = (
 				6A70A8FF2DFA5AE1001D60BA /* image-lesson-prototype.app */,
+				6A7DB0472E50D3830094BB46 /* image-lesson-prototype copy.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +200,13 @@
 				6A70A9352DFB3884001D60BA /* Info.plist */,
 				6A70A9022DFA5AE1001D60BA /* image_lesson_prototypeApp.swift */,
 				6A70A9042DFA5AE1001D60BA /* ContentView.swift */,
+				6A3478042E1A01010016F113 /* RideSharingDemoView.swift */,
+				6A3478052E1A01010016F113 /* AppRootView.swift */,
+				6A3478092E1A01020016F114 /* SettingsView.swift */,
+				6A3478112E1A01030016F115 /* HomeDashboardView.swift */,
+				6A3478152E1A01050016F117 /* HomeDashboardSegmentedView.swift */,
+				6A3478172E1A01060016F118 /* HomeDashboardHybridView.swift */,
+				6A3478132E1A01040016F116 /* FeatureNavigationView.swift */,
 				6A70A9062DFA5AE3001D60BA /* Assets.xcassets */,
 				6A70A9082DFA5AE3001D60BA /* Preview Content */,
 			);
@@ -104,8 +241,6 @@
 		6A70A9302DFB3320001D60BA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				6A1379282DFFB28800F14437 /* GliteImageLessonFeature */,
-				6A1379272DFFB28800F14437 /* GliteImageLessonService */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -136,10 +271,80 @@
 			packageProductDependencies = (
 				6A1379312DFFB3A600F14437 /* GliteImageLessonService */,
 				6A1379342DFFB3BA00F14437 /* GliteImageLessonFeature */,
-				6BFA10022EF000000016F100 /* RideSharingFeature */,
+				6A3477282E1892850016F112 /* RideSharingService */,
+				6A34772B2E1892920016F112 /* RideSharingFeature */,
+				6A34772E2E1892930016F113 /* HomeServicesService */,
+				6A3477302E1892940016F114 /* HomeServicesFeature */,
+				6A3477362E1892990016F119 /* FoodDeliveryService */,
+				6A3477382E18929A0016F11A /* FoodDeliveryFeature */,
+				6AF1C1102E1F00010016F121 /* MarketplaceService */,
+				6AF1C1112E1F00010016F122 /* MarketplaceFeature */,
+				6AF1C1140E1F00010016F125 /* FriendsService */,
+				6AF1C1150E1F00010016F126 /* FriendsFeature */,
+				6B1000112E5A00010016F110 /* AITutorService */,
+				6B1000122E5A00010016F111 /* AITutorFeature */,
+ 				6C2200012E6F00010016F100 /* NewsService */,
+ 				6C2200022E6F00010016F101 /* NewsFeature */,
+				6D9A00112E7000000016F100 /* ActivitiesService */,
+				6D9A00122E7000000016F100 /* ActivitiesFeature */,
+				6E5E00112E8000000016F100 /* EventsService */,
+				6E5E00122E8000000016F100 /* EventsFeature */,
+				6E9000112E9000000016F100 /* MealPlanningService */,
+				6E9000122E9000000016F100 /* MealPlanningFeature */,
+				6F1000112EA000000016F100 /* TripsService */,
+				6F1000122EA000000016F100 /* TripsFeature */,
+				70100011 /* AccommodationsService */,
+				70100012 /* AccommodationsFeature */,
+				70200011 /* HealthService */,
+				70200012 /* HealthFeature */,
 			);
 			productName = "image-lesson-prototype";
 			productReference = 6A70A8FF2DFA5AE1001D60BA /* image-lesson-prototype.app */;
+			productType = "com.apple.product-type.application";
+		};
+		6A7DB02F2E50D3830094BB46 /* image-lesson-prototype copy */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6A7DB0442E50D3830094BB46 /* Build configuration list for PBXNativeTarget "image-lesson-prototype copy" */;
+			buildPhases = (
+				6A7DB0342E50D3830094BB46 /* Sources */,
+				6A7DB03C2E50D3830094BB46 /* Frameworks */,
+				6A7DB0412E50D3830094BB46 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "image-lesson-prototype copy";
+			packageProductDependencies = (
+				6A7DB0302E50D3830094BB46 /* GliteImageLessonService */,
+				6A7DB0312E50D3830094BB46 /* GliteImageLessonFeature */,
+				6A7DB0322E50D3830094BB46 /* RideSharingService */,
+				6A7DB0332E50D3830094BB46 /* RideSharingFeature */,
+				6A7DB0342E50D3840094BB47 /* HomeServicesService */,
+				6A7DB0352E50D3850094BB48 /* HomeServicesFeature */,
+				6A7DB0362E50D3860094BB49 /* FoodDeliveryService */,
+				6A7DB0372E50D3870094BB4A /* FoodDeliveryFeature */,
+				6AF1C1122E1F00010016F123 /* MarketplaceService */,
+				6AF1C1132E1F00010016F124 /* MarketplaceFeature */,
+				6AF1C1160E1F00010016F127 /* FriendsService */,
+				6AF1C1170E1F00010016F128 /* FriendsFeature */,
+				6B1000112E5A00010016F110 /* AITutorService */,
+				6B1000122E5A00010016F111 /* AITutorFeature */,
+ 				6C2200032E6F00010016F102 /* NewsService */,
+ 				6C2200042E6F00010016F103 /* NewsFeature */,
+				6D9A00132E7000000016F100 /* ActivitiesService */,
+				6D9A00142E7000000016F100 /* ActivitiesFeature */,
+				6E5E00132E8000000016F100 /* EventsService */,
+				6E5E00142E8000000016F100 /* EventsFeature */,
+				6E9000132E9000000016F100 /* MealPlanningService */,
+				6E9000142E9000000016F100 /* MealPlanningFeature */,
+				70100011 /* AccommodationsService */,
+				70100012 /* AccommodationsFeature */,
+				70200011 /* HealthService */,
+				70200012 /* HealthFeature */,
+			);
+			productName = "image-lesson-prototype";
+			productReference = 6A7DB0472E50D3830094BB46 /* image-lesson-prototype copy.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -150,7 +355,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1400;
-				LastUpgradeCheck = 1400;
+				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					6A70A8FE2DFA5AE1001D60BA = {
 						CreatedOnToolsVersion = 14.0.1;
@@ -169,13 +374,39 @@
 			packageReferences = (
 				6A1379302DFFB3A600F14437 /* XCLocalSwiftPackageReference "Packages/GliteImageLessonService" */,
 				6A1379332DFFB3BA00F14437 /* XCLocalSwiftPackageReference "Packages/GliteImageLessonFeature" */,
-				6BFA10012EF000000016F100 /* XCLocalSwiftPackageReference "Packages/RideSharingFeature" */,
+				6A3477272E1892850016F112 /* XCLocalSwiftPackageReference "Packages/RideSharingService" */,
+				6A34772A2E1892920016F112 /* XCLocalSwiftPackageReference "Packages/RideSharingFeature" */,
+				6A3477312E1892950016F115 /* XCLocalSwiftPackageReference "Packages/HomeServicesService" */,
+				6A3477322E1892960016F116 /* XCLocalSwiftPackageReference "Packages/HomeServicesFeature" */,
+				6A3477332E1892970016F117 /* XCLocalSwiftPackageReference "Packages/FoodDeliveryService" */,
+				6A3477342E1892980016F118 /* XCLocalSwiftPackageReference "Packages/FoodDeliveryFeature" */,
+				6AF1C0012E1F00000016F100 /* XCLocalSwiftPackageReference "Packages/MarketplaceService" */,
+				6AF1C0022E1F00000016F101 /* XCLocalSwiftPackageReference "Packages/MarketplaceFeature" */,
+				6AF1C0032E1F00000016F102 /* XCLocalSwiftPackageReference "Packages/FriendsService" */,
+				6AF1C0042E1F00000016F103 /* XCLocalSwiftPackageReference "Packages/FriendsFeature" */,
+				6B1000012E5A00010016F100 /* XCLocalSwiftPackageReference "Packages/AITutorService" */,
+				6B1000022E5A00010016F101 /* XCLocalSwiftPackageReference "Packages/AITutorFeature" */,
+ 				6C2100012E6F00010016F100 /* XCLocalSwiftPackageReference "Packages/NewsService" */,
+ 				6C2100022E6F00010016F101 /* XCLocalSwiftPackageReference "Packages/NewsFeature" */,
+				6D9A00212E7000000016F100 /* XCLocalSwiftPackageReference "Packages/ActivitiesService" */,
+				6D9A00222E7000000016F100 /* XCLocalSwiftPackageReference "Packages/ActivitiesFeature" */,
+				6E5E10012E8000000016F100 /* XCLocalSwiftPackageReference "Packages/EventsService" */,
+				6E5E10022E8000000016F100 /* XCLocalSwiftPackageReference "Packages/EventsFeature" */,
+				6E9001012E9000000016F100 /* XCLocalSwiftPackageReference "Packages/MealPlanningService" */,
+				6E9001022E9000000016F100 /* XCLocalSwiftPackageReference "Packages/MealPlanningFeature" */,
+				6F1001012EA000000016F100 /* XCLocalSwiftPackageReference "Packages/TripsService" */,
+				6F1001022EA000000016F100 /* XCLocalSwiftPackageReference "Packages/TripsFeature" */,
+				70100001 /* XCLocalSwiftPackageReference "Packages/AccommodationsService" */,
+				70100002 /* XCLocalSwiftPackageReference "Packages/AccommodationsFeature" */,
+				70200001 /* XCLocalSwiftPackageReference "Packages/HealthService" */,
+				70200002 /* XCLocalSwiftPackageReference "Packages/HealthFeature" */,
 			);
 			productRefGroup = 6A70A9002DFA5AE1001D60BA /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				6A70A8FE2DFA5AE1001D60BA /* image-lesson-prototype */,
+				6A7DB02F2E50D3830094BB46 /* image-lesson-prototype copy */,
 			);
 		};
 /* End PBXProject section */
@@ -190,6 +421,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6A7DB0412E50D3830094BB46 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6A7DB0422E50D3830094BB46 /* Preview Assets.xcassets in Resources */,
+				6A7DB0432E50D3830094BB46 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -199,6 +439,29 @@
 			files = (
 				6A70A9052DFA5AE1001D60BA /* ContentView.swift in Sources */,
 				6A70A9032DFA5AE1001D60BA /* image_lesson_prototypeApp.swift in Sources */,
+				6A3478062E1A01010016F113 /* RideSharingDemoView.swift in Sources */,
+				6A3478072E1A01010016F113 /* AppRootView.swift in Sources */,
+				6A3478082E1A01020016F114 /* SettingsView.swift in Sources */,
+				6A3478102E1A01030016F115 /* HomeDashboardView.swift in Sources */,
+				6A3478142E1A01050016F117 /* HomeDashboardSegmentedView.swift in Sources */,
+				6A3478162E1A01060016F118 /* HomeDashboardHybridView.swift in Sources */,
+				6A3478122E1A01040016F116 /* FeatureNavigationView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A7DB0342E50D3830094BB46 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6A7DB0352E50D3830094BB46 /* ContentView.swift in Sources */,
+				6A7DB0362E50D3830094BB46 /* image_lesson_prototypeApp.swift in Sources */,
+				6A7DB0372E50D3830094BB46 /* RideSharingDemoView.swift in Sources */,
+				6A7DB0382E50D3830094BB46 /* AppRootView.swift in Sources */,
+				6A7DB0392E50D3830094BB46 /* SettingsView.swift in Sources */,
+				6A7DB03A2E50D3830094BB46 /* HomeDashboardView.swift in Sources */,
+				6A7DB04C2E50D3830094BB46 /* HomeDashboardSegmentedView.swift in Sources */,
+				6A7DB04D2E50D3830094BB46 /* HomeDashboardHybridView.swift in Sources */,
+				6A7DB03B2E50D3830094BB46 /* FeatureNavigationView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -239,8 +502,10 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = EYR6YYD3N3;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -255,7 +520,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -299,8 +564,10 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = EYR6YYD3N3;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -309,7 +576,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -327,7 +594,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"image-lesson-prototype/Preview Content\"";
-				DEVELOPMENT_TEAM = EYR6YYD3N3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "image-lesson-prototype/Info.plist";
@@ -338,20 +604,21 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.glite.image-lesson-prototype";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.liive.ride-sharing.driver";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -363,7 +630,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"image-lesson-prototype/Preview Content\"";
-				DEVELOPMENT_TEAM = EYR6YYD3N3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "image-lesson-prototype/Info.plist";
@@ -374,20 +640,93 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.glite.image-lesson-prototype";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.liive.ride-sharing.driver";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		6A7DB0452E50D3830094BB46 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"image-lesson-prototype/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "image-lesson-prototype copy-Info.plist";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app may use the camera in future lessons.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses the microphone to capture your voice for the language lesson.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.liive.ride-sharing.rider";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		6A7DB0462E50D3830094BB46 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"image-lesson-prototype/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "image-lesson-prototype copy-Info.plist";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app may use the camera in future lessons.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses the microphone to capture your voice for the language lesson.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.liive.ride-sharing.rider";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -412,6 +751,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		6A7DB0442E50D3830094BB46 /* Build configuration list for PBXNativeTarget "image-lesson-prototype copy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6A7DB0452E50D3830094BB46 /* Debug */,
+				6A7DB0462E50D3830094BB46 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -423,9 +771,117 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/GliteImageLessonFeature;
 		};
-		6BFA10012EF000000016F100 /* XCLocalSwiftPackageReference "Packages/RideSharingFeature" */ = {
+		6A3477272E1892850016F112 /* XCLocalSwiftPackageReference "Packages/RideSharingService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/RideSharingService;
+		};
+		6A34772A2E1892920016F112 /* XCLocalSwiftPackageReference "Packages/RideSharingFeature" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/RideSharingFeature;
+		};
+		6A3477312E1892950016F115 /* XCLocalSwiftPackageReference "Packages/HomeServicesService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/HomeServicesService;
+		};
+		6A3477322E1892960016F116 /* XCLocalSwiftPackageReference "Packages/HomeServicesFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/HomeServicesFeature;
+		};
+		6A3477332E1892970016F117 /* XCLocalSwiftPackageReference "Packages/FoodDeliveryService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/FoodDeliveryService;
+		};
+		6A3477342E1892980016F118 /* XCLocalSwiftPackageReference "Packages/FoodDeliveryFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/FoodDeliveryFeature;
+		};
+		6AF1C0012E1F00000016F100 /* XCLocalSwiftPackageReference "Packages/MarketplaceService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/MarketplaceService;
+		};
+		6AF1C0022E1F00000016F101 /* XCLocalSwiftPackageReference "Packages/MarketplaceFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/MarketplaceFeature;
+		};
+		6AF1C0032E1F00000016F102 /* XCLocalSwiftPackageReference "Packages/FriendsService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/FriendsService;
+		};
+		6AF1C0042E1F00000016F103 /* XCLocalSwiftPackageReference "Packages/FriendsFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/FriendsFeature;
+		};
+		6B1000012E5A00010016F100 /* XCLocalSwiftPackageReference "Packages/AITutorService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/AITutorService;
+		};
+		6B1000022E5A00010016F101 /* XCLocalSwiftPackageReference "Packages/AITutorFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/AITutorFeature;
+		};
+ 		6C2100012E6F00010016F100 /* XCLocalSwiftPackageReference "Packages/NewsService" */ = {
+ 			isa = XCLocalSwiftPackageReference;
+ 			relativePath = Packages/NewsService;
+ 		};
+ 		6C2100022E6F00010016F101 /* XCLocalSwiftPackageReference "Packages/NewsFeature" */ = {
+ 			isa = XCLocalSwiftPackageReference;
+ 			relativePath = Packages/NewsFeature;
+ 		};
+		6D9A00212E7000000016F100 /* XCLocalSwiftPackageReference "Packages/ActivitiesService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/ActivitiesService;
+		};
+		6D9A00222E7000000016F100 /* XCLocalSwiftPackageReference "Packages/ActivitiesFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/ActivitiesFeature;
+		};
+		6E5E10012E8000000016F100 /* XCLocalSwiftPackageReference "Packages/EventsService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/EventsService;
+		};
+		6E5E10022E8000000016F100 /* XCLocalSwiftPackageReference "Packages/EventsFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/EventsFeature;
+		};
+		6E9001012E9000000016F100 /* XCLocalSwiftPackageReference "Packages/MealPlanningService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/MealPlanningService;
+		};
+		6E9001022E9000000016F100 /* XCLocalSwiftPackageReference "Packages/MealPlanningFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/MealPlanningFeature;
+		};
+		6F1001012EA000000016F100 /* XCLocalSwiftPackageReference "Packages/TripsService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/TripsService;
+		};
+		6F1001022EA000000016F100 /* XCLocalSwiftPackageReference "Packages/TripsFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/TripsFeature;
+		};
+		6F1001022EA000000016F100 /* XCLocalSwiftPackageReference "Packages/TripsFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/TripsFeature;
+		};
+		70100001 /* XCLocalSwiftPackageReference "Packages/AccommodationsService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/AccommodationsService;
+		};
+		70100002 /* XCLocalSwiftPackageReference "Packages/AccommodationsFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/AccommodationsFeature;
+		};
+		70100002 /* XCLocalSwiftPackageReference "Packages/AccommodationsFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/AccommodationsFeature;
+		};
+		70200001 /* XCLocalSwiftPackageReference "Packages/HealthService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/HealthService;
+		};
+		70200002 /* XCLocalSwiftPackageReference "Packages/HealthFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/HealthFeature;
 		};
 /* End XCLocalSwiftPackageReference section */
 
@@ -438,9 +894,252 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = GliteImageLessonFeature;
 		};
-		6BFA10022EF000000016F100 /* RideSharingFeature */ = {
+		6A3477282E1892850016F112 /* RideSharingService */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RideSharingService;
+		};
+		6A34772B2E1892920016F112 /* RideSharingFeature */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RideSharingFeature;
+		};
+		6A34772E2E1892930016F113 /* HomeServicesService */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HomeServicesService;
+		};
+		6A3477302E1892940016F114 /* HomeServicesFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HomeServicesFeature;
+		};
+		6A3477362E1892990016F119 /* FoodDeliveryService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6A3477332E1892970016F117 /* XCLocalSwiftPackageReference "Packages/FoodDeliveryService" */;
+			productName = FoodDeliveryService;
+		};
+		6A3477382E18929A0016F11A /* FoodDeliveryFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6A3477342E1892980016F118 /* XCLocalSwiftPackageReference "Packages/FoodDeliveryFeature" */;
+			productName = FoodDeliveryFeature;
+		};
+		6A7DB0302E50D3830094BB46 /* GliteImageLessonService */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = GliteImageLessonService;
+		};
+		6A7DB0312E50D3830094BB46 /* GliteImageLessonFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = GliteImageLessonFeature;
+		};
+		6A7DB0322E50D3830094BB46 /* RideSharingService */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RideSharingService;
+		};
+		6A7DB0332E50D3830094BB46 /* RideSharingFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RideSharingFeature;
+		};
+		6A7DB0342E50D3840094BB47 /* HomeServicesService */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HomeServicesService;
+		};
+		6A7DB0352E50D3850094BB48 /* HomeServicesFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HomeServicesFeature;
+		};
+		6A7DB0362E50D3860094BB49 /* FoodDeliveryService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6A3477332E1892970016F117 /* XCLocalSwiftPackageReference "Packages/FoodDeliveryService" */;
+			productName = FoodDeliveryService;
+		};
+		6A7DB0372E50D3870094BB4A /* FoodDeliveryFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6A3477342E1892980016F118 /* XCLocalSwiftPackageReference "Packages/FoodDeliveryFeature" */;
+			productName = FoodDeliveryFeature;
+		};
+		6AF1C1102E1F00010016F121 /* MarketplaceService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6AF1C0012E1F00000016F100 /* XCLocalSwiftPackageReference "Packages/MarketplaceService" */;
+			productName = MarketplaceService;
+		};
+		6AF1C1112E1F00010016F122 /* MarketplaceFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6AF1C0022E1F00000016F101 /* XCLocalSwiftPackageReference "Packages/MarketplaceFeature" */;
+			productName = MarketplaceFeature;
+		};
+		6AF1C1122E1F00010016F123 /* MarketplaceService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6AF1C0012E1F00000016F100 /* XCLocalSwiftPackageReference "Packages/MarketplaceService" */;
+			productName = MarketplaceService;
+		};
+		6AF1C1132E1F00010016F124 /* MarketplaceFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6AF1C0022E1F00000016F101 /* XCLocalSwiftPackageReference "Packages/MarketplaceFeature" */;
+			productName = MarketplaceFeature;
+		};
+		6AF1C1140E1F00010016F125 /* FriendsService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6AF1C0032E1F00000016F102 /* XCLocalSwiftPackageReference "Packages/FriendsService" */;
+			productName = FriendsService;
+		};
+		6AF1C1150E1F00010016F126 /* FriendsFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6AF1C0042E1F00000016F103 /* XCLocalSwiftPackageReference "Packages/FriendsFeature" */;
+			productName = FriendsFeature;
+		};
+		6AF1C1160E1F00010016F127 /* FriendsService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6AF1C0032E1F00000016F102 /* XCLocalSwiftPackageReference "Packages/FriendsService" */;
+			productName = FriendsService;
+		};
+		6AF1C1170E1F00010016F128 /* FriendsFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6AF1C0042E1F00000016F103 /* XCLocalSwiftPackageReference "Packages/FriendsFeature" */;
+			productName = FriendsFeature;
+		};
+		6B1000112E5A00010016F110 /* AITutorService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6B1000012E5A00010016F100 /* XCLocalSwiftPackageReference "Packages/AITutorService" */;
+			productName = AITutorService;
+		};
+		6B1000122E5A00010016F111 /* AITutorFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6B1000022E5A00010016F101 /* XCLocalSwiftPackageReference "Packages/AITutorFeature" */;
+			productName = AITutorFeature;
+		};
+ 		6C2200012E6F00010016F100 /* NewsService */ = {
+ 			isa = XCSwiftPackageProductDependency;
+ 			package = 6C2100012E6F00010016F100 /* XCLocalSwiftPackageReference "Packages/NewsService" */;
+ 			productName = NewsService;
+ 		};
+ 		6C2200022E6F00010016F101 /* NewsFeature */ = {
+ 			isa = XCSwiftPackageProductDependency;
+ 			package = 6C2100022E6F00010016F101 /* XCLocalSwiftPackageReference "Packages/NewsFeature" */;
+ 			productName = NewsFeature;
+ 		};
+ 		6C2200032E6F00010016F102 /* NewsService */ = {
+ 			isa = XCSwiftPackageProductDependency;
+ 			package = 6C2100012E6F00010016F100 /* XCLocalSwiftPackageReference "Packages/NewsService" */;
+ 			productName = NewsService;
+ 		};
+ 		6C2200042E6F00010016F103 /* NewsFeature */ = {
+ 			isa = XCSwiftPackageProductDependency;
+ 			package = 6C2100022E6F00010016F101 /* XCLocalSwiftPackageReference "Packages/NewsFeature" */;
+ 			productName = NewsFeature;
+ 		};
+		6D9A00112E7000000016F100 /* ActivitiesService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6D9A00212E7000000016F100 /* XCLocalSwiftPackageReference "Packages/ActivitiesService" */;
+			productName = ActivitiesService;
+		};
+		6D9A00122E7000000016F100 /* ActivitiesFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6D9A00222E7000000016F100 /* XCLocalSwiftPackageReference "Packages/ActivitiesFeature" */;
+			productName = ActivitiesFeature;
+		};
+		6D9A00132E7000000016F100 /* ActivitiesService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6D9A00212E7000000016F100 /* XCLocalSwiftPackageReference "Packages/ActivitiesService" */;
+			productName = ActivitiesService;
+		};
+		6D9A00142E7000000016F100 /* ActivitiesFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6D9A00222E7000000016F100 /* XCLocalSwiftPackageReference "Packages/ActivitiesFeature" */;
+			productName = ActivitiesFeature;
+		};
+		6E5E00112E8000000016F100 /* EventsService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6E5E10012E8000000016F100 /* XCLocalSwiftPackageReference "Packages/EventsService" */;
+			productName = EventsService;
+		};
+		6E5E00122E8000000016F100 /* EventsFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6E5E10022E8000000016F100 /* XCLocalSwiftPackageReference "Packages/EventsFeature" */;
+			productName = EventsFeature;
+		};
+		6E5E00132E8000000016F100 /* EventsService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6E5E10012E8000000016F100 /* XCLocalSwiftPackageReference "Packages/EventsService" */;
+			productName = EventsService;
+		};
+		6E5E00142E8000000016F100 /* EventsFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6E5E10022E8000000016F100 /* XCLocalSwiftPackageReference "Packages/EventsFeature" */;
+			productName = EventsFeature;
+		};
+		6E9000112E9000000016F100 /* MealPlanningService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6E9001012E9000000016F100 /* XCLocalSwiftPackageReference "Packages/MealPlanningService" */;
+			productName = MealPlanningService;
+		};
+		6E9000122E9000000016F100 /* MealPlanningFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6E9001022E9000000016F100 /* XCLocalSwiftPackageReference "Packages/MealPlanningFeature" */;
+			productName = MealPlanningFeature;
+		};
+		6E9000132E9000000016F100 /* MealPlanningService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6E9001012E9000000016F100 /* XCLocalSwiftPackageReference "Packages/MealPlanningService" */;
+			productName = MealPlanningService;
+		};
+		6E9000142E9000000016F100 /* MealPlanningFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6E9001022E9000000016F100 /* XCLocalSwiftPackageReference "Packages/MealPlanningFeature" */;
+			productName = MealPlanningFeature;
+		};
+		6F1000112EA000000016F100 /* TripsService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6F1001012EA000000016F100 /* XCLocalSwiftPackageReference "Packages/TripsService" */;
+			productName = TripsService;
+		};
+		6F1000122EA000000016F100 /* TripsFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6F1001022EA000000016F100 /* XCLocalSwiftPackageReference "Packages/TripsFeature" */;
+			productName = TripsFeature;
+		};
+		6F1000132EA000000016F100 /* TripsService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6F1001012EA000000016F100 /* XCLocalSwiftPackageReference "Packages/TripsService" */;
+			productName = TripsService;
+		};
+		6F1000142EA000000016F100 /* TripsFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6F1001022EA000000016F100 /* XCLocalSwiftPackageReference "Packages/TripsFeature" */;
+			productName = TripsFeature;
+		};
+		70100011 /* AccommodationsService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 70100001 /* XCLocalSwiftPackageReference "Packages/AccommodationsService" */;
+			productName = AccommodationsService;
+		};
+		70100012 /* AccommodationsFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 70100002 /* XCLocalSwiftPackageReference "Packages/AccommodationsFeature" */;
+			productName = AccommodationsFeature;
+		};
+		70100012 /* XCLocalSwiftPackageReference "Packages/AccommodationsFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/AccommodationsFeature;
+		};
+		70200011 /* XCLocalSwiftPackageReference "Packages/HealthService" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/HealthService;
+		};
+		70200012 /* XCLocalSwiftPackageReference "Packages/HealthFeature" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/HealthFeature;
+		};
+		70100012 /* AccommodationsFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 70100002 /* XCLocalSwiftPackageReference "Packages/AccommodationsFeature" */;
+			productName = AccommodationsFeature;
+		};
+		70200011 /* HealthService */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 70200001 /* XCLocalSwiftPackageReference "Packages/HealthService" */;
+			productName = HealthService;
+		};
+		70200012 /* HealthFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 70200002 /* XCLocalSwiftPackageReference "Packages/HealthFeature" */;
+			productName = HealthFeature;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

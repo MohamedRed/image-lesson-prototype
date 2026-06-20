@@ -186,8 +186,17 @@ public final class LiveKitService: NSObject, GliteImageLessonServicing {
     // MARK: - Private Methods
 
     private func fetchConnectionDetails() async throws -> ConnectionDetails {
-        let url = apiBaseURL.appendingPathComponent("connection-details")
-        let (data, response) = try await URLSession.shared.data(from: url)
+        let url = apiBaseURL.appendingPathComponent("livekitToken")
+        
+        // Send POST request with feature parameter
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body = ["feature": "image-lesson"]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw URLError(.badServerResponse)

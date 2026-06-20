@@ -1,0 +1,11 @@
+{
+  "displayName": "RideSharing RED Dashboard",
+  "charts": [
+    { "title": "Function Invocations", "metric": "custom.googleapis.com/*/invocations" },
+    { "title": "Function Errors", "metric": "custom.googleapis.com/*/errors" },
+    { "title": "Function P95 Latency", "metric": "custom.googleapis.com/*/latency_ms" },
+    { "title": "Rides per Day", "bq": "SELECT DATE(created_at) d, COUNT(*) c FROM `ride_sharing.ride_requests` GROUP BY d" },
+    { "title": "Payouts per Day", "bq": "SELECT DATE(createdAt) d, SUM(amountUsd) FROM `payouts` GROUP BY d" }
+  ],
+  "instructions": "Import this file into Looker Studio and bind the data sources to your project."
+} 

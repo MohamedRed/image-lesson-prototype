@@ -1,0 +1,148 @@
+# Docker Compose for Liive iOS Local Development
+
+services:
+  # Firebase Emulators
+  firebase-emulators:
+    image: andreysenov/firebase-tools:latest
+    ports:
+      - "4000:4000"   # Emulator UI
+      - "8080:8080"   # Firestore
+      - "9099:9099"   # Auth
+      - "5001:5001"   # Functions
+      - "9000:9000"   # Hosting
+    volumes:
+      - .:/workspace
+      - ./emulator-data:/workspace/emulator-data
+    working_dir: /workspace
+    user: root
+    command: >
+      sh -c "
+        echo '{\"firestore\":{\"rules\":\"firestore.rules\",\"indexes\":\"firestore.indexes.json\"},\"functions\":[{\"source\":\"backend/functions\",\"codebase\":\"default\",\"ignore\":[\"node_modules\",\".git\",\"firebase-debug.log\",\"firebase-debug.*.log\"],\"predeploy\":[\"npm --prefix \\\"$RESOURCE_DIR\\\" run build\"]}],\"emulators\":{\"auth\":{\"port\":9099,\"host\":\"0.0.0.0\"},\"functions\":{\"port\":5001,\"host\":\"0.0.0.0\"},\"firestore\":{\"port\":8080,\"host\":\"0.0.0.0\"},\"ui\":{\"enabled\":true,\"port\":4000,\"host\":\"0.0.0.0\"},\"singleProjectMode\":true}}' > firebase-docker.json &&
+        cd backend/functions && npm ci && npm run build && cd - >/dev/null &&
+        firebase emulators:start --config firebase-docker.json --import=./emulator-data --export-on-exit
+      "
+    environment:
+      - FIRESTORE_EMULATOR_HOST=0.0.0.0:8080
+      - FIREBASE_AUTH_EMULATOR_HOST=0.0.0.0:9099
+      - FIREBASE_FUNCTIONS_EMULATOR_HOST=0.0.0.0:5001
+      - HOST=0.0.0.0
+    networks:
+      - liive-local
+
+  # Multi-Hop Planner (Go Service)
+  planner:
+    build:
+      context: ./backend/planner
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      - PORT=8080
+      - FIRESTORE_EMULATOR_HOST=firebase-emulators:8080
+      - PROJECT_ID=liive-ios-local
+      - BIGQUERY_PROJECT_ID=${BIGQUERY_PROJECT_ID:-liive-ios-test}
+      - BIGQUERY_DATASET_ID=${BIGQUERY_DATASET_ID:-liive_test}
+      - GOOGLE_APPLICATION_CREDENTIALS=/tmp/key.json
+      - PUBSUB_EMULATOR_HOST=pubsub-emulator:8085
+      # External service test keys (loaded from .env.local)
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - RADAR_SECRET_KEY=${RADAR_SECRET_KEY}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - LIVEKIT_URL=${LIVEKIT_URL}
+      - MAPBOX_ACCESS_TOKEN=${MAPBOX_ACCESS_TOKEN}
+    volumes:
+      - ./local-dev/service-account-key.json:/tmp/key.json
+    depends_on:
+      - firebase-emulators
+      - bigquery-cli
+      - pubsub-emulator
+    networks:
+      - liive-local
+    restart: unless-stopped
+
+  # BigQuery CLI tool for local dataset management
+  bigquery-cli:
+    image: google/cloud-sdk:alpine
+    platform: linux/amd64
+    volumes:
+      - ./local-dev/service-account-key.json:/tmp/key.json
+      - ./backend/bigquery.sql:/tmp/bigquery.sql
+      - ./backend/bigquery_procedures.sql:/tmp/bigquery_procedures.sql
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/tmp/key.json
+      - BIGQUERY_PROJECT_ID=${BIGQUERY_PROJECT_ID:-liive-ios-test}
+      - BIGQUERY_DATASET_ID=${BIGQUERY_DATASET_ID:-liive_test}
+    command: >
+      sh -c "
+        echo 'BigQuery CLI ready for test dataset operations' &&
+        gcloud auth activate-service-account --key-file=/tmp/key.json &&
+        echo 'Use: docker-compose exec bigquery-cli bq query --use_legacy_sql=false [SQL]' &&
+        tail -f /dev/null
+      "
+    networks:
+      - liive-local
+    restart: unless-stopped
+
+  # Google Cloud PubSub Emulator using official image with Java
+  pubsub-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    platform: linux/amd64
+    ports:
+      - "8085:8085"
+    command: >
+      gcloud beta emulators pubsub start --project=liive-ios-local --host-port=0.0.0.0:8085
+    environment:
+      - PUBSUB_PROJECT_ID=liive-ios-local
+    networks:
+      - liive-local
+    restart: unless-stopped
+
+
+  # Stripe CLI for webhook testing (connects to real Stripe test mode)
+  stripe-cli:
+    image: stripe/stripe-cli:latest
+    environment:
+      - STRIPE_API_KEY=${STRIPE_SECRET_KEY:?Set STRIPE_SECRET_KEY in your environment}
+    command: >
+      listen --forward-to firebase-emulators:5001/liive-ios-local/us-central1/stripeWebhook
+    networks:
+      - liive-local
+    depends_on:
+      - firebase-emulators
+
+  # Monitoring & Observability (Grafana + Prometheus)
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./local-dev/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - liive-local
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    platform: linux/amd64
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./local-dev/grafana:/etc/grafana/provisioning
+    networks:
+      - liive-local
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  liive-local:
+    driver: bridge

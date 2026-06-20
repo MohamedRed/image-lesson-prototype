@@ -1,0 +1,140 @@
+graph TB
+    %% Ride Sharing Platform - System Architecture
+    %% C4 Model: System Context & Container Diagram
+    
+    subgraph "External Systems"
+        Stripe[Stripe Payment Processing]
+        Mapbox[Mapbox Curb Data API]
+        LiveKit[LiveKit Audio/Video Service]
+        APNS[Apple Push Notification Service]
+    end
+    
+    subgraph "Users"
+        Riders[👥 Riders<br/>iOS App Users]
+        Drivers[🚗 Drivers<br/>iOS App Users]
+        Ops[👨‍💼 Operations Team<br/>Monitoring & Support]
+    end
+    
+    subgraph "Frontend Layer"
+        iOSApp[📱 iOS Application<br/>SwiftUI + Combine<br/>Modular Packages]
+    end
+    
+    subgraph "API Gateway Layer"
+        CloudFunctions[☁️ Cloud Functions v2<br/>TypeScript<br/>HTTP Triggers]
+    end
+    
+    subgraph "Core Services"
+        subgraph "Matching & Planning"
+            PlannerService[🧠 Multi-Hop Planner<br/>Cloud Run - Go<br/>2-3 Leg Algorithm<br/>Intelligent Transfer Points]
+            SingleHopMatcher[🎯 Journey Matcher<br/>Cloud Function<br/>Single & Multi-Leg<br/>Resource Reservation]
+        end
+        
+        subgraph "Business Logic"
+            PricingEngine[💰 Pricing Engine<br/>Cloud Function<br/>Surge Calculation]
+            ResourceSweeper[🧹 Resource Sweeper<br/>Cloud Function<br/>Cleanup & Reconciliation]
+            CongestionCron[📊 Congestion Monitor<br/>Cloud Function<br/>Zone Capacity Management]
+        end
+        
+        subgraph "Analytics & ML"
+            ForecastService[🔮 Forecast Service<br/>Cloud Function<br/>BigQuery ML Integration]
+            BigQueryExport[📈 BigQuery Export<br/>Cloud Function<br/>Data Pipeline]
+        end
+        
+        subgraph "Security & Monitoring"
+            LocationSpoof[🛡️ Location Spoof Detector<br/>Cloud Function<br/>GPS Validation]
+            InventoryChecker[✅ Inventory Hash Checker<br/>Cloud Function<br/>Driver Validation]
+            StuckVehicle[🚨 Stuck Vehicle Monitor<br/>Cloud Function<br/>Traffic Management]
+            GenderPoolKPI[👥 Gender Pool KPI<br/>Cloud Function<br/>Supply Analysis]
+        end
+    end
+    
+    subgraph "Data Layer"
+        Firestore[🔥 Firestore<br/>NoSQL Database<br/>Real-time Sync]
+        BigQuery[📊 BigQuery<br/>Data Warehouse<br/>ML Models]
+        SecretManager[🔐 Secret Manager<br/>API Keys & Tokens]
+    end
+    
+    subgraph "Infrastructure"
+        subgraph "Event Streaming"
+            PubSub[📡 Pub/Sub<br/>Event Bus<br/>Message Queuing]
+        end
+        
+        subgraph "Scheduling"
+            CloudScheduler[⏰ Cloud Scheduler<br/>Cron Jobs<br/>Automated Tasks]
+        end
+        
+        subgraph "Monitoring"
+            CloudMonitoring[📈 Cloud Monitoring<br/>Metrics & Alerts<br/>Custom Dashboards]
+            CloudLogging[📝 Cloud Logging<br/>Centralized Logs<br/>Error Tracking]
+        end
+    end
+    
+    %% User Interactions
+    Riders --> iOSApp
+    Drivers --> iOSApp
+    Ops --> CloudMonitoring
+    
+    %% iOS App Connections
+    iOSApp --> CloudFunctions
+    iOSApp --> LiveKit
+    iOSApp --> APNS
+    
+    %% API Gateway to Services
+    CloudFunctions --> PlannerService
+    CloudFunctions --> Firestore
+    CloudFunctions --> Stripe
+    CloudFunctions --> SecretManager
+    
+    %% Core Service Dependencies
+    SingleHopMatcher --> PlannerService
+    SingleHopMatcher --> Firestore
+    PricingEngine --> Firestore
+    ResourceSweeper --> Firestore
+    CongestionCron --> Firestore
+    
+    %% Analytics & ML
+    ForecastService --> BigQuery
+    ForecastService --> Firestore
+    BigQueryExport --> Firestore
+    BigQueryExport --> BigQuery
+    
+    %% Security Services
+    LocationSpoof --> Firestore
+    LocationSpoof --> PubSub
+    InventoryChecker --> Firestore
+    StuckVehicle --> Firestore
+    StuckVehicle --> PubSub
+    GenderPoolKPI --> BigQuery
+    GenderPoolKPI --> PubSub
+    
+    %% External Data Sources
+    CloudFunctions --> Mapbox
+    
+    %% Event Streaming
+    PubSub --> BigQuery
+    PubSub --> CloudFunctions
+    
+    %% Scheduling
+    CloudScheduler --> CloudFunctions
+    CloudScheduler --> BigQuery
+    
+    %% Monitoring
+    CloudFunctions --> CloudMonitoring
+    CloudFunctions --> CloudLogging
+    PlannerService --> CloudMonitoring
+    PlannerService --> CloudLogging
+    
+    %% Styling
+    classDef userClass fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef frontendClass fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef serviceClass fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef dataClass fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef infraClass fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef externalClass fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+    
+    class Riders,Drivers,Ops userClass
+    class iOSApp frontendClass
+    class CloudFunctions,PlannerService,SingleHopMatcher,PricingEngine,ResourceSweeper,CongestionCron,ForecastService,BigQueryExport,LocationSpoof,InventoryChecker,StuckVehicle,GenderPoolKPI serviceClass
+    class Firestore,BigQuery,SecretManager dataClass
+    class PubSub,CloudScheduler,CloudMonitoring,CloudLogging infraClass
+    class Stripe,Mapbox,LiveKit,APNS externalClass 

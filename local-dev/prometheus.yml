@@ -1,0 +1,44 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Firebase Functions Metrics
+  - job_name: 'firebase-functions'
+    static_configs:
+      - targets: ['firebase-emulators:5001']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # Go Planner Service Metrics  
+  - job_name: 'planner'
+    static_configs:
+      - targets: ['planner:8080']
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  # Redis Metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # PostgreSQL Metrics
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # LiveKit Metrics
+  - job_name: 'livekit'
+    static_configs:
+      - targets: ['livekit:7880']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

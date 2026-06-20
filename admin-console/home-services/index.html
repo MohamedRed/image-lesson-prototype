@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liive Home Services - Admin Console</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-tools text-indigo-600"></i>
+                        Liive Admin Console
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="userEmail" class="text-gray-600"></span>
+                    <button id="signOutBtn" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Auth Section -->
+        <div id="authSection" class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold mb-6 text-center">Admin Login</h2>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                    <input type="email" id="email" required 
+                           class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                    <input type="password" id="password" required 
+                           class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <button type="submit" 
+                        class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">
+                    Sign In
+                </button>
+            </form>
+            <div id="authError" class="mt-4 text-red-600 text-sm hidden"></div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="hidden">
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100 text-blue-500">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-gray-600 text-sm">Active RFQs</p>
+                            <p id="activeRfqsCount" class="text-2xl font-bold">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-green-100 text-green-500">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-gray-600 text-sm">Active Contracts</p>
+                            <p id="activeContractsCount" class="text-2xl font-bold">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-yellow-100 text-yellow-500">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-gray-600 text-sm">Open Disputes</p>
+                            <p id="openDisputesCount" class="text-2xl font-bold">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-purple-100 text-purple-500">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-gray-600 text-sm">Total Professionals</p>
+                            <p id="totalProsCount" class="text-2xl font-bold">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="bg-white rounded-lg shadow-md">
+                <div class="border-b">
+                    <nav class="flex space-x-8 px-6">
+                        <button class="tab-btn py-4 px-1 border-b-2 border-indigo-500 text-indigo-600 font-medium" data-tab="categories">
+                            <i class="fas fa-tags mr-2"></i>Categories
+                        </button>
+                        <button class="tab-btn py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="rfqs">
+                            <i class="fas fa-file-alt mr-2"></i>RFQs
+                        </button>
+                        <button class="tab-btn py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="disputes">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Disputes
+                        </button>
+                        <button class="tab-btn py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="professionals">
+                            <i class="fas fa-users mr-2"></i>Professionals
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Categories Tab -->
+                <div id="categoriesTab" class="tab-content p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold">Service Categories</h3>
+                        <button id="addCategoryBtn" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">
+                            <i class="fas fa-plus mr-2"></i>Add Category
+                        </button>
+                    </div>
+                    <div id="categoriesList" class="space-y-4">
+                        <!-- Categories will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- RFQs Tab -->
+                <div id="rfqsTab" class="tab-content p-6 hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold">RFQ Moderation Queue</h3>
+                        <div class="flex space-x-2">
+                            <select id="rfqStatusFilter" class="border rounded px-3 py-2">
+                                <option value="">All Status</option>
+                                <option value="open">Open</option>
+                                <option value="flagged">Flagged</option>
+                                <option value="suspended">Suspended</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="rfqsList" class="space-y-4">
+                        <!-- RFQs will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Disputes Tab -->
+                <div id="disputesTab" class="tab-content p-6 hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold">Dispute Management</h3>
+                        <div class="flex space-x-2">
+                            <select id="disputeStatusFilter" class="border rounded px-3 py-2">
+                                <option value="">All Status</option>
+                                <option value="open">Open</option>
+                                <option value="investigating">Investigating</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="disputesList" class="space-y-4">
+                        <!-- Disputes will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Professionals Tab -->
+                <div id="professionalsTab" class="tab-content p-6 hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold">Professional Verification</h3>
+                        <div class="flex space-x-2">
+                            <select id="verificationFilter" class="border rounded px-3 py-2">
+                                <option value="">All</option>
+                                <option value="pending">Pending Verification</option>
+                                <option value="verified">Verified</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="professionalsList" class="space-y-4">
+                        <!-- Professionals will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="categoryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold mb-4">Add New Category</h3>
+            <form id="categoryForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Name (English)</label>
+                    <input type="text" id="categoryName" required class="w-full px-3 py-2 border rounded">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Name (Arabic)</label>
+                    <input type="text" id="categoryNameAr" class="w-full px-3 py-2 border rounded">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Name (French)</label>
+                    <input type="text" id="categoryNameFr" class="w-full px-3 py-2 border rounded">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Icon</label>
+                    <input type="text" id="categoryIcon" required class="w-full px-3 py-2 border rounded" placeholder="e.g., wrench.fill">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Display Order</label>
+                    <input type="number" id="categoryOrder" class="w-full px-3 py-2 border rounded">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="cancelCategoryBtn" class="px-4 py-2 text-gray-600 border rounded hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../shared/firebase-config.js"></script>
+    <script src="../shared/auth.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

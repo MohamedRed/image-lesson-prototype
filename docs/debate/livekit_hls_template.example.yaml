@@ -1,0 +1,30 @@
+# Example LiveKit HLS Egress Template
+roomComposite:
+  roomNamePrefix: "debate_"
+  layout: "grid"
+  audio:
+    codec: "aac"
+    bitrate: 128000
+  video:
+    size:
+      width: 1920
+      height: 1080
+    framerate: 30
+    layers:
+      - name: "1080p"
+        bitrate: 4000000
+        framerate: 30
+      - name: "720p"
+        bitrate: 2200000
+        framerate: 30
+      - name: "480p"
+        bitrate: 1200000
+        framerate: 30
+  segmentDuration: 6
+  playlistWindow: 5
+  lowLatency: false
+output:
+  type: "gcs"
+  bucket: "debate-hls-output"
+  path: "${DEBATE_ID}/"
+  filenamePrefix: "master"

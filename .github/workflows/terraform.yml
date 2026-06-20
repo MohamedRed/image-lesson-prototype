@@ -1,0 +1,326 @@
+name: Terraform CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+    paths: ['infra/**']
+  pull_request:
+    branches: [main]
+    paths: ['infra/**']
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      action:
+        description: 'Terraform action'
+        required: true
+        default: 'plan'
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+
+env:
+  TF_VERSION: '1.6.0'
+  TF_WORKING_DIR: './infra'
+
+jobs:
+  terraform-check:
+    name: Terraform Format and Validate
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+        
+    - name: Terraform Format Check
+      run: |
+        cd ${{ env.TF_WORKING_DIR }}
+        terraform fmt -check -recursive
+        
+    - name: Terraform Init
+      run: |
+        cd ${{ env.TF_WORKING_DIR }}
+        terraform init -backend=false
+        
+    - name: Terraform Validate
+      run: |
+        cd ${{ env.TF_WORKING_DIR }}
+        terraform validate
+
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    needs: terraform-check
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'plan')
+    
+    strategy:
+      matrix:
+        environment: [dev, staging]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: liive-ride-sharing-${{ matrix.environment }}
+        
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+        
+    - name: Terraform Init
+      run: |
+        cd ${{ env.TF_WORKING_DIR }}
+        terraform init \
+          -backend-config="bucket=liive-terraform-state-${{ matrix.environment }}" \
+          -backend-config="prefix=terraform/state/${{ matrix.environment }}"
+          
+    - name: Terraform Plan
+      id: plan
+      run: |
+        cd ${{ env.TF_WORKING_DIR }}
+        terraform plan \
+          -var-file="environments/${{ matrix.environment }}.tfvars" \
+          -out=tfplan-${{ matrix.environment }} \
+          -detailed-exitcode
+      continue-on-error: true
+      
+    - name: Upload Plan Artifact
+      uses: actions/upload-artifact@v3
+      if: steps.plan.outputs.exitcode == 2
+      with:
+        name: tfplan-${{ matrix.environment }}-${{ github.run_number }}
+        path: ${{ env.TF_WORKING_DIR }}/tfplan-${{ matrix.environment }}
+        retention-days: 30
+        
+    - name: Comment PR with Plan
+      if: github.event_name == 'pull_request' && steps.plan.outputs.exitcode == 2
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const output = `
+          ## Terraform Plan Results - ${{ matrix.environment }}
+          
+          #### Terraform Format and Style 🖌\`${{ needs.terraform-check.result }}\`
+          #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+          #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+          
+          <details><summary>Show Plan</summary>
+          
+          \`\`\`terraform
+          ${{ steps.plan.outputs.stdout }}
+          \`\`\`
+          
+          </details>
+          
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*
+          `;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          });
+
+  terraform-apply-dev:
+    name: Terraform Apply (Dev)
+    runs-on: ubuntu-latest
+    needs: terraform-check
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: liive-ride-sharing-dev
+        
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+        
+    - name: Terraform Init
+      run: |
+        cd ${{ env.TF_WORKING_DIR }}
+        terraform init \
+          -backend-config="bucket=liive-terraform-state-dev" \
+          -backend-config="prefix=terraform/state/dev"
+          
+    - name: Terraform Apply
+      run: |
+        cd ${{ env.TF_WORKING_DIR }}
+        terraform apply \
+          -var-file="environments/dev.tfvars" \
+          -auto-approve
+          
+    - name: Slack Notification
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#engineering'
+        text: |
+          Terraform Apply (Dev): ${{ job.status }}
+          
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref }}
+          Commit: ${{ github.sha }}
+          Actor: ${{ github.actor }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  terraform-apply-staging:
+    name: Terraform Apply (Staging)
+    runs-on: ubuntu-latest
+    needs: terraform-check
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: liive-ride-sharing-staging
+        
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+        
+    - name: Terraform Init
+      run: |
+        cd ${{ env.TF_WORKING_DIR }}
+        terraform init \
+          -backend-config="bucket=liive-terraform-state-staging" \
+          -backend-config="prefix=terraform/state/staging"
+          
+    - name: Terraform Apply
+      run: |
+        cd ${{ env.TF_WORKING_DIR }}
+        terraform apply \
+          -var-file="environments/staging.tfvars" \
+          -auto-approve
+          
+    - name: Slack Notification
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#engineering'
+        text: |
+          Terraform Apply (Staging): ${{ job.status }}
+          
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref }}
+          Commit: ${{ github.sha }}
+          Actor: ${{ github.actor }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  terraform-apply-prod:
+    name: Terraform Apply (Production)
+    runs-on: ubuntu-latest
+    needs: terraform-check
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod' && github.event.inputs.action == 'apply'
+
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: liive-ride-sharing-prod
+        
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+        
+    - name: Terraform Init
+      run: |
+        cd ${{ env.TF_WORKING_DIR }}
+        terraform init \
+          -backend-config="bucket=liive-terraform-state-prod" \
+          -backend-config="prefix=terraform/state/prod"
+          
+    - name: Terraform Plan
+      run: |
+        cd ${{ env.TF_WORKING_DIR }}
+        terraform plan \
+          -var-file="environments/prod.tfvars" \
+          -out=tfplan-prod
+          
+    - name: Manual Approval Required
+      run: |
+        echo "⚠️  Production deployment requires manual approval"
+        echo "Review the plan above before proceeding"
+        
+    - name: Terraform Apply
+      run: |
+        cd ${{ env.TF_WORKING_DIR }}
+        terraform apply tfplan-prod
+        
+    - name: Slack Notification
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#engineering-alerts'
+        text: |
+          🚨 Terraform Apply (PRODUCTION): ${{ job.status }}
+          
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref }}
+          Commit: ${{ github.sha }}
+          Actor: ${{ github.actor }}
+          
+          ${{ job.status == 'success' && '✅ Production deployment successful' || '❌ Production deployment failed' }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
