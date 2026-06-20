@@ -1,4 +1,4 @@
-import { ResourceRequirements, ReservationResult } from "./reserveResourcesTx";
+import { ResourceRequirements, ReservationResult, MultiLegResourceRequirements } from "./reserveResourcesTx";
 
 export interface PlannerRideRequest {
   origin: any;
@@ -112,6 +112,47 @@ export async function requestPlannerJourney(
   }
 
   return journey;
+}
+
+export function buildResourceRequirements(rideRequest: any): ResourceRequirements {
+  return {
+    passengerCount: rideRequest.passengerCount ?? 1,
+    riderGender: rideRequest.riderGender,
+    luggageManifest: rideRequest.luggageManifest,
+    pet: rideRequest.pet,
+    childPassengers: rideRequest.childPassengers,
+    premiumRequested: rideRequest.premiumRequested,
+  };
+}
+
+export function buildMultiLegReservationRequirements(
+  journey: PlannerJourney,
+  rideRequest: any,
+  rideRequestId: string
+): MultiLegResourceRequirements {
+  if (!journey.legs || journey.legs.length === 0) {
+    throw new Error("Planner returned no journey legs");
+  }
+
+  const requirements = buildResourceRequirements(rideRequest);
+  return {
+    legs: journey.legs.map((leg, index) => {
+      if (!leg.driverId) {
+        throw new Error(`Planner leg ${index + 1} missing driverId`);
+      }
+      if (!leg.pickupZoneId) {
+        throw new Error(`Planner leg ${index + 1} missing pickupZoneId for driver ${leg.driverId}`);
+      }
+      return {
+        driverId: leg.driverId,
+        pickupZoneId: leg.pickupZoneId,
+        legNumber: index + 1,
+        requirements,
+      };
+    }),
+    totalPassengerCount: rideRequest.passengerCount ?? 1,
+    rideRequestId,
+  };
 }
 
 export async function planJourneyWithSingleLegReservationRetry({

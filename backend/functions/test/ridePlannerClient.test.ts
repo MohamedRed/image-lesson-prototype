@@ -1,4 +1,5 @@
 import {
+  buildMultiLegReservationRequirements,
   buildPlannerRequest,
   planJourneyWithSingleLegReservationRetry,
 } from "../src/ride-sharing/plannerClient";
@@ -111,5 +112,69 @@ describe("planner client", () => {
     expect(fetchBodies[0].oriWalkIso).toEqual(oriWalkIso);
     expect(fetchBodies[0].destWalkIso).toEqual(destWalkIso);
     expect(fetchBodies[0].oriDriveIso).toEqual(oriDriveIso);
+  });
+
+  it("builds multi-leg reservation requirements only from planner-provided pickup zones", () => {
+    const requirements = buildMultiLegReservationRequirements(
+      {
+        legs: [
+          { driverId: "driverA", pickupZoneId: "zone-a", etaSeconds: 120 },
+          { driverId: "driverB", pickupZoneId: "zone-b", etaSeconds: 240 },
+        ],
+      },
+      {
+        passengerCount: 2,
+        riderGender: "female",
+        luggageManifest: { suitcase: 1 },
+        pet: { small: 1 },
+      },
+      "req-123"
+    );
+
+    expect(requirements).toEqual({
+      legs: [
+        {
+          driverId: "driverA",
+          pickupZoneId: "zone-a",
+          legNumber: 1,
+          requirements: {
+            passengerCount: 2,
+            riderGender: "female",
+            luggageManifest: { suitcase: 1 },
+            pet: { small: 1 },
+            childPassengers: undefined,
+            premiumRequested: undefined,
+          },
+        },
+        {
+          driverId: "driverB",
+          pickupZoneId: "zone-b",
+          legNumber: 2,
+          requirements: {
+            passengerCount: 2,
+            riderGender: "female",
+            luggageManifest: { suitcase: 1 },
+            pet: { small: 1 },
+            childPassengers: undefined,
+            premiumRequested: undefined,
+          },
+        },
+      ],
+      totalPassengerCount: 2,
+      rideRequestId: "req-123",
+    });
+  });
+
+  it("rejects multi-leg planner responses missing pickupZoneId instead of using default-zone", () => {
+    expect(() => buildMultiLegReservationRequirements(
+      {
+        legs: [
+          { driverId: "driverA", pickupZoneId: "zone-a" },
+          { driverId: "driverB" },
+        ],
+      },
+      { passengerCount: 1, riderGender: "female" },
+      "req-456"
+    )).toThrow("Planner leg 2 missing pickupZoneId for driver driverB");
   });
 });

@@ -8,7 +8,7 @@ import { GeoPoint } from "firebase-admin/firestore";
 import { onDocumentWritten as onRideRequestWritten } from "firebase-functions/v2/firestore";
 import { incrementCounter, withMetrics } from "./shared/metrics";
 import { withTrace } from "./shared/trace";
-import { reserveResourcesTransaction, ResourceRequirements, reserveMultiLegResources, MultiLegResourceRequirements } from "./ride-sharing/reserveResourcesTx";
+import { reserveResourcesTransaction, ResourceRequirements, reserveMultiLegResources } from "./ride-sharing/reserveResourcesTx";
 import { getSecret, secretPath, SECRET_IDS } from "./shared/secretManager";
 import { 
   hasLocationChangedSignificantly, 
@@ -20,7 +20,7 @@ import {
   encodeGeohash
 } from "./shared/geoHelpers";
 import { RadarTripService, RadarUserService } from "./services/location/radarService";
-import { planJourneyWithSingleLegReservationRetry } from "./ride-sharing/plannerClient";
+import { planJourneyWithSingleLegReservationRetry, buildMultiLegReservationRequirements, buildResourceRequirements } from "./ride-sharing/plannerClient";
 
 // Events functions
 export * from "./events/index";
@@ -169,14 +169,7 @@ export const singleHopMatcher = withMetrics("singleHopMatcher", onDocumentCreate
     const plannerUrl = process.env.PLANNER_URL;
     if (!plannerUrl) throw new Error("PLANNER_URL env var not set");
 
-    const resourceRequirements: ResourceRequirements = {
-      passengerCount: req.passengerCount ?? 1,
-      riderGender: req.riderGender,
-      luggageManifest: req.luggageManifest,
-      pet: req.pet,
-      childPassengers: req.childPassengers,
-      premiumRequested: req.premiumRequested,
-    };
+    const resourceRequirements: ResourceRequirements = buildResourceRequirements(req);
 
     const planned = await planJourneyWithSingleLegReservationRetry({
       plannerUrl,
@@ -198,7 +191,7 @@ export const singleHopMatcher = withMetrics("singleHopMatcher", onDocumentCreate
     if (journey.legs.length === 1) {
       const firstLeg = journey.legs[0];
       const driverId = firstLeg.driverId;
-      const pickupZoneId = planned.pickupZoneId || firstLeg.pickupZoneId || "default-zone";
+      const pickupZoneId = planned.pickupZoneId || firstLeg.pickupZoneId;
       const reservation = planned.reservation;
 
       if (!reservation?.success) {
@@ -218,23 +211,11 @@ export const singleHopMatcher = withMetrics("singleHopMatcher", onDocumentCreate
 
     } else {
       // Multi-leg journey - use multi-leg resource reservation
-      const multiLegRequirements: MultiLegResourceRequirements = {
-        legs: journey.legs.map((leg: any, index: number) => ({
-          driverId: leg.driverId,
-          pickupZoneId: leg.pickupZoneId || "default-zone",
-          legNumber: index + 1,
-          requirements: {
-            passengerCount: req.passengerCount ?? 1,
-            riderGender: req.riderGender,
-            luggageManifest: req.luggageManifest,
-            pet: req.pet,
-            childPassengers: req.childPassengers,
-            premiumRequested: req.premiumRequested,
-          },
-        })),
-        totalPassengerCount: req.passengerCount ?? 1,
-        rideRequestId: event.params.reqId!,
-      };
+      const multiLegRequirements = buildMultiLegReservationRequirements(
+        journey,
+        req,
+        event.params.reqId!
+      );
 
       const multiLegReservation = await reserveMultiLegResources(multiLegRequirements);
 
@@ -245,7 +226,7 @@ export const singleHopMatcher = withMetrics("singleHopMatcher", onDocumentCreate
       // Update ride request with multi-leg match
       await event.data!.ref.update({
         assignedDriverIds: journey.legs.map((leg: any) => leg.driverId),
-        pickupZoneIds: journey.legs.map((leg: any) => leg.pickupZoneId || "default-zone"),
+        pickupZoneIds: multiLegRequirements.legs.map((leg) => leg.pickupZoneId),
         state: "proposed",
         proposedAt: admin.firestore.FieldValue.serverTimestamp(),
         journey,
