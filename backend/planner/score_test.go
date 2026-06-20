@@ -354,6 +354,28 @@ func TestBuildSingleHopJourneyIncludesPickupZoneID(t *testing.T) {
 	}
 }
 
+func TestBuildSingleHopJourneyUsesBackendSelectedRoutePickupAndDropoff(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("driver-with-route-points", 0.01, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.02},
+		{Latitude: 0, Longitude: 0.50},
+		{Latitude: 0, Longitude: 0.98},
+	})
+
+	journey := buildSingleHopJourney(req, driver, 90)
+	if len(journey.Legs) != 1 {
+		t.Fatalf("expected one leg, got %d", len(journey.Legs))
+	}
+	leg := journey.Legs[0]
+	if leg.Pickup == req.Origin || leg.Dropoff == req.Destination {
+		t.Fatalf("expected backend-selected route pickup/dropoff, got pickup=%#v dropoff=%#v", leg.Pickup, leg.Dropoff)
+	}
+	if math.Abs(leg.Pickup.Longitude-0.02) > 0.000001 || math.Abs(leg.Dropoff.Longitude-0.98) > 0.000001 {
+		t.Fatalf("expected pickup/dropoff snapped to route points, got pickup=%#v dropoff=%#v", leg.Pickup, leg.Dropoff)
+	}
+}
+
 func TestBuild2HopJourneyIncludesPickupZoneIDs(t *testing.T) {
 	req := corridorRequest()
 	transfer := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.5}, TransferTimeSeconds: 7}

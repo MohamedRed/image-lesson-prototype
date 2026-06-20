@@ -91,10 +91,27 @@ func buildJourneyLeg(driver DriverProfile, pickup, dropoff GeoPoint, etaSec int)
 }
 
 func buildSingleHopJourney(req RideRequest, driver DriverProfile, etaSec int) Journey {
+	pickup, dropoff := selectedSingleHopPickupDropoff(req, driver)
 	return Journey{
-		Legs:                      []Leg{buildJourneyLeg(driver, req.Origin, req.Destination, etaSec)},
+		Legs:                      []Leg{buildJourneyLeg(driver, pickup, dropoff, etaSec)},
 		TotalEstimatedTimeSeconds: etaSec,
 	}
+}
+
+func selectedSingleHopPickupDropoff(req RideRequest, driver DriverProfile) (GeoPoint, GeoPoint) {
+	if driver.RoutePolyline == "" {
+		return req.Origin, req.Destination
+	}
+	points, ok := decodePolyline(driver.RoutePolyline)
+	if !ok || len(points) < 2 {
+		return req.Origin, req.Destination
+	}
+	originIdx, _ := nearestRoutePointIndex(points, req.Origin)
+	destinationIdx, _ := nearestRoutePointIndex(points, req.Destination)
+	if originIdx < 0 || destinationIdx <= originIdx {
+		return req.Origin, req.Destination
+	}
+	return points[originIdx], points[destinationIdx]
 }
 
 func build2HopJourney(req RideRequest, transfer TransferPoint, driver1 DriverProfile, eta1 int, driver2 DriverProfile, eta2 int) Journey {
