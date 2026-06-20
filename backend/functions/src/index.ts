@@ -20,6 +20,7 @@ import {
   encodeGeohash
 } from "./shared/geoHelpers";
 import { RadarTripService, RadarUserService } from "./services/location/radarService";
+import { planJourneyWithSingleLegReservationRetry } from "./ride-sharing/plannerClient";
 
 // Events functions
 export * from "./events/index";
@@ -168,53 +169,40 @@ export const singleHopMatcher = withMetrics("singleHopMatcher", onDocumentCreate
     const plannerUrl = process.env.PLANNER_URL;
     if (!plannerUrl) throw new Error("PLANNER_URL env var not set");
 
-    const plannerResp = await fetch(plannerUrl + "/plan", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        origin: req.origin,
-        destination: req.destination,
-        passengerCount: req.passengerCount ?? 1,
-        riderGender: req.riderGender ?? null,
-        luggageManifest: req.luggageManifest,
-        pet: req.pet,
-        childPassengers: req.childPassengers,
-        premiumRequested: req.premiumRequested,
-        walkRadiusM: req.walkRadiusM,
-      }),
+    const resourceRequirements: ResourceRequirements = {
+      passengerCount: req.passengerCount ?? 1,
+      riderGender: req.riderGender,
+      luggageManifest: req.luggageManifest,
+      pet: req.pet,
+      childPassengers: req.childPassengers,
+      premiumRequested: req.premiumRequested,
+    };
+
+    const planned = await planJourneyWithSingleLegReservationRetry({
+      plannerUrl,
+      rideRequest: req,
+      geoUpdates: updates,
+      resourceRequirements,
+      reserveResources: (driverId, pickupZoneId, requirements) =>
+        reserveResourcesTransaction(driverId, pickupZoneId, requirements),
+      fetchImpl: fetch as any,
+      maxAttempts: Number(process.env.PLANNER_RESERVATION_MAX_ATTEMPTS || 3),
     });
 
-    if (!plannerResp.ok) throw new Error(`Planner HTTP ${plannerResp.status}`);
-
-    const journey = (await plannerResp.json()) as any;
+    const journey = planned.journey as any;
     if (!journey.legs || journey.legs.length === 0) {
       throw new Error("Planner returned no journey legs");
     }
 
     // Handle both single-leg and multi-leg journeys
     if (journey.legs.length === 1) {
-      // Single-leg journey - use existing logic
       const firstLeg = journey.legs[0];
       const driverId = firstLeg.driverId;
-      const pickupZoneId = firstLeg.pickupZoneId || "default-zone";
+      const pickupZoneId = planned.pickupZoneId || firstLeg.pickupZoneId || "default-zone";
+      const reservation = planned.reservation;
 
-      const resourceRequirements: ResourceRequirements = {
-        passengerCount: req.passengerCount ?? 1,
-        riderGender: req.riderGender,
-        luggageManifest: req.luggageManifest,
-        pet: req.pet,
-        childPassengers: req.childPassengers,
-        premiumRequested: req.premiumRequested,
-      };
-
-      const reservation = await reserveResourcesTransaction(
-        driverId,
-        pickupZoneId,
-        resourceRequirements
-      );
-
-      if (!reservation.success) {
-        throw new Error(`Resource reservation failed: ${reservation.error}`);
+      if (!reservation?.success) {
+        throw new Error("Single-leg planner returned without a successful reservation");
       }
 
       // Update ride request with single-leg match
@@ -225,6 +213,7 @@ export const singleHopMatcher = withMetrics("singleHopMatcher", onDocumentCreate
         proposedAt: admin.firestore.FieldValue.serverTimestamp(),
         journey,
         reservedResources: reservation.reservedResources,
+        attemptedDriverIds: planned.attemptedDriverIds,
       });
 
     } else {

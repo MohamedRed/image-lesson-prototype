@@ -20,11 +20,12 @@ import (
 // in docs/ride_sharing_full_plan.md.
 
 type RideRequest struct {
-	Origin         GeoPoint `json:"origin"`
-	Destination    GeoPoint `json:"destination"`
-	PassengerCount int      `json:"passengerCount"`
-	RiderGender    string   `json:"riderGender"`
-	WalkRadiusM    int      `json:"walkRadiusM"`
+	Origin            GeoPoint `json:"origin"`
+	Destination       GeoPoint `json:"destination"`
+	PassengerCount    int      `json:"passengerCount"`
+	RiderGender       string   `json:"riderGender"`
+	WalkRadiusM       int      `json:"walkRadiusM"`
+	ExcludedDriverIDs []string `json:"excludedDriverIds"`
 	// Canonical single-hop corridor geometry. The legacy ori*/dest* names are
 	// persisted by Firebase Functions today; origin*/destination* aliases let
 	// newer clients use the canonical spec names without planner changes.
@@ -608,7 +609,7 @@ func planHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	driverID, etaSec, err := pickBestDriver(r.Context(), req, nil)
+	driverID, etaSec, err := pickBestDriver(r.Context(), req, req.ExcludedDriverIDs)
 
 	var journey Journey
 	if err == nil {
