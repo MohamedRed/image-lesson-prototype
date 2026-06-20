@@ -376,6 +376,28 @@ func TestBuildSingleHopJourneyUsesBackendSelectedRoutePickupAndDropoff(t *testin
 	}
 }
 
+func TestBuildSingleHopJourneyPrefersRoutePointsInsideWalkZones(t *testing.T) {
+	req := corridorRequest()
+	req.OriWalkIso = rectPolygon(-0.01, 0.010, 0.01, 0.020)
+	req.DestWalkIso = rectPolygon(-0.01, 0.980, 0.01, 0.990)
+	driver := corridorDriver("driver-with-walk-zone-points", 0.01, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.001},
+		{Latitude: 0, Longitude: 0.015},
+		{Latitude: 0, Longitude: 0.985},
+		{Latitude: 0, Longitude: 0.999},
+	})
+
+	journey := buildSingleHopJourney(req, driver, 90)
+	if len(journey.Legs) != 1 {
+		t.Fatalf("expected one leg, got %d", len(journey.Legs))
+	}
+	leg := journey.Legs[0]
+	if math.Abs(leg.Pickup.Longitude-0.015) > 0.000001 || math.Abs(leg.Dropoff.Longitude-0.985) > 0.000001 {
+		t.Fatalf("expected pickup/dropoff to prefer route points inside walk zones, got pickup=%#v dropoff=%#v", leg.Pickup, leg.Dropoff)
+	}
+}
+
 func TestBuild2HopJourneyIncludesPickupZoneIDs(t *testing.T) {
 	req := corridorRequest()
 	transfer := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.5}, TransferTimeSeconds: 7}
