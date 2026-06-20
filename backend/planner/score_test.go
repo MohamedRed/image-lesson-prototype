@@ -507,6 +507,31 @@ func TestPickBestDriverFromProfiles_RanksLowerRouteDetourAboveLoopingCorridor(t 
 	}
 }
 
+func TestPickBestDriverFromProfiles_RanksRouteEtaProfileAboveEqualGeometry(t *testing.T) {
+	req := corridorRequest()
+	slowProfile := corridorDriverWithPickupZone("aaa-slow-profile", 0, -0.10, routeCorridor(), "zone-slow")
+	slowProfile.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+	slowProfile.RouteETAProfileSeconds = []int{0, 1800, 1900}
+	fastProfile := corridorDriverWithPickupZone("zzz-fast-profile", 0, -0.10, routeCorridor(), "zone-fast")
+	fastProfile.RoutePolyline = slowProfile.RoutePolyline
+	fastProfile.RouteETAProfileSeconds = []int{0, 60, 1900}
+
+	driverID, etaSec, err := pickBestDriverFromProfiles(req, []DriverProfile{slowProfile, fastProfile}, nil, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected route ETA profile winner, got error: %v", err)
+	}
+	if driverID != "zzz-fast-profile" {
+		t.Fatalf("expected faster route ETA profile to beat equal-geometry lower ID, got %q", driverID)
+	}
+	if etaSec != 60 {
+		t.Fatalf("expected pickup ETA from route ETA profile, got %d", etaSec)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RanksShorterRoutePickupEtaAboveNearestCurrentLocation(t *testing.T) {
 	req := corridorRequest()
 	nearButLatePickup := corridorDriverWithPickupZone("aaa-nearest-but-late-pickup", 0, 0.02, routeCorridor(), "zone-late")

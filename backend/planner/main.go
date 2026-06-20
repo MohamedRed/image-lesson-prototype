@@ -348,23 +348,24 @@ func addResourceTotals(total map[string]int, values map[string]int) {
 
 // DriverProfile is an in-memory representation of driver attributes used for matching.
 type DriverProfile struct {
-	ID                  string
-	CurrentLocation     GeoPoint
-	CapacitySeats       int
-	ActivePickups       int
-	HasSeatLedger       bool
-	ReservedSeats       int
-	PickupZoneID        string
-	RoutePolyline       string
-	BufferPolygon       GeoJSONGeometry
-	CurbFactor          float64
-	LuggageCapacity     map[string]int
-	ReservedLuggage     map[string]int
-	PetLimits           map[string]int
-	ReservedPets        map[string]int
-	ChildSeatInventory  map[string]int
-	ReservedChildSeats  map[string]int
-	PremiumCapabilities map[string]any
+	ID                     string
+	CurrentLocation        GeoPoint
+	CapacitySeats          int
+	ActivePickups          int
+	HasSeatLedger          bool
+	ReservedSeats          int
+	PickupZoneID           string
+	RoutePolyline          string
+	RouteETAProfileSeconds []int
+	BufferPolygon          GeoJSONGeometry
+	CurbFactor             float64
+	LuggageCapacity        map[string]int
+	ReservedLuggage        map[string]int
+	PetLimits              map[string]int
+	ReservedPets           map[string]int
+	ChildSeatInventory     map[string]int
+	ReservedChildSeats     map[string]int
+	PremiumCapabilities    map[string]any
 }
 
 // TransferPoint represents a curb segment suitable for passenger transfers
@@ -442,7 +443,7 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	// Compute distances/score
 	straightLinePickupKm := haversineKm(driver.CurrentLocation.Latitude, driver.CurrentLocation.Longitude, req.Origin.Latitude, req.Origin.Longitude)
 	pickupKm := driverPickupDistanceKm(req, driver, straightLinePickupKm)
-	etaSec := int(pickupKm / 40.0 * 3600)
+	etaSec := driverPickupETASeconds(req, driver, pickupKm)
 	if etaSec > maxSingleHopPickupETASeconds() {
 		return 0, 0, false
 	}
@@ -572,6 +573,41 @@ func driverPickupDistanceKm(req RideRequest, driver DriverProfile, fallbackKm fl
 	}
 	routeStartKm := haversineKm(driver.CurrentLocation.Latitude, driver.CurrentLocation.Longitude, points[0].Latitude, points[0].Longitude)
 	return routeStartKm + routeDistanceBetweenPositions(points, 0, pickupProjection.position) + pickupProjection.snapKm
+}
+
+func driverPickupETASeconds(req RideRequest, driver DriverProfile, fallbackPickupKm float64) int {
+	if driver.RoutePolyline == "" || len(driver.RouteETAProfileSeconds) == 0 {
+		return int(fallbackPickupKm / 40.0 * 3600)
+	}
+	points, ok := decodePolyline(driver.RoutePolyline)
+	if !ok || len(points) < 2 || len(driver.RouteETAProfileSeconds) != len(points) {
+		return int(fallbackPickupKm / 40.0 * 3600)
+	}
+	pickupProjection, _, ok := routeInsertionProjections(req, points)
+	if !ok {
+		return int(fallbackPickupKm / 40.0 * 3600)
+	}
+	routeStartKm := haversineKm(driver.CurrentLocation.Latitude, driver.CurrentLocation.Longitude, points[0].Latitude, points[0].Longitude)
+	routeStartETA := int(routeStartKm / 40.0 * 3600)
+	return routeStartETA + routeETASecondsAtPosition(driver.RouteETAProfileSeconds, pickupProjection.position)
+}
+
+func routeETASecondsAtPosition(profile []int, position float64) int {
+	if len(profile) == 0 {
+		return 0
+	}
+	if position <= 0 {
+		return profile[0]
+	}
+	last := len(profile) - 1
+	if position >= float64(last) {
+		return profile[last]
+	}
+	startIdx := int(math.Floor(position))
+	fraction := position - float64(startIdx)
+	start := profile[startIdx]
+	end := profile[startIdx+1]
+	return int(math.Round(float64(start) + fraction*float64(end-start)))
 }
 
 func driverRouteWalkSnapsWithinThreshold(req RideRequest, driver DriverProfile) bool {
@@ -1848,16 +1884,17 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			Legs            []struct {
 				Seats int `firestore:"seats"`
 			} `firestore:"legs"`
-			PickupZoneID        string                 `firestore:"pickupZoneId"`
-			RoutePolyline       string                 `firestore:"routePolyline"`
-			BufferPolygon       GeoJSONGeometry        `firestore:"bufferPolygon"`
-			LuggageCapacity     map[string]int         `firestore:"luggageCapacity"`
-			CargoLedger         []cargoLedgerEntry     `firestore:"cargoLedger"`
-			PetLimits           map[string]int         `firestore:"petLimits"`
-			PetLedger           []petLedgerEntry       `firestore:"petLedger"`
-			ChildSeatInventory  map[string]int         `firestore:"childSeatInventory"`
-			ChildSeatLedger     []childSeatLedgerEntry `firestore:"childSeatLedger"`
-			PremiumCapabilities map[string]any         `firestore:"premiumCapabilities"`
+			PickupZoneID           string                 `firestore:"pickupZoneId"`
+			RoutePolyline          string                 `firestore:"routePolyline"`
+			RouteETAProfileSeconds []int                  `firestore:"routeEtaProfile"`
+			BufferPolygon          GeoJSONGeometry        `firestore:"bufferPolygon"`
+			LuggageCapacity        map[string]int         `firestore:"luggageCapacity"`
+			CargoLedger            []cargoLedgerEntry     `firestore:"cargoLedger"`
+			PetLimits              map[string]int         `firestore:"petLimits"`
+			PetLedger              []petLedgerEntry       `firestore:"petLedger"`
+			ChildSeatInventory     map[string]int         `firestore:"childSeatInventory"`
+			ChildSeatLedger        []childSeatLedgerEntry `firestore:"childSeatLedger"`
+			PremiumCapabilities    map[string]any         `firestore:"premiumCapabilities"`
 		}
 		if err := d.DataTo(&data); err != nil {
 			continue
@@ -1887,23 +1924,24 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		}
 
 		prof := DriverProfile{
-			ID:                  d.Ref.ID,
-			CurrentLocation:     GeoPoint{Latitude: data.CurrentLocation.Latitude, Longitude: data.CurrentLocation.Longitude},
-			CapacitySeats:       data.CapacitySeats,
-			ActivePickups:       data.ActivePickups,
-			HasSeatLedger:       hasSeatLedger,
-			ReservedSeats:       sumReservedSeats(data.Legs),
-			PickupZoneID:        data.PickupZoneID,
-			RoutePolyline:       data.RoutePolyline,
-			BufferPolygon:       data.BufferPolygon,
-			CurbFactor:          curbFactor,
-			LuggageCapacity:     data.LuggageCapacity,
-			ReservedLuggage:     sumCargoLedger(data.CargoLedger),
-			PetLimits:           data.PetLimits,
-			ReservedPets:        sumPetLedger(data.PetLedger),
-			ChildSeatInventory:  data.ChildSeatInventory,
-			ReservedChildSeats:  sumChildSeatLedger(data.ChildSeatLedger),
-			PremiumCapabilities: data.PremiumCapabilities,
+			ID:                     d.Ref.ID,
+			CurrentLocation:        GeoPoint{Latitude: data.CurrentLocation.Latitude, Longitude: data.CurrentLocation.Longitude},
+			CapacitySeats:          data.CapacitySeats,
+			ActivePickups:          data.ActivePickups,
+			HasSeatLedger:          hasSeatLedger,
+			ReservedSeats:          sumReservedSeats(data.Legs),
+			PickupZoneID:           data.PickupZoneID,
+			RoutePolyline:          data.RoutePolyline,
+			RouteETAProfileSeconds: data.RouteETAProfileSeconds,
+			BufferPolygon:          data.BufferPolygon,
+			CurbFactor:             curbFactor,
+			LuggageCapacity:        data.LuggageCapacity,
+			ReservedLuggage:        sumCargoLedger(data.CargoLedger),
+			PetLimits:              data.PetLimits,
+			ReservedPets:           sumPetLedger(data.PetLedger),
+			ChildSeatInventory:     data.ChildSeatInventory,
+			ReservedChildSeats:     sumChildSeatLedger(data.ChildSeatLedger),
+			PremiumCapabilities:    data.PremiumCapabilities,
 		}
 
 		profiles = append(profiles, prof)
