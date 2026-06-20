@@ -1234,6 +1234,41 @@ func TestBuild2HopJourneyUsesBackendSelectedRoutePickupAndDropoffPerLeg(t *testi
 	assertGeoPointNear(t, journey.Legs[1].Dropoff, GeoPoint{Latitude: 0, Longitude: 0.998})
 }
 
+func TestScore3HopJourneyUsesRouteAwareResponseEta(t *testing.T) {
+	req := corridorRequest()
+	transfer1 := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.33}, TransferTimeSeconds: 7, CongestionFactor: 1}
+	transfer2 := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.66}, TransferTimeSeconds: 8, CongestionFactor: 1}
+	driver1 := corridorDriver("driver-leg-1-score-3hop-route-eta", 0, -0.10, routeCorridor())
+	driver1.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 0.33},
+	})
+	driver1.RouteETAProfileSeconds = []int{0, 30, 330}
+	driver2 := corridorDriver("driver-leg-2-score-3hop-route-eta", 0, 0.33, routeCorridor())
+	driver2.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.33},
+		{Latitude: 0, Longitude: 0.66},
+	})
+	driver2.RouteETAProfileSeconds = []int{0, 360}
+	driver3 := corridorDriver("driver-leg-3-score-3hop-route-eta", 0, 0.66, routeCorridor())
+	driver3.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.66},
+		{Latitude: 0, Longitude: 1},
+	})
+	driver3.RouteETAProfileSeconds = []int{0, 420}
+
+	got := score3HopJourney(req, transfer1, transfer2, driver1, 30, driver2, 40, driver3, 50)
+	want := calculateJourneyScore(1215, 3, 1)
+	stalePickupOnlyScore := calculateJourneyScore(135, 3, 1)
+	if got != want {
+		t.Fatalf("expected score to use route-aware 3-hop total ETA, got %f want %f", got, want)
+	}
+	if got == stalePickupOnlyScore {
+		t.Fatalf("expected score not to use stale pickup-only 3-hop total")
+	}
+}
+
 func TestBuild3HopJourneyUsesRouteRideEtaPerLeg(t *testing.T) {
 	req := corridorRequest()
 	transfer1 := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.33}, TransferTimeSeconds: 7}

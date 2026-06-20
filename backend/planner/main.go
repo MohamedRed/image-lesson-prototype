@@ -278,6 +278,12 @@ func score2HopJourney(req RideRequest, transfer TransferPoint, driver1 DriverPro
 	return calculateJourneyScore(journey.TotalEstimatedTimeSeconds, 2, transfer.CongestionFactor)
 }
 
+func score3HopJourney(req RideRequest, transfer1 TransferPoint, transfer2 TransferPoint, driver1 DriverProfile, eta1 int, driver2 DriverProfile, eta2 int, driver3 DriverProfile, eta3 int) float64 {
+	journey := build3HopJourney(req, transfer1, transfer2, driver1, eta1, driver2, eta2, driver3, eta3)
+	avgCongestion := (transfer1.CongestionFactor + transfer2.CongestionFactor) / 2
+	return calculateJourneyScore(journey.TotalEstimatedTimeSeconds, 3, avgCongestion)
+}
+
 func routeAwareLegETASeconds(req RideRequest, driver DriverProfile, pickupEtaSec int) int {
 	rideEtaSec, ok := singleHopRouteRideETASeconds(req, driver)
 	if !ok {
@@ -1871,9 +1877,7 @@ func plan3HopWithTransfers(ctx context.Context, req RideRequest, transferPoints 
 				continue
 			}
 
-			totalTime := eta1 + eta2 + eta3 + transfer1.TransferTimeSeconds + transfer2.TransferTimeSeconds
-			avgCongestion := (transfer1.CongestionFactor + transfer2.CongestionFactor) / 2
-			score := calculateJourneyScore(totalTime, 3, avgCongestion)
+			score := score3HopJourney(req, transfer1, transfer2, driver1, eta1, driver2, eta2, driver3, eta3)
 
 			if score < bestScore {
 				bestScore = score
