@@ -111,7 +111,25 @@ export async function requestPlannerJourney(
     throw new Error("Planner returned no journey legs");
   }
 
+  assertJourneyDisplayGeometry(journey);
+
   return journey;
+}
+
+export function assertJourneyDisplayGeometry(journey: PlannerJourney): void {
+  journey.legs.forEach((leg, index) => {
+    if (!hasGeoPoint(leg.pickup ?? leg.Pickup) || !hasGeoPoint(leg.dropoff ?? leg.Dropoff)) {
+      throw new Error(`Planner leg ${index + 1} missing pickup/dropoff geometry for driver ${leg.driverId}`);
+    }
+  });
+}
+
+function hasGeoPoint(value: any): boolean {
+  if (!value || typeof value !== "object") return false;
+  const latitude = value.latitude ?? value.Latitude;
+  const longitude = value.longitude ?? value.Longitude;
+  return typeof latitude === "number" && Number.isFinite(latitude) &&
+    typeof longitude === "number" && Number.isFinite(longitude);
 }
 
 export function buildResourceRequirements(rideRequest: any): ResourceRequirements {
