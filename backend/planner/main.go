@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"time"
 
@@ -23,6 +24,17 @@ type RideRequest struct {
 	Destination    GeoPoint `json:"destination"`
 	PassengerCount int      `json:"passengerCount"`
 	RiderGender    string   `json:"riderGender"`
+	WalkRadiusM    int      `json:"walkRadiusM"`
+	// Canonical single-hop corridor geometry. The legacy ori*/dest* names are
+	// persisted by Firebase Functions today; origin*/destination* aliases let
+	// newer clients use the canonical spec names without planner changes.
+	OriWalkIso          GeoJSONGeometry `json:"oriWalkIso"`
+	DestWalkIso         GeoJSONGeometry `json:"destWalkIso"`
+	OriDriveIso         GeoJSONGeometry `json:"oriDriveIso"`
+	OriginWalkIso       GeoJSONGeometry `json:"originWalkIso"`
+	DestinationWalkIso  GeoJSONGeometry `json:"destinationWalkIso"`
+	OriginDriveGeo      GeoJSONGeometry `json:"originDriveGeo"`
+	DestinationDriveGeo GeoJSONGeometry `json:"destinationDriveGeo"`
 	// Optional extra constraints for MVP+ planner
 	LuggageManifest map[string]int `json:"luggageManifest"` // e.g. {"suitcase":2}
 	Pet             map[string]int `json:"pet"`             // e.g. {"small":1}
@@ -35,8 +47,21 @@ type RideRequest struct {
 
 // GeoPoint mirrors Firestore's GeoPoint JSON representation.
 type GeoPoint struct {
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
+	Latitude  float64 `json:"latitude" firestore:"latitude"`
+	Longitude float64 `json:"longitude" firestore:"longitude"`
+}
+
+// GeoJSONGeometry represents the subset of GeoJSON currently produced by
+// Firebase Functions: Polygon geometries with [longitude, latitude] pairs.
+// Coordinates intentionally stays as any because Firestore, JSON decoding,
+// and tests materialize nested arrays with different concrete Go types.
+type GeoJSONGeometry struct {
+	Type        string `json:"type" firestore:"type"`
+	Coordinates any    `json:"coordinates" firestore:"coordinates"`
+}
+
+func (g GeoJSONGeometry) isZero() bool {
+	return g.Type == "" || g.Coordinates == nil
 }
 
 // Journey response currently only supports single-hop for MVP.
@@ -60,6 +85,9 @@ type DriverProfile struct {
 	CapacitySeats       int
 	ActivePickups       int
 	PickupZoneID        string
+	RoutePolyline       string
+	BufferPolygon       GeoJSONGeometry
+	CurbFactor          float64
 	LuggageCapacity     map[string]int
 	PetLimits           map[string]int
 	ChildSeatInventory  map[string]int
@@ -143,6 +171,10 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 		}
 	}
 
+	if !driverSatisfiesSingleHopCorridor(req, driver) {
+		return 0, 0, false
+	}
+
 	// Compute distances/score
 	pickupKm := haversineKm(driver.CurrentLocation.Latitude, driver.CurrentLocation.Longitude, req.Origin.Latitude, req.Origin.Longitude)
 	etaSec := int(pickupKm / 40.0 * 3600)
@@ -157,6 +189,399 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	score := baseScore * math.Pow(curbFactor, wCurb)
 
 	return score, etaSec, true
+}
+
+type scoreWeights struct {
+	Detour float64
+	ETA    float64
+	Curb   float64
+}
+
+type scoredDriver struct {
+	driver DriverProfile
+	score  float64
+	etaSec int
+}
+
+func defaultScoreWeights() scoreWeights {
+	return scoreWeights{Detour: 0.7, ETA: 0.3, Curb: 1.0}
+}
+
+func pickBestDriverFromProfiles(req RideRequest, drivers []DriverProfile, exclude []string, weights scoreWeights) (string, int, error) {
+	return pickBestDriverFromProfilesWithReservation(req, drivers, exclude, weights, nil)
+}
+
+func pickBestDriverFromProfilesWithReservation(req RideRequest, drivers []DriverProfile, exclude []string, weights scoreWeights, reserve func(DriverProfile) bool) (string, int, error) {
+	ranked := rankDriverProfiles(req, drivers, exclude, weights)
+	for _, candidate := range ranked {
+		if reserve != nil && !reserve(candidate.driver) {
+			continue
+		}
+		return candidate.driver.ID, candidate.etaSec, nil
+	}
+	return "", 0, fmt.Errorf("no suitable driver scored")
+}
+
+func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []string, weights scoreWeights) []scoredDriver {
+	if weights.Detour == 0 && weights.ETA == 0 {
+		weights = defaultScoreWeights()
+	}
+	if weights.Curb == 0 {
+		weights.Curb = 1
+	}
+
+	ranked := make([]scoredDriver, 0, len(drivers))
+	for _, driver := range drivers {
+		if contains(exclude, driver.ID) {
+			continue
+		}
+		curbFactor := driver.CurbFactor
+		if curbFactor <= 0 {
+			curbFactor = 1
+		}
+		score, etaSec, ok := computeDriverScore(req, driver, curbFactor, weights.Detour, weights.ETA, weights.Curb)
+		if !ok {
+			continue
+		}
+		ranked = append(ranked, scoredDriver{driver: driver, score: score, etaSec: etaSec})
+	}
+
+	sort.SliceStable(ranked, func(i, j int) bool {
+		if ranked[i].score == ranked[j].score {
+			return ranked[i].driver.ID < ranked[j].driver.ID
+		}
+		return ranked[i].score < ranked[j].score
+	})
+	return ranked
+}
+
+func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) bool {
+	originIso := req.originWalkGeometry()
+	destinationIso := req.destinationWalkGeometry()
+	if originIso.isZero() && destinationIso.isZero() {
+		return true
+	}
+	if !originIso.isZero() && !driverRouteIntersectsGeometry(driver, originIso) {
+		return false
+	}
+	if !destinationIso.isZero() && !driverRouteIntersectsGeometry(driver, destinationIso) {
+		return false
+	}
+	return true
+}
+
+func driverRouteIntersectsGeometry(driver DriverProfile, geometry GeoJSONGeometry) bool {
+	if !driver.BufferPolygon.isZero() && geoJSONPolygonsIntersect(driver.BufferPolygon, geometry) {
+		return true
+	}
+	if driver.RoutePolyline != "" && polylineIntersectsPolygon(driver.RoutePolyline, geometry) {
+		return true
+	}
+	return false
+}
+
+func (req RideRequest) originWalkGeometry() GeoJSONGeometry {
+	if !req.OriWalkIso.isZero() {
+		return req.OriWalkIso
+	}
+	if !req.OriginWalkIso.isZero() {
+		return req.OriginWalkIso
+	}
+	if req.WalkRadiusM > 0 {
+		return circlePolygon(req.Origin, float64(req.WalkRadiusM), 32)
+	}
+	return GeoJSONGeometry{}
+}
+
+func (req RideRequest) destinationWalkGeometry() GeoJSONGeometry {
+	if !req.DestWalkIso.isZero() {
+		return req.DestWalkIso
+	}
+	if !req.DestinationWalkIso.isZero() {
+		return req.DestinationWalkIso
+	}
+	if req.WalkRadiusM > 0 {
+		return circlePolygon(req.Destination, float64(req.WalkRadiusM), 32)
+	}
+	return GeoJSONGeometry{}
+}
+
+func circlePolygon(center GeoPoint, radiusMeters float64, points int) GeoJSONGeometry {
+	if points < 8 {
+		points = 8
+	}
+	coords := make([][]float64, 0, points+1)
+	latRad := center.Latitude * math.Pi / 180
+	for i := 0; i < points; i++ {
+		angle := (float64(i) / float64(points)) * 2 * math.Pi
+		deltaLat := (radiusMeters / 111320.0) * math.Cos(angle)
+		denom := 111320.0 * math.Cos(latRad)
+		if math.Abs(denom) < 1e-9 {
+			denom = 111320.0
+		}
+		deltaLon := (radiusMeters / denom) * math.Sin(angle)
+		coords = append(coords, []float64{center.Longitude + deltaLon, center.Latitude + deltaLat})
+	}
+	coords = append(coords, coords[0])
+	return GeoJSONGeometry{Type: "Polygon", Coordinates: [][][]float64{coords}}
+}
+
+func polylineIntersectsPolygon(encoded string, polygon GeoJSONGeometry) bool {
+	line, ok := decodePolyline(encoded)
+	if !ok || len(line) == 0 {
+		return false
+	}
+	ring, ok := polygonOuterRing(polygon)
+	if !ok || len(ring) < 3 {
+		return false
+	}
+	for _, point := range line {
+		if pointInPolygon(point, ring) {
+			return true
+		}
+	}
+	for i := 0; i < len(line)-1; i++ {
+		for j := 0; j < len(ring)-1; j++ {
+			if segmentsIntersect(line[i], line[i+1], ring[j], ring[j+1]) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func decodePolyline(encoded string) ([]GeoPoint, bool) {
+	points := []GeoPoint{}
+	index := 0
+	lat := 0
+	lon := 0
+	for index < len(encoded) {
+		dLat, ok := decodePolylineValue(encoded, &index)
+		if !ok {
+			return nil, false
+		}
+		dLon, ok := decodePolylineValue(encoded, &index)
+		if !ok {
+			return nil, false
+		}
+		lat += dLat
+		lon += dLon
+		points = append(points, GeoPoint{Latitude: float64(lat) / 1e5, Longitude: float64(lon) / 1e5})
+	}
+	return points, len(points) > 0
+}
+
+func decodePolylineValue(encoded string, index *int) (int, bool) {
+	result := 0
+	shift := 0
+	for *index < len(encoded) {
+		b := int(encoded[*index]) - 63
+		*index = *index + 1
+		result |= (b & 0x1f) << shift
+		shift += 5
+		if b < 0x20 {
+			if result&1 != 0 {
+				return ^(result >> 1), true
+			}
+			return result >> 1, true
+		}
+	}
+	return 0, false
+}
+
+func geoJSONPolygonsIntersect(a, b GeoJSONGeometry) bool {
+	aRing, okA := polygonOuterRing(a)
+	bRing, okB := polygonOuterRing(b)
+	if !okA || !okB || len(aRing) < 3 || len(bRing) < 3 {
+		return false
+	}
+
+	for _, p := range aRing {
+		if pointInPolygon(p, bRing) {
+			return true
+		}
+	}
+	for _, p := range bRing {
+		if pointInPolygon(p, aRing) {
+			return true
+		}
+	}
+	for i := 0; i < len(aRing)-1; i++ {
+		for j := 0; j < len(bRing)-1; j++ {
+			if segmentsIntersect(aRing[i], aRing[i+1], bRing[j], bRing[j+1]) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func polygonOuterRing(g GeoJSONGeometry) ([]GeoPoint, bool) {
+	if g.Type != "Polygon" || g.Coordinates == nil {
+		return nil, false
+	}
+	coords, ok := firstRingCoordinates(g.Coordinates)
+	if !ok || len(coords) < 3 {
+		return nil, false
+	}
+	ring := make([]GeoPoint, 0, len(coords))
+	for _, pair := range coords {
+		if len(pair) < 2 {
+			return nil, false
+		}
+		ring = append(ring, GeoPoint{Latitude: pair[1], Longitude: pair[0]})
+	}
+	if ring[0] != ring[len(ring)-1] {
+		ring = append(ring, ring[0])
+	}
+	return ring, true
+}
+
+func firstRingCoordinates(coords any) ([][]float64, bool) {
+	switch c := coords.(type) {
+	case [][][]float64:
+		if len(c) == 0 {
+			return nil, false
+		}
+		return c[0], true
+	case [][][]interface{}:
+		if len(c) == 0 {
+			return nil, false
+		}
+		return coordinatePairsFromAny(c[0])
+	case []interface{}:
+		if len(c) == 0 {
+			return nil, false
+		}
+		return coordinatePairsFromAny(c[0])
+	default:
+		return nil, false
+	}
+}
+
+func coordinatePairsFromAny(value any) ([][]float64, bool) {
+	switch ring := value.(type) {
+	case [][]float64:
+		return ring, true
+	case [][]interface{}:
+		pairs := make([][]float64, 0, len(ring))
+		for _, rawPair := range ring {
+			pair, ok := numericPair(rawPair)
+			if !ok {
+				return nil, false
+			}
+			pairs = append(pairs, pair)
+		}
+		return pairs, true
+	case []interface{}:
+		pairs := make([][]float64, 0, len(ring))
+		for _, rawPair := range ring {
+			pair, ok := numericPair(rawPair)
+			if !ok {
+				return nil, false
+			}
+			pairs = append(pairs, pair)
+		}
+		return pairs, true
+	default:
+		return nil, false
+	}
+}
+
+func coordinatePairsFromInterfaces(ring []interface{}) ([][]float64, bool) {
+	pairs := make([][]float64, 0, len(ring))
+	for _, rawPair := range ring {
+		pair, ok := numericPair(rawPair)
+		if !ok {
+			return nil, false
+		}
+		pairs = append(pairs, pair)
+	}
+	return pairs, true
+}
+
+func numericPair(value any) ([]float64, bool) {
+	switch pair := value.(type) {
+	case []float64:
+		if len(pair) < 2 {
+			return nil, false
+		}
+		return pair[:2], true
+	case []interface{}:
+		if len(pair) < 2 {
+			return nil, false
+		}
+		lng, okLng := numberAsFloat(pair[0])
+		lat, okLat := numberAsFloat(pair[1])
+		if !okLng || !okLat {
+			return nil, false
+		}
+		return []float64{lng, lat}, true
+	default:
+		return nil, false
+	}
+}
+
+func numberAsFloat(value any) (float64, bool) {
+	switch n := value.(type) {
+	case float64:
+		return n, true
+	case float32:
+		return float64(n), true
+	case int:
+		return float64(n), true
+	case int64:
+		return float64(n), true
+	case json.Number:
+		f, err := n.Float64()
+		return f, err == nil
+	default:
+		return 0, false
+	}
+}
+
+func pointInPolygon(point GeoPoint, polygon []GeoPoint) bool {
+	inside := false
+	for i, j := 0, len(polygon)-1; i < len(polygon); j, i = i, i+1 {
+		xi, yi := polygon[i].Longitude, polygon[i].Latitude
+		xj, yj := polygon[j].Longitude, polygon[j].Latitude
+		intersects := ((yi > point.Latitude) != (yj > point.Latitude)) &&
+			(point.Longitude < (xj-xi)*(point.Latitude-yi)/(yj-yi)+xi)
+		if intersects {
+			inside = !inside
+		}
+	}
+	return inside
+}
+
+func segmentsIntersect(a1, a2, b1, b2 GeoPoint) bool {
+	orientation := func(p, q, r GeoPoint) float64 {
+		return (q.Longitude-p.Longitude)*(r.Latitude-p.Latitude) - (q.Latitude-p.Latitude)*(r.Longitude-p.Longitude)
+	}
+	onSegment := func(p, q, r GeoPoint) bool {
+		return math.Min(p.Longitude, r.Longitude) <= q.Longitude && q.Longitude <= math.Max(p.Longitude, r.Longitude) &&
+			math.Min(p.Latitude, r.Latitude) <= q.Latitude && q.Latitude <= math.Max(p.Latitude, r.Latitude)
+	}
+
+	o1 := orientation(a1, a2, b1)
+	o2 := orientation(a1, a2, b2)
+	o3 := orientation(b1, b2, a1)
+	o4 := orientation(b1, b2, a2)
+
+	const eps = 1e-12
+	if math.Abs(o1) < eps && onSegment(a1, b1, a2) {
+		return true
+	}
+	if math.Abs(o2) < eps && onSegment(a1, b2, a2) {
+		return true
+	}
+	if math.Abs(o3) < eps && onSegment(b1, a1, b2) {
+		return true
+	}
+	if math.Abs(o4) < eps && onSegment(b1, a2, b2) {
+		return true
+	}
+	return (o1 > 0) != (o2 > 0) && (o3 > 0) != (o4 > 0)
 }
 
 func main() {
@@ -433,14 +858,16 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (str
 
 	for _, d := range docs {
 		var data struct {
-			CurrentLocation     GeoPoint `firestore:"currentLocation"`
-			CapacitySeats       int                `firestore:"capacitySeats"`
-			ActivePickups       int                `firestore:"activePickups"`
-			PickupZoneID        string             `firestore:"pickupZoneId"`
-			LuggageCapacity     map[string]int     `firestore:"luggageCapacity"`
-			PetLimits           map[string]int     `firestore:"petLimits"`
-			ChildSeatInventory  map[string]int     `firestore:"childSeatInventory"`
-			PremiumCapabilities map[string]any     `firestore:"premiumCapabilities"`
+			CurrentLocation     GeoPoint        `firestore:"currentLocation"`
+			CapacitySeats       int             `firestore:"capacitySeats"`
+			ActivePickups       int             `firestore:"activePickups"`
+			PickupZoneID        string          `firestore:"pickupZoneId"`
+			RoutePolyline       string          `firestore:"routePolyline"`
+			BufferPolygon       GeoJSONGeometry `firestore:"bufferPolygon"`
+			LuggageCapacity     map[string]int  `firestore:"luggageCapacity"`
+			PetLimits           map[string]int  `firestore:"petLimits"`
+			ChildSeatInventory  map[string]int  `firestore:"childSeatInventory"`
+			PremiumCapabilities map[string]any  `firestore:"premiumCapabilities"`
 		}
 		if err := d.DataTo(&data); err != nil {
 			continue
@@ -475,6 +902,9 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (str
 			CapacitySeats:       data.CapacitySeats,
 			ActivePickups:       data.ActivePickups,
 			PickupZoneID:        data.PickupZoneID,
+			RoutePolyline:       data.RoutePolyline,
+			BufferPolygon:       data.BufferPolygon,
+			CurbFactor:          curbFactor,
 			LuggageCapacity:     data.LuggageCapacity,
 			PetLimits:           data.PetLimits,
 			ChildSeatInventory:  data.ChildSeatInventory,
