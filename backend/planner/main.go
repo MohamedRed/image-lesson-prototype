@@ -2187,6 +2187,9 @@ func validateGenderConsistency(riderGender string, driverIDs []string) bool {
 
 // calculateJourneyScore computes a score for multi-hop journeys
 func calculateJourneyScore(totalTimeSeconds, numLegs int, avgCongestionFactor float64) float64 {
+	if avgCongestionFactor <= 0 {
+		avgCongestionFactor = 1
+	}
 	// Base score is total time
 	baseScore := float64(totalTimeSeconds)
 

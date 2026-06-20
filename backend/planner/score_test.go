@@ -1111,6 +1111,14 @@ func TestBuildSingleHopJourneyUsesEarlierPickupProjectionWhenOriginWalkZoneMissi
 	assertGeoPointNear(t, leg.Dropoff, GeoPoint{Latitude: 0, Longitude: 1.00})
 }
 
+func TestCalculateJourneyScoreDefaultsMissingCongestionToNeutral(t *testing.T) {
+	got := calculateJourneyScore(600, 2, 0)
+	want := calculateJourneyScore(600, 2, 1)
+	if got != want {
+		t.Fatalf("expected missing congestion factor to be neutral, got %f want %f", got, want)
+	}
+}
+
 func TestScore2HopJourneyUsesRouteAwareResponseEta(t *testing.T) {
 	req := corridorRequest()
 	transfer := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.5}, TransferTimeSeconds: 7, CongestionFactor: 1}
