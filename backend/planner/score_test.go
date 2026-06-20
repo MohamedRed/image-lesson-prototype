@@ -1111,6 +1111,25 @@ func TestBuildSingleHopJourneyUsesEarlierPickupProjectionWhenOriginWalkZoneMissi
 	assertGeoPointNear(t, leg.Dropoff, GeoPoint{Latitude: 0, Longitude: 1.00})
 }
 
+func TestBuild2HopJourneyAddsDirectRideEtaWhenRoutesMissing(t *testing.T) {
+	req := corridorRequest()
+	transfer := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.5}, TransferTimeSeconds: 7}
+	driver1 := corridorDriver("driver-leg-1-no-route", 0.01, 0, routeCorridor())
+	driver2 := corridorDriver("driver-leg-2-no-route", 0.01, 0.5, routeCorridor())
+
+	journey := build2HopJourney(req, transfer, driver1, 30, driver2, 40)
+
+	expectedLeg1 := 30 + singleHopDirectRideETASeconds(buildLegRequest(req, req.Origin, transfer.Location))
+	expectedLeg2 := 40 + singleHopDirectRideETASeconds(buildLegRequest(req, transfer.Location, req.Destination))
+	expectedTotal := expectedLeg1 + expectedLeg2 + transfer.TransferTimeSeconds
+	if len(journey.Legs) != 2 {
+		t.Fatalf("expected two legs, got %d", len(journey.Legs))
+	}
+	if journey.Legs[0].EstimatedTimeSeconds != expectedLeg1 || journey.Legs[1].EstimatedTimeSeconds != expectedLeg2 || journey.TotalEstimatedTimeSeconds != expectedTotal {
+		t.Fatalf("expected direct fallback ETAs %d/%d and total %d, got legs=%#v total=%d", expectedLeg1, expectedLeg2, expectedTotal, journey.Legs, journey.TotalEstimatedTimeSeconds)
+	}
+}
+
 func TestBuild2HopJourneyIncludesPickupZoneIDs(t *testing.T) {
 	req := corridorRequest()
 	transfer := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.5}, TransferTimeSeconds: 7}
@@ -1127,8 +1146,11 @@ func TestBuild2HopJourneyIncludesPickupZoneIDs(t *testing.T) {
 	if journey.Legs[0].PickupZoneID != "zone-leg-1" || journey.Legs[1].PickupZoneID != "zone-leg-2" {
 		t.Fatalf("expected both pickupZoneIds to be preserved, got %#v", journey.Legs)
 	}
-	if journey.TotalEstimatedTimeSeconds != 77 {
-		t.Fatalf("expected total time with transfer wait, got %d", journey.TotalEstimatedTimeSeconds)
+	expectedLeg1 := 30 + singleHopDirectRideETASeconds(buildLegRequest(req, req.Origin, transfer.Location))
+	expectedLeg2 := 40 + singleHopDirectRideETASeconds(buildLegRequest(req, transfer.Location, req.Destination))
+	expectedTotal := expectedLeg1 + expectedLeg2 + transfer.TransferTimeSeconds
+	if journey.TotalEstimatedTimeSeconds != expectedTotal {
+		t.Fatalf("expected total time with direct fallback ride ETA, got %d want %d", journey.TotalEstimatedTimeSeconds, expectedTotal)
 	}
 }
 

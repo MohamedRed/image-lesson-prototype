@@ -276,7 +276,7 @@ func build2HopJourney(req RideRequest, transfer TransferPoint, driver1 DriverPro
 func routeAwareLegETASeconds(req RideRequest, driver DriverProfile, pickupEtaSec int) int {
 	rideEtaSec, ok := singleHopRouteRideETASeconds(req, driver)
 	if !ok {
-		return pickupEtaSec
+		rideEtaSec = singleHopDirectRideETASeconds(req)
 	}
 	return pickupEtaSec + rideEtaSec
 }
