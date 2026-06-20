@@ -582,6 +582,9 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 		if contains(exclude, driver.ID) {
 			continue
 		}
+		if driver.PickupZoneID == "" {
+			continue
+		}
 		curbFactor := driver.CurbFactor
 		if curbFactor <= 0 {
 			curbFactor = 1

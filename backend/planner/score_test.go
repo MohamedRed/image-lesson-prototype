@@ -285,8 +285,8 @@ func TestComputeDriverScore_RejectsPolylineMissingWalkZoneDespiteBroadBuffer(t *
 func TestPickBestDriverFromProfiles_RanksCorridorMatchAboveNearestWrongDirection(t *testing.T) {
 	req := corridorRequest()
 	drivers := []DriverProfile{
-		corridorDriver("nearest-wrong-direction", 0, 0.001, rectPolygon(-0.005, -0.01, 0.005, 0.20)),
-		corridorDriver("farther-valid-corridor", 0.10, 0, routeCorridor()),
+		corridorDriverWithPickupZone("nearest-wrong-direction", 0, 0.001, rectPolygon(-0.005, -0.01, 0.005, 0.20), "zone-wrong-direction"),
+		corridorDriverWithPickupZone("farther-valid-corridor", 0.10, 0, routeCorridor(), "zone-valid-corridor"),
 	}
 
 	driverID, _, err := pickBestDriverFromProfiles(req, drivers, nil, defaultScoreWeights())
@@ -300,12 +300,12 @@ func TestPickBestDriverFromProfiles_RanksCorridorMatchAboveNearestWrongDirection
 
 func TestPickBestDriverFromProfiles_RanksLowerRouteDetourAboveLoopingCorridor(t *testing.T) {
 	req := corridorRequest()
-	direct := corridorDriver("zzz-direct-corridor", 0, 0, routeCorridor())
+	direct := corridorDriverWithPickupZone("zzz-direct-corridor", 0, 0, routeCorridor(), "zone-direct")
 	direct.RoutePolyline = encodePolyline([]GeoPoint{
 		{Latitude: 0, Longitude: 0},
 		{Latitude: 0, Longitude: 1},
 	})
-	looping := corridorDriver("aaa-looping-corridor", 0, 0, routeCorridor())
+	looping := corridorDriverWithPickupZone("aaa-looping-corridor", 0, 0, routeCorridor(), "zone-looping")
 	looping.RoutePolyline = encodePolyline([]GeoPoint{
 		{Latitude: 0, Longitude: 0},
 		{Latitude: 1, Longitude: 0},
@@ -319,6 +319,20 @@ func TestPickBestDriverFromProfiles_RanksLowerRouteDetourAboveLoopingCorridor(t 
 	}
 	if driverID != "zzz-direct-corridor" {
 		t.Fatalf("expected direct route with lower detour to win, got %q", driverID)
+	}
+}
+
+func TestPickBestDriverFromProfiles_RequiresPickupZoneIDForReservation(t *testing.T) {
+	req := corridorRequest()
+	missingZone := corridorDriver("nearest-valid-but-missing-zone", 0.001, 0, routeCorridor())
+	withZone := corridorDriverWithPickupZone("farther-valid-with-zone", 0.02, 0, routeCorridor(), "zone-reservable")
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{missingZone, withZone}, nil, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected planner to choose reservable corridor driver, got error: %v", err)
+	}
+	if driverID != "farther-valid-with-zone" {
+		t.Fatalf("expected driver with pickupZoneId to beat unreservable missing-zone driver, got %q", driverID)
 	}
 }
 
@@ -358,8 +372,8 @@ func TestComputeDriverScore_DoesNotRejectSparseDirectPolylineAsDetour(t *testing
 func TestPickBestDriverFromProfiles_RetriesNextCandidateWhenReservationFails(t *testing.T) {
 	req := corridorRequest()
 	drivers := []DriverProfile{
-		corridorDriver("best-but-reservation-fails", 0.01, 0, routeCorridor()),
-		corridorDriver("second-reservation-succeeds", 0.02, 0, routeCorridor()),
+		corridorDriverWithPickupZone("best-but-reservation-fails", 0.01, 0, routeCorridor(), "zone-first"),
+		corridorDriverWithPickupZone("second-reservation-succeeds", 0.02, 0, routeCorridor(), "zone-second"),
 	}
 
 	attempted := []string{}
@@ -520,6 +534,12 @@ func corridorDriver(id string, lat, lon float64, buffer GeoJSONGeometry) DriverP
 		CapacitySeats:   4,
 		BufferPolygon:   buffer,
 	}
+}
+
+func corridorDriverWithPickupZone(id string, lat, lon float64, buffer GeoJSONGeometry, pickupZoneID string) DriverProfile {
+	driver := corridorDriver(id, lat, lon, buffer)
+	driver.PickupZoneID = pickupZoneID
+	return driver
 }
 
 func routeCorridor() GeoJSONGeometry {
