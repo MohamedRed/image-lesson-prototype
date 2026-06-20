@@ -108,29 +108,72 @@ func selectedSingleHopPickupDropoff(req RideRequest, driver DriverProfile) (GeoP
 	}
 
 	lastPos := float64(len(points) - 1)
-	pickup, pickupPos, ok := nearestRoutePointInGeometry(points, req.Origin, req.originWalkGeometry(), 0, lastPos)
-	if !ok {
-		projection, ok := nearestRouteProjection(points, req.Origin)
-		if !ok {
-			return req.Origin, req.Destination
-		}
-		pickup = projection.point
-		pickupPos = projection.position
-	}
-
-	dropoff, dropoffPos, ok := nearestRoutePointInGeometry(points, req.Destination, req.destinationWalkGeometry(), pickupPos, lastPos)
-	if !ok {
-		projection, ok := nearestRouteProjectionInRange(points, req.Destination, pickupPos, lastPos)
-		if !ok {
-			return req.Origin, req.Destination
-		}
-		dropoff = projection.point
-		dropoffPos = projection.position
-	}
-	if dropoffPos <= pickupPos {
+	pickup, pickupPos, dropoff, dropoffPos, ok := selectedOrderedPickupDropoff(points, req, 0, lastPos)
+	if !ok || dropoffPos <= pickupPos {
 		return req.Origin, req.Destination
 	}
 	return pickup, dropoff
+}
+
+func selectedOrderedPickupDropoff(points []GeoPoint, req RideRequest, minPos, maxPos float64) (GeoPoint, float64, GeoPoint, float64, bool) {
+	pickupCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originWalkGeometry(), minPos, maxPos)
+	for _, pickup := range pickupCandidates {
+		dropoff, dropoffPos, ok := nearestRoutePointInGeometry(points, req.Destination, req.destinationWalkGeometry(), pickup.position, maxPos)
+		if !ok {
+			dropoffProjection, projectionOK := nearestRouteProjectionInRange(points, req.Destination, pickup.position, maxPos)
+			if !projectionOK {
+				continue
+			}
+			dropoff = dropoffProjection.point
+			dropoffPos = dropoffProjection.position
+		}
+		if dropoffPos > pickup.position {
+			return pickup.point, pickup.position, dropoff, dropoffPos, true
+		}
+	}
+	return GeoPoint{}, 0, GeoPoint{}, 0, false
+}
+
+func routeProjectionCandidatesInGeometryOrRange(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos, maxPos float64) []routeProjection {
+	collect := func(requireGeometry bool) []routeProjection {
+		candidates := []routeProjection{}
+		consider := func(point GeoPoint, position float64) {
+			if position < minPos || position > maxPos {
+				return
+			}
+			if requireGeometry && !pointInGeoJSONPolygon(point, geometry) {
+				return
+			}
+			candidates = append(candidates, routeProjection{
+				point:    point,
+				position: position,
+				snapKm:   haversineKm(point.Latitude, point.Longitude, target.Latitude, target.Longitude),
+			})
+		}
+		for i, point := range points {
+			consider(point, float64(i))
+		}
+		for i := 0; i < len(points)-1; i++ {
+			point, fraction := nearestPointOnSegment(points[i], points[i+1], target)
+			consider(point, float64(i)+fraction)
+		}
+		return candidates
+	}
+
+	candidates := []routeProjection{}
+	if !geometry.isZero() {
+		candidates = collect(true)
+	}
+	if len(candidates) == 0 {
+		candidates = collect(false)
+	}
+	sort.SliceStable(candidates, func(i, j int) bool {
+		if candidates[i].snapKm == candidates[j].snapKm {
+			return candidates[i].position < candidates[j].position
+		}
+		return candidates[i].snapKm < candidates[j].snapKm
+	})
+	return candidates
 }
 
 func nearestRoutePointInGeometry(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos, maxPos float64) (GeoPoint, float64, bool) {
@@ -796,12 +839,15 @@ func routePolylineTravelsOriginBeforeDestination(req RideRequest, encodedPolylin
 	if !ok || len(points) < 2 {
 		return false
 	}
-	originPos, originOk := routePositionForOrder(points, req.Origin, req.originWalkGeometry(), 0)
-	if !originOk {
-		return false
+	lastPos := float64(len(points) - 1)
+	originCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originWalkGeometry(), 0, lastPos)
+	for _, origin := range originCandidates {
+		destinationPos, destinationOk := routePositionForOrder(points, req.Destination, req.destinationWalkGeometry(), origin.position)
+		if destinationOk && destinationPos > origin.position {
+			return true
+		}
 	}
-	destinationPos, destinationOk := routePositionForOrder(points, req.Destination, req.destinationWalkGeometry(), originPos)
-	return destinationOk && destinationPos > originPos
+	return false
 }
 
 func routePositionForOrder(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos float64) (float64, bool) {

@@ -303,6 +303,24 @@ func TestComputeDriverScore_UsesLaterDestinationProjectionWhenEarlierDestination
 	}
 }
 
+func TestComputeDriverScore_UsesEarlierOriginProjectionWhenOriginWalkZoneMissing(t *testing.T) {
+	req := corridorRequest()
+	req.Origin = GeoPoint{Latitude: 0.004, Longitude: 0}
+	req.OriWalkIso = GeoJSONGeometry{}
+	req.OriginWalkIso = GeoJSONGeometry{}
+	driver := corridorDriver("earlier-origin-projection", 0, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 1.00},
+		{Latitude: 0.004, Longitude: 0.00},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected route order to ignore later origin projections when an earlier origin projection reaches destination")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteThatNeverEntersOriginDriveGeo(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("never-enters-origin-drive-geo", 0, 0.20, routeCorridor())
@@ -693,6 +711,27 @@ func TestBuildSingleHopJourneyUsesLaterDropoffProjectionWhenDestinationWalkZoneM
 		{Latitude: 0, Longitude: 1.00},
 		{Latitude: 0, Longitude: 0.00},
 		{Latitude: 0, Longitude: 1.10},
+	})
+
+	journey := buildSingleHopJourney(req, driver, 90)
+	if len(journey.Legs) != 1 {
+		t.Fatalf("expected one leg, got %d", len(journey.Legs))
+	}
+	leg := journey.Legs[0]
+	assertGeoPointNear(t, leg.Pickup, GeoPoint{Latitude: 0, Longitude: 0})
+	assertGeoPointNear(t, leg.Dropoff, GeoPoint{Latitude: 0, Longitude: 1.00})
+}
+
+func TestBuildSingleHopJourneyUsesEarlierPickupProjectionWhenOriginWalkZoneMissing(t *testing.T) {
+	req := corridorRequest()
+	req.Origin = GeoPoint{Latitude: 0.004, Longitude: 0}
+	req.OriWalkIso = GeoJSONGeometry{}
+	req.OriginWalkIso = GeoJSONGeometry{}
+	driver := corridorDriver("driver-earlier-origin-projection", 0.01, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 1.00},
+		{Latitude: 0.004, Longitude: 0.00},
 	})
 
 	journey := buildSingleHopJourney(req, driver, 90)
