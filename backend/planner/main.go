@@ -586,7 +586,7 @@ func driverRouteWalkSnapsWithinThreshold(req RideRequest, driver DriverProfile) 
 	if !ok {
 		return true
 	}
-	maxWalkKm := maxSingleHopWalkMeters() / 1000.0
+	maxWalkKm := effectiveSingleHopWalkMeters(req) / 1000.0
 	return pickupProjection.snapKm <= maxWalkKm && dropoffProjection.snapKm <= maxWalkKm
 }
 
@@ -769,6 +769,14 @@ func maxSingleHopWalkMeters() float64 {
 		}
 	}
 	return 1000.0
+}
+
+func effectiveSingleHopWalkMeters(req RideRequest) float64 {
+	limit := maxSingleHopWalkMeters()
+	if req.WalkRadiusM > 0 && float64(req.WalkRadiusM) < limit {
+		return float64(req.WalkRadiusM)
+	}
+	return limit
 }
 
 type scoreWeights struct {

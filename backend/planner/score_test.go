@@ -771,6 +771,28 @@ func TestComputeDriverScore_RejectsRouteSnapOutsideWalkThreshold(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsRouteSnapOutsideRequestWalkRadius(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "2000")
+	req := corridorRequest()
+	req.WalkRadiusM = 500
+	req.OriWalkIso = rectPolygon(-0.02, -0.02, 0.02, 0.02)
+	req.OriginWalkIso = GeoJSONGeometry{}
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	req.DestWalkIso = rectPolygon(-0.02, 0.98, 0.02, 1.02)
+	req.DestinationWalkIso = GeoJSONGeometry{}
+	driver := corridorDriver("outside-request-walk-radius", 0, 0.01, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.01},
+		{Latitude: 0, Longitude: 1.01},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected request walkRadiusM to reject route snap even when env max and broad walk polygons allow it")
+	}
+}
+
 func TestPickBestDriverFromProfiles_RetriesNextCandidateWhenReservationFails(t *testing.T) {
 	req := corridorRequest()
 	drivers := []DriverProfile{
