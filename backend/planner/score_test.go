@@ -270,6 +270,22 @@ func TestComputeDriverScore_AllowsRouteThatContinuesAfterDestinationNearOrigin(t
 	}
 }
 
+func TestComputeDriverScore_AllowsRouteOrderWhenDestinationWalkZoneMissing(t *testing.T) {
+	req := corridorRequest()
+	req.DestWalkIso = GeoJSONGeometry{}
+	req.DestinationWalkIso = GeoJSONGeometry{}
+	driver := corridorDriver("origin-zone-with-destination-projection", 0, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 1.10},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected route order to use destination projection when destination walk-zone geometry is missing")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteThatNeverEntersOriginDriveGeo(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("never-enters-origin-drive-geo", 0, 0.20, routeCorridor())

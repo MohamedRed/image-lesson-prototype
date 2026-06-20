@@ -789,15 +789,23 @@ func routePolylineTravelsOriginBeforeDestination(req RideRequest, encodedPolylin
 	if !ok || len(points) < 2 {
 		return false
 	}
-	if originPos, ok := firstRoutePositionInGeometry(points, req.Origin, req.originWalkGeometry(), 0); ok {
-		if destinationPos, ok := firstRoutePositionInGeometry(points, req.Destination, req.destinationWalkGeometry(), originPos); ok {
-			return destinationPos > originPos
-		}
+	originPos, originOk := routePositionForOrder(points, req.Origin, req.originWalkGeometry(), 0)
+	if !originOk {
 		return false
 	}
-	originProjection, originOk := nearestRouteProjection(points, req.Origin)
-	destinationProjection, destinationOk := nearestRouteProjection(points, req.Destination)
-	return originOk && destinationOk && destinationProjection.position > originProjection.position
+	destinationPos, destinationOk := routePositionForOrder(points, req.Destination, req.destinationWalkGeometry(), originPos)
+	return destinationOk && destinationPos > originPos
+}
+
+func routePositionForOrder(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos float64) (float64, bool) {
+	if pos, ok := firstRoutePositionInGeometry(points, target, geometry, minPos); ok {
+		return pos, true
+	}
+	projection, ok := nearestRouteProjection(points, target)
+	if !ok || projection.position < minPos {
+		return 0, false
+	}
+	return projection.position, true
 }
 
 func firstRoutePositionInGeometry(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos float64) (float64, bool) {
