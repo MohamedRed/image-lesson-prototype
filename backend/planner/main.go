@@ -102,9 +102,14 @@ func buildSingleHopJourney(req RideRequest, driver DriverProfile, etaSec int) Jo
 func singleHopTotalETASeconds(req RideRequest, driver DriverProfile, pickupEtaSec int) int {
 	rideEtaSec, ok := singleHopRouteRideETASeconds(req, driver)
 	if !ok {
-		return pickupEtaSec
+		rideEtaSec = singleHopDirectRideETASeconds(req)
 	}
 	return pickupEtaSec + rideEtaSec
+}
+
+func singleHopDirectRideETASeconds(req RideRequest) int {
+	rideKm := haversineKm(req.Origin.Latitude, req.Origin.Longitude, req.Destination.Latitude, req.Destination.Longitude)
+	return int(rideKm / 40.0 * 3600)
 }
 
 func singleHopRouteRideETASeconds(req RideRequest, driver DriverProfile) (int, bool) {

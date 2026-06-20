@@ -872,6 +872,23 @@ func TestPickBestDriverFromProfiles_RetriesNextCandidateWhenReservationFails(t *
 	}
 }
 
+func TestBuildSingleHopJourneyAddsDirectRideTimeWhenRouteMissing(t *testing.T) {
+	req := corridorRequest()
+	req.Destination = GeoPoint{Latitude: 0, Longitude: 0.01}
+	driver := corridorDriver("driver-without-route", 0, 0, routeCorridor())
+
+	pickupEtaSec := 30
+	journey := buildSingleHopJourney(req, driver, pickupEtaSec)
+	expectedRideSec := int(haversineKm(0, 0, 0, 0.01) / 40.0 * 3600)
+	expectedTotalSec := pickupEtaSec + expectedRideSec
+	if len(journey.Legs) != 1 {
+		t.Fatalf("expected one leg, got %d", len(journey.Legs))
+	}
+	if journey.Legs[0].EstimatedTimeSeconds != expectedTotalSec || journey.TotalEstimatedTimeSeconds != expectedTotalSec {
+		t.Fatalf("expected pickup plus direct ride ETA %d seconds, got leg=%d total=%d", expectedTotalSec, journey.Legs[0].EstimatedTimeSeconds, journey.TotalEstimatedTimeSeconds)
+	}
+}
+
 func TestBuildSingleHopJourneyAddsRouteRideTimeWhenEtaProfileMissing(t *testing.T) {
 	req := corridorRequest()
 	req.Destination = GeoPoint{Latitude: 0, Longitude: 0.01}
