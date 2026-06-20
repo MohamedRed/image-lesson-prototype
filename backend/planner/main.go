@@ -716,7 +716,7 @@ func routeInsertionDetourKm(req RideRequest, encodedPolyline string, directRideK
 	}
 
 	routeSegmentKm := routeDistanceBetweenPositions(points, originProjection.position, destinationProjection.position)
-	detourKm := routeSegmentKm - directRideKm + originProjection.snapKm + destinationProjection.snapKm
+	detourKm := routeSegmentKm - directRideKm
 	if detourKm < 0 {
 		return 0, true
 	}

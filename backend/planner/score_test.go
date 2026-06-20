@@ -483,6 +483,26 @@ func TestPickBestDriverFromProfiles_RanksCorridorMatchAboveNearestWrongDirection
 	}
 }
 
+func TestRouteInsertionDetourExcludesRiderWalkSnapDistance(t *testing.T) {
+	req := corridorRequest()
+	req.WalkRadiusM = 1000
+	req.OriWalkIso = rectPolygon(-0.01, -0.02, 0.01, 0.02)
+	req.DestWalkIso = rectPolygon(-0.01, 0.98, 0.01, 1.02)
+	directRideKm := haversineKm(req.Origin.Latitude, req.Origin.Longitude, req.Destination.Latitude, req.Destination.Longitude)
+	polyline := encodePolyline([]GeoPoint{
+		{Latitude: 0.006, Longitude: 0},
+		{Latitude: 0.006, Longitude: 1},
+	})
+
+	got, ok := routeInsertionDetourKm(req, polyline, directRideKm)
+	if !ok {
+		t.Fatalf("expected route insertion detour to score offset corridor")
+	}
+	if got > 0.001 {
+		t.Fatalf("expected driver insertion detour to exclude rider walk snap distance, got %.6f", got)
+	}
+}
+
 func TestDriverDetourUsesRouteInsertionDetourNotPickupDistance(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("direct-route-detour", 0, -0.10, routeCorridor())
