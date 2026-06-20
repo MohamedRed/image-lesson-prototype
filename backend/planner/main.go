@@ -273,6 +273,11 @@ func build2HopJourney(req RideRequest, transfer TransferPoint, driver1 DriverPro
 	}
 }
 
+func score2HopJourney(req RideRequest, transfer TransferPoint, driver1 DriverProfile, eta1 int, driver2 DriverProfile, eta2 int) float64 {
+	journey := build2HopJourney(req, transfer, driver1, eta1, driver2, eta2)
+	return calculateJourneyScore(journey.TotalEstimatedTimeSeconds, 2, transfer.CongestionFactor)
+}
+
 func routeAwareLegETASeconds(req RideRequest, driver DriverProfile, pickupEtaSec int) int {
 	rideEtaSec, ok := singleHopRouteRideETASeconds(req, driver)
 	if !ok {
@@ -1811,8 +1816,7 @@ func plan2HopWithTransfers(ctx context.Context, req RideRequest, transferPoints 
 			continue
 		}
 
-		totalTime := eta1 + eta2 + transfer.TransferTimeSeconds
-		score := calculateJourneyScore(totalTime, 2, transfer.CongestionFactor)
+		score := score2HopJourney(req, transfer, driver1, eta1, driver2, eta2)
 
 		if score < bestScore {
 			bestScore = score

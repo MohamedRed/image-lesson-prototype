@@ -1111,6 +1111,34 @@ func TestBuildSingleHopJourneyUsesEarlierPickupProjectionWhenOriginWalkZoneMissi
 	assertGeoPointNear(t, leg.Dropoff, GeoPoint{Latitude: 0, Longitude: 1.00})
 }
 
+func TestScore2HopJourneyUsesRouteAwareResponseEta(t *testing.T) {
+	req := corridorRequest()
+	transfer := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.5}, TransferTimeSeconds: 7, CongestionFactor: 1}
+	driver1 := corridorDriver("driver-leg-1-score-route-eta", 0, -0.10, routeCorridor())
+	driver1.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 0.5},
+	})
+	driver1.RouteETAProfileSeconds = []int{0, 30, 330}
+	driver2 := corridorDriver("driver-leg-2-score-route-eta", 0, 0.5, routeCorridor())
+	driver2.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.5},
+		{Latitude: 0, Longitude: 1},
+	})
+	driver2.RouteETAProfileSeconds = []int{0, 600}
+
+	got := score2HopJourney(req, transfer, driver1, 30, driver2, 40)
+	want := calculateJourneyScore(977, 2, 1)
+	stalePickupOnlyScore := calculateJourneyScore(77, 2, 1)
+	if got != want {
+		t.Fatalf("expected score to use route-aware total ETA, got %f want %f", got, want)
+	}
+	if got == stalePickupOnlyScore {
+		t.Fatalf("expected score not to use stale pickup-only total")
+	}
+}
+
 func TestBuild2HopJourneyAddsDirectRideEtaWhenRoutesMissing(t *testing.T) {
 	req := corridorRequest()
 	transfer := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.5}, TransferTimeSeconds: 7}
