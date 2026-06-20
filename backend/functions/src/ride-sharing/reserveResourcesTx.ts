@@ -222,8 +222,9 @@ export async function reserveResourcesTransaction(
 
 export function calculateAvailableSeats(driverData: any): number {
   const capacitySeats = driverData.capacitySeats || 4;
+  const hasSeatLedger = Object.prototype.hasOwnProperty.call(driverData, "legs");
   const reservedSeats = getCurrentSeatUsage(driverData.legs || []);
-  const seatsUsed = reservedSeats > 0 ? reservedSeats : (driverData.activePickups || 0);
+  const seatsUsed = hasSeatLedger ? reservedSeats : (driverData.activePickups || 0);
   return capacitySeats - seatsUsed;
 }
 
