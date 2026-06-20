@@ -105,6 +105,16 @@ func TestComputeDriverScore_CurbPenalty(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_DefaultsMissingCapacitySeatsToReservationDefault(t *testing.T) {
+	req := RideRequest{Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1}
+	driver := DriverProfile{CurrentLocation: GeoPoint{0, 0}}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected missing capacitySeats to default to reservation runtime capacity")
+	}
+}
+
 func TestComputeDriverScore_UsesReservedSeatLedgerForCapacity(t *testing.T) {
 	req := RideRequest{Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 2}
 	driver := DriverProfile{

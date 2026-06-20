@@ -455,7 +455,8 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	}
 
 	seatsUsed := reservedSeatCount(driver)
-	seatsLeft := driver.CapacitySeats - seatsUsed
+	capacitySeats := effectiveCapacitySeats(driver)
+	seatsLeft := capacitySeats - seatsUsed
 	if seatsLeft < passCnt {
 		return 0, 0, false
 	}
@@ -545,11 +546,19 @@ func reservedSeatCount(driver DriverProfile) int {
 	return seatsUsed
 }
 
+func effectiveCapacitySeats(driver DriverProfile) int {
+	if driver.CapacitySeats > 0 {
+		return driver.CapacitySeats
+	}
+	return 4
+}
+
 func seatLoadScore(driver DriverProfile, seatsUsed int) float64 {
-	if driver.CapacitySeats <= 0 || seatsUsed <= 0 {
+	capacitySeats := effectiveCapacitySeats(driver)
+	if seatsUsed <= 0 {
 		return 0
 	}
-	return float64(seatsUsed) / float64(driver.CapacitySeats)
+	return float64(seatsUsed) / float64(capacitySeats)
 }
 
 func cargoLoadScore(req RideRequest, driver DriverProfile) float64 {
@@ -1916,12 +1925,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 	}
 	defer client.Close()
 
-	// Ensure driver seats >= passengerCount
-	passCnt := req.PassengerCount
-	if passCnt <= 0 {
-		passCnt = 1
-	}
-	q := client.Collection("drivers").Where("capacitySeats", ">=", passCnt).Limit(50)
+	q := client.Collection("drivers").Limit(50)
 	if req.RiderGender != "" {
 		q = q.Where("gender", "==", req.RiderGender)
 	}
