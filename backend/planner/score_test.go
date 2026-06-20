@@ -119,6 +119,37 @@ func TestComputeDriverScore_UsesReservedSeatLedgerForCapacity(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_SeatLedgerOverridesActivePickupCount(t *testing.T) {
+	req := RideRequest{Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 2}
+	driver := DriverProfile{
+		CapacitySeats:   6,
+		ActivePickups:   3,
+		ReservedSeats:   2,
+		CurrentLocation: GeoPoint{0, 0},
+	}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected reserved seat ledger, not active pickup count, to decide remaining capacity")
+	}
+}
+
+func TestComputeDriverScore_EmptySeatLedgerDoesNotFallBackToActivePickupCount(t *testing.T) {
+	req := RideRequest{Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 4}
+	driver := DriverProfile{
+		CapacitySeats:   4,
+		ActivePickups:   3,
+		HasSeatLedger:   true,
+		ReservedSeats:   0,
+		CurrentLocation: GeoPoint{0, 0},
+	}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected an empty seat ledger to mean zero reserved seats, not legacy active-pickup fallback")
+	}
+}
+
 func TestComputeDriverScore_ToddlerRequiresForwardChildSeat(t *testing.T) {
 	req := RideRequest{
 		Origin:         GeoPoint{0, 0},
@@ -204,6 +235,20 @@ func TestComputeDriverScore_RejectsCorridorMissingDestinationWalkZone(t *testing
 	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
 	if ok {
 		t.Fatalf("expected driver route corridor that misses destination walk zone to be rejected")
+	}
+}
+
+func TestComputeDriverScore_RejectsRouteThatHitsDestinationBeforeOrigin(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("reverse-route", 0, 1, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 1},
+		{Latitude: 0, Longitude: 0},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected reverse-direction route to be rejected even when its corridor intersects both walk zones")
 	}
 }
 

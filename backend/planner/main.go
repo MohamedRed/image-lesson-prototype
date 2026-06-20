@@ -220,6 +220,7 @@ type DriverProfile struct {
 	CurrentLocation     GeoPoint
 	CapacitySeats       int
 	ActivePickups       int
+	HasSeatLedger       bool
 	ReservedSeats       int
 	PickupZoneID        string
 	RoutePolyline       string
@@ -252,7 +253,7 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	}
 
 	seatsUsed := driver.ReservedSeats
-	if seatsUsed == 0 && driver.ActivePickups > 0 {
+	if !driver.HasSeatLedger && seatsUsed == 0 && driver.ActivePickups > 0 {
 		// Backward compatibility for older driver documents that only tracked
 		// pickup count. New documents use the seat ledger so multi-passenger
 		// groups consume all reserved seats.
@@ -260,9 +261,6 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	}
 	seatsLeft := driver.CapacitySeats - seatsUsed
 	if seatsLeft < passCnt {
-		return 0, 0, false
-	}
-	if driver.ActivePickups >= 3 {
 		return 0, 0, false
 	}
 
@@ -457,7 +455,20 @@ func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) boo
 	if !destinationIso.isZero() && !driverRouteIntersectsGeometry(driver, destinationIso) {
 		return false
 	}
+	if driver.RoutePolyline != "" && !routePolylineTravelsOriginBeforeDestination(req, driver.RoutePolyline) {
+		return false
+	}
 	return true
+}
+
+func routePolylineTravelsOriginBeforeDestination(req RideRequest, encodedPolyline string) bool {
+	points, ok := decodePolyline(encodedPolyline)
+	if !ok || len(points) < 2 {
+		return false
+	}
+	originIdx, _ := nearestRoutePointIndex(points, req.Origin)
+	destinationIdx, _ := nearestRoutePointIndex(points, req.Destination)
+	return originIdx >= 0 && destinationIdx > originIdx
 }
 
 func driverRouteIntersectsGeometry(driver DriverProfile, geometry GeoJSONGeometry) bool {
@@ -1020,6 +1031,8 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 	bestEta := 0
 
 	for _, d := range docs {
+		raw := d.Data()
+		_, hasSeatLedger := raw["legs"]
 		var data struct {
 			CurrentLocation GeoPoint `firestore:"currentLocation"`
 			CapacitySeats   int      `firestore:"capacitySeats"`
@@ -1070,6 +1083,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			CurrentLocation:     GeoPoint{Latitude: data.CurrentLocation.Latitude, Longitude: data.CurrentLocation.Longitude},
 			CapacitySeats:       data.CapacitySeats,
 			ActivePickups:       data.ActivePickups,
+			HasSeatLedger:       hasSeatLedger,
 			ReservedSeats:       sumReservedSeats(data.Legs),
 			PickupZoneID:        data.PickupZoneID,
 			RoutePolyline:       data.RoutePolyline,
