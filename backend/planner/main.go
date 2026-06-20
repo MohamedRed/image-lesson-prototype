@@ -111,45 +111,70 @@ func selectedSingleHopPickupDropoff(req RideRequest, driver DriverProfile) (GeoP
 	if originIdx < 0 || destinationIdx <= originIdx {
 		return req.Origin, req.Destination
 	}
-	if idx, ok := nearestRoutePointIndexInGeometry(points, req.Origin, req.originWalkGeometry(), 0, destinationIdx-1); ok {
-		originIdx = idx
+
+	pickup := points[originIdx]
+	dropoff := points[destinationIdx]
+	pickupPos := float64(originIdx)
+	dropoffPos := float64(destinationIdx)
+	if point, pos, ok := nearestRoutePointInGeometry(points, req.Origin, req.originWalkGeometry(), 0, dropoffPos); ok {
+		pickup = point
+		pickupPos = pos
 	}
-	if idx, ok := nearestRoutePointIndexInGeometry(points, req.Destination, req.destinationWalkGeometry(), originIdx+1, len(points)-1); ok {
-		destinationIdx = idx
+	if point, pos, ok := nearestRoutePointInGeometry(points, req.Destination, req.destinationWalkGeometry(), pickupPos, float64(len(points)-1)); ok {
+		dropoff = point
+		dropoffPos = pos
 	}
-	if destinationIdx <= originIdx {
+	if dropoffPos <= pickupPos {
 		return req.Origin, req.Destination
 	}
-	return points[originIdx], points[destinationIdx]
+	return pickup, dropoff
 }
 
-func nearestRoutePointIndexInGeometry(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minIdx, maxIdx int) (int, bool) {
-	if geometry.isZero() || len(points) == 0 {
-		return -1, false
+func nearestRoutePointInGeometry(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos, maxPos float64) (GeoPoint, float64, bool) {
+	if geometry.isZero() || len(points) == 0 || minPos > maxPos {
+		return GeoPoint{}, 0, false
 	}
-	if minIdx < 0 {
-		minIdx = 0
-	}
-	if maxIdx >= len(points) {
-		maxIdx = len(points) - 1
-	}
-	if minIdx > maxIdx {
-		return -1, false
-	}
-	bestIdx := -1
+	bestPoint := GeoPoint{}
+	bestPos := 0.0
 	bestDistanceKm := math.MaxFloat64
-	for i := minIdx; i <= maxIdx; i++ {
-		point := points[i]
-		if !pointInGeoJSONPolygon(point, geometry) {
-			continue
+	consider := func(point GeoPoint, pos float64) {
+		if pos < minPos || pos > maxPos || !pointInGeoJSONPolygon(point, geometry) {
+			return
 		}
 		distanceKm := haversineKm(point.Latitude, point.Longitude, target.Latitude, target.Longitude)
 		if distanceKm < bestDistanceKm {
 			bestDistanceKm = distanceKm
-			bestIdx = i
+			bestPoint = point
+			bestPos = pos
 		}
 	}
-	return bestIdx, bestIdx >= 0
+	for i, point := range points {
+		consider(point, float64(i))
+	}
+	for i := 0; i < len(points)-1; i++ {
+		point, fraction := nearestPointOnSegment(points[i], points[i+1], target)
+		consider(point, float64(i)+fraction)
+	}
+	return bestPoint, bestPos, bestDistanceKm < math.MaxFloat64
+}
+
+func nearestPointOnSegment(start, end, target GeoPoint) (GeoPoint, float64) {
+	dLat := end.Latitude - start.Latitude
+	dLon := end.Longitude - start.Longitude
+	lengthSquared := dLat*dLat + dLon*dLon
+	if lengthSquared == 0 {
+		return start, 0
+	}
+	fraction := ((target.Latitude-start.Latitude)*dLat + (target.Longitude-start.Longitude)*dLon) / lengthSquared
+	if fraction < 0 {
+		fraction = 0
+	} else if fraction > 1 {
+		fraction = 1
+	}
+	return GeoPoint{
+		Latitude:  start.Latitude + fraction*dLat,
+		Longitude: start.Longitude + fraction*dLon,
+	}, fraction
 }
 
 func build2HopJourney(req RideRequest, transfer TransferPoint, driver1 DriverProfile, eta1 int, driver2 DriverProfile, eta2 int) Journey {
