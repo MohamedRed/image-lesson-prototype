@@ -116,7 +116,7 @@ resource "google_cloud_scheduler_job" "scheduled_functions" {
   http_target {
     http_method = "POST"
     uri         = "https://${var.functions_location}-${var.project_id}.cloudfunctions.net/${each.value.function}"
-    
+
     headers = {
       "Content-Type" = "application/json"
     }
@@ -129,7 +129,7 @@ resource "google_cloud_scheduler_job" "scheduled_functions" {
 
     oidc_token {
       service_account_email = data.google_service_account.scheduler.email
-      audience             = "https://${var.functions_location}-${var.project_id}.cloudfunctions.net/${each.value.function}"
+      audience              = "https://${var.functions_location}-${var.project_id}.cloudfunctions.net/${each.value.function}"
     }
   }
 }
@@ -177,7 +177,7 @@ resource "google_cloud_scheduler_job" "bigquery_procedure" {
   http_target {
     http_method = "POST"
     uri         = "https://bigquery.googleapis.com/bigquery/v2/projects/${var.project_id}/jobs"
-    
+
     headers = {
       "Content-Type"  = "application/json"
       "Authorization" = "Bearer {{.token}}"
@@ -186,7 +186,7 @@ resource "google_cloud_scheduler_job" "bigquery_procedure" {
     body = base64encode(jsonencode({
       configuration = {
         query = {
-          query      = "CALL `ride_sharing_${var.environment}.refresh_hourly_aggregation`();"
+          query        = "CALL `ride_sharing_${var.environment}.refresh_hourly_aggregation`();"
           useLegacySql = false
         }
       }
@@ -194,7 +194,7 @@ resource "google_cloud_scheduler_job" "bigquery_procedure" {
 
     oauth_token {
       service_account_email = google_service_account.scheduler.email
-      scope                = "https://www.googleapis.com/auth/bigquery"
+      scope                 = "https://www.googleapis.com/auth/bigquery"
     }
   }
 }

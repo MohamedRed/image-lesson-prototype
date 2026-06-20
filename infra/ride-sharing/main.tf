@@ -107,10 +107,10 @@ resource "google_project_service" "apis" {
 # Secret Manager secrets
 resource "google_secret_manager_secret" "secrets" {
   for_each = {
-    slack-webhook-url      = "Slack webhook URL for notifications"
-    mapbox-access-token    = "Mapbox API token for curb data"
-    stripe-secret-key      = "Stripe secret key for payments"
-    stripe-webhook-secret  = "Stripe webhook verification secret"
+    slack-webhook-url     = "Slack webhook URL for notifications"
+    mapbox-access-token   = "Mapbox API token for curb data"
+    stripe-secret-key     = "Stripe secret key for payments"
+    stripe-webhook-secret = "Stripe webhook verification secret"
     livekit-api-key       = "LiveKit API key for real-time communication"
     livekit-api-secret    = "LiveKit API secret for real-time communication"
     livekit-ws-url        = "LiveKit WebSocket URL for real-time communication"
@@ -132,9 +132,9 @@ resource "google_secret_manager_secret_version" "secret_versions" {
     "mapbox-access-token"   = var.mapbox_access_token
     "stripe-secret-key"     = var.stripe_secret_key
     "stripe-webhook-secret" = var.stripe_webhook_secret
-    "livekit-api-key"      = var.livekit_api_key
-    "livekit-api-secret"   = var.livekit_api_secret
-    "livekit-ws-url"       = var.livekit_ws_url
+    "livekit-api-key"       = var.livekit_api_key
+    "livekit-api-secret"    = var.livekit_api_secret
+    "livekit-ws-url"        = var.livekit_ws_url
   }
 
   secret      = google_secret_manager_secret.secrets[each.key].id
@@ -144,67 +144,67 @@ resource "google_secret_manager_secret_version" "secret_versions" {
 # BigQuery module
 module "bigquery" {
   source = "./modules/bigquery"
-  
-  project_id   = var.project_id
-  environment  = var.environment
-  labels       = local.common_labels
-  
+
+  project_id  = var.project_id
+  environment = var.environment
+  labels      = local.common_labels
+
   depends_on = [google_project_service.apis]
 }
 
 # Cloud Run planner service
 module "planner" {
   source = "./modules/cloud_run"
-  
-  project_id     = var.project_id
-  region         = var.region
-  environment    = var.environment
-  labels         = local.common_labels
-  
-  service_name   = "ride-planner"
-  image_url      = "gcr.io/${var.project_id}/ride-planner:latest"
-  
+
+  project_id  = var.project_id
+  region      = var.region
+  environment = var.environment
+  labels      = local.common_labels
+
+  service_name = "ride-planner"
+  image_url    = "gcr.io/${var.project_id}/ride-planner:latest"
+
   env_vars = {
     GOOGLE_CLOUD_PROJECT = var.project_id
-    BQ_DATASET          = module.bigquery.dataset_id
+    BQ_DATASET           = module.bigquery.dataset_id
   }
-  
+
   depends_on = [google_project_service.apis]
 }
 
 # Cloud Scheduler jobs
 module "scheduler" {
   source = "./modules/scheduler"
-  
+
   project_id  = var.project_id
   region      = var.region
   environment = var.environment
   labels      = local.common_labels
-  
+
   functions_location = var.region
-  
+
   depends_on = [google_project_service.apis]
 }
 
 # Pub/Sub topics for event-driven architecture
 module "pubsub" {
   source = "./modules/pubsub"
-  
+
   project_id  = var.project_id
   environment = var.environment
   labels      = local.common_labels
-  
+
   depends_on = [google_project_service.apis]
 }
 
 # Monitoring and alerting (existing)
 module "monitoring" {
   source = "./modules/monitoring"
-  
+
   project_id  = var.project_id
   environment = var.environment
   labels      = local.common_labels
-  
+
   depends_on = [google_project_service.apis]
 }
 

@@ -6,13 +6,13 @@ terraform {
   backend "gcs" {
     bucket = "liive-terraform-state"
     prefix = "terraform/state"
-    
+
     # Optional: Enable object versioning for state locking
     # This is automatically handled by GCS when versioning is enabled
   }
-  
+
   required_version = ">= 1.6"
-  
+
   required_providers {
     google = {
       source  = "hashicorp/google"

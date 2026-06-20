@@ -7,7 +7,7 @@ resource "google_cloud_run_service" "health_etl" {
     spec {
       containers {
         image = "gcr.io/${var.project_id}/health-etl:latest"
-        
+
         ports {
           container_port = 8080
         }
@@ -36,16 +36,16 @@ resource "google_cloud_run_service" "health_etl" {
 
       # Service account with necessary permissions
       service_account_name = google_service_account.health_etl.email
-      
+
       # Timeout for long-running ETL jobs
       timeout_seconds = 3600
     }
 
     metadata {
       annotations = {
-        "autoscaling.knative.dev/minScale" = "0"
-        "autoscaling.knative.dev/maxScale" = "3"
-        "run.googleapis.com/cpu-throttling" = "false"
+        "autoscaling.knative.dev/minScale"         = "0"
+        "autoscaling.knative.dev/maxScale"         = "3"
+        "run.googleapis.com/cpu-throttling"        = "false"
         "run.googleapis.com/execution-environment" = "gen2"
       }
     }
@@ -92,20 +92,20 @@ resource "google_project_iam_member" "health_etl_pubsub" {
 resource "google_cloud_scheduler_job" "daily_etl" {
   name      = "daily-health-etl"
   region    = var.region
-  schedule  = "0 2 * * *"  # 2 AM UTC daily
+  schedule  = "0 2 * * *" # 2 AM UTC daily
   time_zone = "UTC"
 
   http_target {
     http_method = "POST"
     uri         = "${google_cloud_run_service.health_etl.status[0].url}/etl/daily"
-    
+
     headers = {
       "Content-Type" = "application/json"
     }
 
     oidc_token {
       service_account_email = google_service_account.health_etl.email
-      audience             = google_cloud_run_service.health_etl.status[0].url
+      audience              = google_cloud_run_service.health_etl.status[0].url
     }
   }
 
@@ -118,16 +118,16 @@ resource "google_cloud_scheduler_job" "daily_etl" {
 # BigQuery scheduled queries
 resource "google_bigquery_data_transfer_config" "daily_aggregates" {
   display_name           = "Daily Health Aggregates"
-  location              = var.bq_location
-  data_source_id        = "scheduled_query"
-  schedule              = "every day 03:00"
+  location               = var.bq_location
+  data_source_id         = "scheduled_query"
+  schedule               = "every day 03:00"
   destination_dataset_id = google_bigquery_dataset.health_analytics.dataset_id
 
   params = {
-    query                = file("${path.module}/../bigquery/scheduled-queries/daily_health_aggregates.sql")
+    query                           = file("${path.module}/../bigquery/scheduled-queries/daily_health_aggregates.sql")
     destination_table_name_template = "daily_aggregates"
-    write_disposition              = "WRITE_APPEND"
-    use_legacy_sql                 = false
+    write_disposition               = "WRITE_APPEND"
+    use_legacy_sql                  = false
   }
 
   depends_on = [
@@ -138,16 +138,16 @@ resource "google_bigquery_data_transfer_config" "daily_aggregates" {
 
 resource "google_bigquery_data_transfer_config" "weekly_trends" {
   display_name           = "Weekly Health Trends"
-  location              = var.bq_location
-  data_source_id        = "scheduled_query"
-  schedule              = "every sunday 04:00"
+  location               = var.bq_location
+  data_source_id         = "scheduled_query"
+  schedule               = "every sunday 04:00"
   destination_dataset_id = google_bigquery_dataset.health_analytics.dataset_id
 
   params = {
-    query                = file("${path.module}/../bigquery/scheduled-queries/weekly_health_trends.sql")
+    query                           = file("${path.module}/../bigquery/scheduled-queries/weekly_health_trends.sql")
     destination_table_name_template = "weekly_trends"
-    write_disposition              = "WRITE_APPEND"
-    use_legacy_sql                 = false
+    write_disposition               = "WRITE_APPEND"
+    use_legacy_sql                  = false
   }
 
   depends_on = [

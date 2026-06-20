@@ -103,7 +103,7 @@ resource "google_pubsub_subscription" "cloud_functions_subscriptions" {
   # Push configuration for Cloud Functions
   push_config {
     push_endpoint = "https://${var.project_id}.cloudfunctions.net/pubsub-${each.key}-handler"
-    
+
     attributes = {
       x-goog-version = "v1"
     }
@@ -126,9 +126,9 @@ resource "google_pubsub_subscription" "cloud_functions_subscriptions" {
 # Analytics subscription with pull delivery
 resource "google_pubsub_subscription" "analytics_subscriptions" {
   for_each = {
-    ride-events      = "ride-analytics"
-    driver-events    = "driver-analytics"
-    pricing-events   = "pricing-analytics"
+    ride-events    = "ride-analytics"
+    driver-events  = "driver-analytics"
+    pricing-events = "pricing-analytics"
   }
 
   name    = "${each.value}-${var.environment}"
@@ -143,7 +143,7 @@ resource "google_pubsub_subscription" "analytics_subscriptions" {
   message_retention_duration = "3600s" # 1 hour
 
   # No push config - these are pull subscriptions for batch processing
-  
+
   retry_policy {
     minimum_backoff = "60s"
     maximum_backoff = "3600s"
@@ -231,9 +231,9 @@ data "google_project" "current" {
 
 # Create schemas for structured messages
 resource "google_pubsub_schema" "ride_event_schema" {
-  name       = "ride-event-schema-${var.environment}"
-  type       = "AVRO"
-  project    = var.project_id
+  name    = "ride-event-schema-${var.environment}"
+  type    = "AVRO"
+  project = var.project_id
   definition = jsonencode({
     type = "record"
     name = "RideEvent"
@@ -249,7 +249,7 @@ resource "google_pubsub_schema" "ride_event_schema" {
           name = "EventType"
           symbols = [
             "RIDE_CREATED",
-            "RIDE_MATCHED", 
+            "RIDE_MATCHED",
             "RIDE_STARTED",
             "RIDE_COMPLETED",
             "RIDE_CANCELLED"
@@ -257,13 +257,13 @@ resource "google_pubsub_schema" "ride_event_schema" {
         }
       },
       {
-        name = "timestamp"
-        type = "long"
+        name        = "timestamp"
+        type        = "long"
         logicalType = "timestamp-millis"
       },
       {
-        name = "driver_id"
-        type = ["null", "string"]
+        name    = "driver_id"
+        type    = ["null", "string"]
         default = null
       },
       {
@@ -286,8 +286,8 @@ resource "google_pubsub_schema" "ride_event_schema" {
         type = "Location"
       },
       {
-        name = "fare_amount"
-        type = ["null", "double"]
+        name    = "fare_amount"
+        type    = ["null", "double"]
         default = null
       }
     ]

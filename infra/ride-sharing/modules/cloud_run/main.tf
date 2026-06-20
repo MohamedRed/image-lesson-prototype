@@ -95,7 +95,7 @@ resource "google_cloud_run_v2_service" "service" {
 
       ports {
         container_port = 8080
-        name          = "http1"
+        name           = "http1"
       }
 
       startup_probe {
@@ -104,9 +104,9 @@ resource "google_cloud_run_v2_service" "service" {
           port = 8080
         }
         initial_delay_seconds = 10
-        timeout_seconds      = 5
-        period_seconds       = 10
-        failure_threshold    = 3
+        timeout_seconds       = 5
+        period_seconds        = 10
+        failure_threshold     = 3
       }
 
       liveness_probe {
@@ -115,9 +115,9 @@ resource "google_cloud_run_v2_service" "service" {
           port = 8080
         }
         initial_delay_seconds = 30
-        timeout_seconds      = 5
-        period_seconds       = 30
-        failure_threshold    = 3
+        timeout_seconds       = 5
+        period_seconds        = 30
+        failure_threshold     = 3
       }
     }
 
