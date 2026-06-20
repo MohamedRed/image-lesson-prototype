@@ -290,51 +290,26 @@ public final class FirestoreRideService: RideSharingServicing {
                 self._events.send(.priceUpdated(total: total))
             }
 
-            if let journey = request.journey, let legs = journey["legs"] as? [[String: Any]] {
-                self._events.send(.journeyReceived(legs: legs.count))
+            if let journey = request.journey,
+               let geometry = rideJourneyDisplayGeometry(from: journey) {
+                self._events.send(.journeyReceived(legs: geometry.legCount))
 
-                var segments: [[(Double, Double)]] = []
-                for leg in legs {
-                    guard
-                        let pick = leg["Pickup" ] as? [String: Any] ?? leg["pickup"] as? [String: Any],
-                        let drop = leg["Dropoff"] as? [String: Any] ?? leg["dropoff"] as? [String: Any],
-                        let plat = pick["Latitude"] as? Double ?? pick["latitude"] as? Double,
-                        let plon = pick["Longitude"] as? Double ?? pick["longitude"] as? Double,
-                        let dlat = drop["Latitude"] as? Double ?? drop["latitude"] as? Double,
-                        let dlon = drop["Longitude"] as? Double ?? drop["longitude"] as? Double
-                    else { continue }
-                    segments.append([(plat, plon), (dlat, dlon)])
+                let segments = geometry.routeSegments.map { segment in
+                    [segment.start.asTuple, segment.end.asTuple]
                 }
                 if !segments.isEmpty {
                     self._events.send(.routeSegmentsUpdated(segments))
                 }
 
-                // Transfer points between legs
-                if legs.count > 1 {
-                    var transfers: [(Double, Double)] = []
-                    for i in 0..<(legs.count - 1) {
-                        if let drop = legs[i]["Dropoff"] as? [String: Any] ?? legs[i]["dropoff"] as? [String: Any],
-                           let lat = drop["Latitude"] as? Double ?? drop["latitude"] as? Double,
-                           let lon = drop["Longitude"] as? Double ?? drop["longitude"] as? Double {
-                            transfers.append((lat, lon))
-                        }
-                    }
-                    if !transfers.isEmpty {
-                        self._events.send(.transferPointsUpdated(transfers))
-                    }
+                if !geometry.transferPoints.isEmpty {
+                    self._events.send(.transferPointsUpdated(geometry.transferPoints.map { $0.asTuple }))
+                }
 
-                    // Walking segments between transfers (dropoff to next pickup)
-                    if legs.count > 1 {
-                        var walks: [[(Double, Double)]] = []
-                        for i in 0..<(segments.count - 1) {
-                            let from = segments[i][1]
-                            let to = segments[i + 1][0]
-                            walks.append([from, to])
-                        }
-                        if !walks.isEmpty {
-                            self._events.send(.walkingSegmentsUpdated(walks))
-                        }
-                    }
+                let walks = geometry.walkingSegments.map { segment in
+                    [segment.start.asTuple, segment.end.asTuple]
+                }
+                if !walks.isEmpty {
+                    self._events.send(.walkingSegmentsUpdated(walks))
                 }
             }
 
