@@ -954,17 +954,18 @@ func polylineIntersectsPolygon(encoded string, polygon GeoJSONGeometry) bool {
 	if !ok || len(line) == 0 {
 		return false
 	}
-	rings, ok := polygonOuterRings(polygon)
+	parts, ok := polygonParts(polygon)
 	if !ok {
 		return false
 	}
-	for _, ring := range rings {
-		for _, point := range line {
-			if pointInPolygon(point, ring) {
-				return true
-			}
+	for _, point := range line {
+		if pointInGeoJSONPolygon(point, polygon) {
+			return true
 		}
-		for i := 0; i < len(line)-1; i++ {
+	}
+	rings := ringsForSegmentIntersection(parts)
+	for i := 0; i < len(line)-1; i++ {
+		for _, ring := range rings {
 			for j := 0; j < len(ring)-1; j++ {
 				if segmentsIntersect(line[i], line[i+1], ring[j], ring[j+1]) {
 					return true
