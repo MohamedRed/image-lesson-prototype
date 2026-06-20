@@ -355,6 +355,25 @@ func TestPickBestDriverFromProfiles_RanksLowerSeatLoadAboveTiedCandidate(t *test
 	}
 }
 
+func TestPickBestDriverFromProfiles_RanksLowerCargoLoadAboveTiedCandidate(t *testing.T) {
+	req := corridorRequest()
+	req.LuggageManifest = map[string]int{"suitcase": 1}
+	lowLoad := corridorDriverWithPickupZone("zzz-low-cargo-load", 0, 0, routeCorridor(), "zone-low-cargo")
+	lowLoad.LuggageCapacity = map[string]int{"suitcase": 4}
+	lowLoad.ReservedLuggage = map[string]int{"suitcase": 0}
+	highLoad := corridorDriverWithPickupZone("aaa-high-cargo-load", 0, 0, routeCorridor(), "zone-high-cargo")
+	highLoad.LuggageCapacity = map[string]int{"suitcase": 4}
+	highLoad.ReservedLuggage = map[string]int{"suitcase": 3}
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{highLoad, lowLoad}, nil, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected valid corridor driver, got error: %v", err)
+	}
+	if driverID != "zzz-low-cargo-load" {
+		t.Fatalf("expected lower cargo-load driver to win tied corridor match, got %q", driverID)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RequiresPickupZoneIDForReservation(t *testing.T) {
 	req := corridorRequest()
 	missingZone := corridorDriver("nearest-valid-but-missing-zone", 0.001, 0, routeCorridor())
