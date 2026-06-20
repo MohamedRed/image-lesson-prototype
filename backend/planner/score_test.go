@@ -208,6 +208,7 @@ func TestComputeDriverScore_CorridorIntersectsOriginWalkZone(t *testing.T) {
 }
 
 func TestComputeDriverScore_CorridorIntersectsDestinationWalkZone(t *testing.T) {
+	allowLongPickupETA(t)
 	req := corridorRequest()
 	req.OriWalkIso = GeoJSONGeometry{}
 	req.OriginWalkIso = GeoJSONGeometry{}
@@ -270,6 +271,7 @@ func TestComputeDriverScore_RejectsRouteThatHitsDestinationBeforeOrigin(t *testi
 }
 
 func TestComputeDriverScore_AllowsRouteThatContinuesAfterDestinationNearOrigin(t *testing.T) {
+	allowLongPickupETA(t)
 	req := corridorRequest()
 	driver := corridorDriver("continues-after-destination", 0, 0, routeCorridor())
 	driver.RoutePolyline = encodePolyline([]GeoPoint{
@@ -285,6 +287,7 @@ func TestComputeDriverScore_AllowsRouteThatContinuesAfterDestinationNearOrigin(t
 }
 
 func TestComputeDriverScore_AllowsRouteOrderWhenDestinationWalkZoneMissing(t *testing.T) {
+	allowLongPickupETA(t)
 	req := corridorRequest()
 	req.DestWalkIso = GeoJSONGeometry{}
 	req.DestinationWalkIso = GeoJSONGeometry{}
@@ -301,6 +304,7 @@ func TestComputeDriverScore_AllowsRouteOrderWhenDestinationWalkZoneMissing(t *te
 }
 
 func TestComputeDriverScore_UsesLaterDestinationProjectionWhenEarlierDestinationPrecedesOrigin(t *testing.T) {
+	allowLongPickupETA(t)
 	req := corridorRequest()
 	req.DestWalkIso = GeoJSONGeometry{}
 	req.DestinationWalkIso = GeoJSONGeometry{}
@@ -318,6 +322,7 @@ func TestComputeDriverScore_UsesLaterDestinationProjectionWhenEarlierDestination
 }
 
 func TestComputeDriverScore_UsesEarlierOriginProjectionWhenOriginWalkZoneMissing(t *testing.T) {
+	allowLongPickupETA(t)
 	req := corridorRequest()
 	req.Origin = GeoPoint{Latitude: 0.004, Longitude: 0}
 	req.OriWalkIso = GeoJSONGeometry{}
@@ -671,6 +676,7 @@ func TestComputeDriverScore_RejectsExcessiveDetourBeforeRouteContinuesNearOrigin
 
 func TestComputeDriverScore_DoesNotRejectSparseDirectPolylineAsDetour(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "1")
+	allowLongPickupETA(t)
 	req := corridorRequest()
 	driver := corridorDriver("sparse-direct-route", 0, 0, routeCorridor())
 	driver.RoutePolyline = encodePolyline([]GeoPoint{
@@ -701,6 +707,21 @@ func TestComputeDriverScore_RejectsRoutePickupEtaAboveThreshold(t *testing.T) {
 	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
 	if ok {
 		t.Fatalf("expected route pickup ETA above threshold to be rejected")
+	}
+}
+
+func TestComputeDriverScore_RejectsRoutePickupEtaAboveDefaultThreshold(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("late-by-default", 0, -0.21, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.21},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected default pickup ETA threshold to reject a route reaching pickup after more than 30 minutes")
 	}
 }
 
@@ -1008,6 +1029,11 @@ func TestLegExcludedDriverIDsMergesReservationRetryAndPriorLegDrivers(t *testing
 	if !reflect.DeepEqual(excluded, want) {
 		t.Fatalf("expected merged exclusions %#v, got %#v", want, excluded)
 	}
+}
+
+func allowLongPickupETA(t *testing.T) {
+	t.Helper()
+	t.Setenv("MAX_SINGLE_HOP_PICKUP_ETA_SECONDS", "28800")
 }
 
 func corridorRequest() RideRequest {

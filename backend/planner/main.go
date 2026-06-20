@@ -740,7 +740,7 @@ func maxSingleHopPickupETASeconds() int {
 			return parsed
 		}
 	}
-	return 28800
+	return 1800
 }
 
 type scoreWeights struct {
