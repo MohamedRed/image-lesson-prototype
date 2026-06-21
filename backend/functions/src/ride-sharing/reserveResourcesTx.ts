@@ -231,15 +231,20 @@ function getCurrentSeatUsage(legs: any[]): number {
   return legs.reduce((total, leg) => total + (leg.seats || 0), 0);
 }
 
+function normalizePassengerGender(gender?: string): string | undefined {
+  const normalized = gender?.trim().toLowerCase();
+  return normalized || undefined;
+}
+
 function currentPassengerGenderPool(currentPassengerGenders: unknown[]): string[] {
   return currentPassengerGenders
     .filter((gender): gender is string => typeof gender === "string")
-    .map((gender) => gender.trim())
-    .filter((gender) => gender.length > 0);
+    .map((gender) => normalizePassengerGender(gender))
+    .filter((gender): gender is string => Boolean(gender));
 }
 
 function genderPoolCompatible(currentPassengerGenders: unknown[], riderGender?: string): boolean {
-  const normalizedRiderGender = riderGender?.trim();
+  const normalizedRiderGender = normalizePassengerGender(riderGender);
   if (!normalizedRiderGender) {
     return true;
   }
@@ -248,7 +253,7 @@ function genderPoolCompatible(currentPassengerGenders: unknown[], riderGender?: 
 }
 
 function passengerGenderUpdate(currentPassengerGenders: unknown[], riderGender?: string): string[] | undefined {
-  const normalizedRiderGender = riderGender?.trim();
+  const normalizedRiderGender = normalizePassengerGender(riderGender);
   if (!normalizedRiderGender) {
     return undefined;
   }

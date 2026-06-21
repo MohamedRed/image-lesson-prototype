@@ -57,6 +57,32 @@ describe("reserveResourcesTransaction", () => {
     expect(updates.map((update) => update.path)).toEqual(["drivers/driver-older-child", "pickupZones/zone-1"]);
   });
 
+  it("normalizes rider gender before reservation pool comparison and persistence", async () => {
+    const updates: Array<{ path: string; data: Record<string, unknown> }> = [];
+    const db = fakeReservationDb({
+      "drivers/driver-gender-case": {
+        capacitySeats: 4,
+        activePickups: 0,
+        currentPassengerGenders: ["female"],
+      },
+      "pickupZones/zone-1": {
+        capacityCars: 10,
+        activePickups: 0,
+      },
+    }, updates);
+
+    const result = await reserveResourcesTransaction(
+      "driver-gender-case",
+      "zone-1",
+      { passengerCount: 1, riderGender: " Female " } as any,
+      db as never
+    );
+
+    expect(result.success).toBe(true);
+    const driverUpdate = updates.find((update) => update.path === "drivers/driver-gender-case");
+    expect(driverUpdate?.data.currentPassengerGenders).toEqual(["female", "female"]);
+  });
+
   it("ignores blank passenger gender placeholders during gender pool validation", async () => {
     const updates: Array<{ path: string; data: Record<string, unknown> }> = [];
     const db = fakeReservationDb({
