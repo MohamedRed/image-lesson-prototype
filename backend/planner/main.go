@@ -169,7 +169,13 @@ func selectedOrderedPickupDropoff(points []GeoPoint, req RideRequest, minPos, ma
 			if requireWalkFeasible && !projectionSatisfiesEffectiveWalkGeometry(req, pickup, originWalk) {
 				continue
 			}
-			dropoffProjection, ok := routeDestinationProjectionAfter(points, req, pickup.position, maxPos)
+			var dropoffProjection routeProjection
+			var ok bool
+			if requireWalkFeasible {
+				dropoffProjection, ok = routeDestinationProjectionAfter(points, req, pickup.position, maxPos)
+			} else {
+				dropoffProjection, ok = routeProjectionInGeometryOrRangeAfter(req, points, req.Destination, req.destinationOrderGeometry(), pickup.position, maxPos)
+			}
 			if !ok || dropoffProjection.position <= pickup.position {
 				continue
 			}
@@ -1232,7 +1238,16 @@ func routeDestinationProjectionAfter(points []GeoPoint, req RideRequest, minPos,
 	destinationDrive := req.destinationDriveGeometry()
 	destinationGeometry := req.destinationOrderGeometry()
 	if destinationDrive.isZero() {
-		return routeProjectionInGeometryOrRangeAfter(req, points, req.Destination, destinationGeometry, minPos, maxPos)
+		candidates := routeWalkProjectionCandidates(points, req, req.Destination, destinationGeometry, minPos, maxPos)
+		for _, candidate := range candidates {
+			if candidate.position <= minPos || candidate.position > maxPos {
+				continue
+			}
+			if projectionSatisfiesEffectiveWalkGeometry(req, candidate, destinationGeometry) {
+				return candidate, true
+			}
+		}
+		return routeProjection{}, false
 	}
 
 	candidates := routeProjectionCandidatesInGeometryOrRange(points, req.Destination, destinationGeometry, minPos, maxPos)
