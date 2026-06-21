@@ -12,9 +12,19 @@ import unittest
 ROOT = Path(__file__).resolve().parent
 CLOUD_RUN_MODULE = ROOT / "modules" / "cloud_run" / "main.tf"
 ROOT_MAIN = ROOT / "main.tf"
+ROOT_BACKEND = ROOT / "backend.tf"
 
 
 class CloudRunSecurityTests(unittest.TestCase):
+    def test_root_required_providers_declared_once(self) -> None:
+        root_text = ROOT_MAIN.read_text() + "\n" + ROOT_BACKEND.read_text()
+
+        self.assertEqual(
+            root_text.count("required_providers"),
+            1,
+            "Terraform root module must declare required_providers only once so terraform validate can run",
+        )
+
     def test_public_invoker_is_explicit_opt_in_and_default_private(self) -> None:
         module_text = CLOUD_RUN_MODULE.read_text()
         root_text = ROOT_MAIN.read_text()
