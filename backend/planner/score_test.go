@@ -197,6 +197,21 @@ func TestComputeDriverScore_ExclusiveRequestUsesSeatLedgerNotStaleActivePickups(
 	}
 }
 
+func TestComputeDriverScore_ExclusiveRequestIgnoresEmptyPassengerGenderPlaceholders(t *testing.T) {
+	req := corridorRequest()
+	req.PremiumRequested = map[string]any{"exclusive": true}
+	driver := corridorDriver("exclusive-empty-gender-placeholders", 0, 0, routeCorridor())
+	driver.PremiumCapabilities = map[string]any{"exclusive": true}
+	driver.HasSeatLedger = true
+	driver.ReservedSeats = 0
+	driver.CurrentPassengerGenders = []string{"", "   "}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected blank currentPassengerGenders placeholders not to count as existing passengers")
+	}
+}
+
 func TestComputeDriverScore_IgnoresFalsePremiumRequirement(t *testing.T) {
 	req := corridorRequest()
 	req.PremiumRequested = map[string]any{"exclusive": false}

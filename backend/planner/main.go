@@ -708,6 +708,7 @@ func genderPoolCompatible(riderGender string, currentPassengerGenders []string) 
 		return true
 	}
 	for _, gender := range currentPassengerGenders {
+		gender = strings.TrimSpace(gender)
 		if gender != "" && gender != riderGender {
 			return false
 		}
@@ -730,7 +731,16 @@ func premiumCapabilityRequired(value any) bool {
 
 func driverHasExistingPassengers(driver DriverProfile, seatsUsed int) bool {
 	legacyActivePickupsOccupied := !driver.HasSeatLedger && driver.ActivePickups > 0
-	return seatsUsed > 0 || legacyActivePickupsOccupied || len(driver.CurrentPassengerGenders) > 0
+	return seatsUsed > 0 || legacyActivePickupsOccupied || hasPassengerGenderPool(driver.CurrentPassengerGenders)
+}
+
+func hasPassengerGenderPool(currentPassengerGenders []string) bool {
+	for _, gender := range currentPassengerGenders {
+		if strings.TrimSpace(gender) != "" {
+			return true
+		}
+	}
+	return false
 }
 
 func seatLoadScore(driver DriverProfile, seatsUsed int) float64 {
