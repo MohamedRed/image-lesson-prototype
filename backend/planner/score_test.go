@@ -182,6 +182,21 @@ func TestComputeDriverScore_RejectsExclusiveRequestWithExistingReservedSeats(t *
 	}
 }
 
+func TestComputeDriverScore_ExclusiveRequestUsesSeatLedgerNotStaleActivePickups(t *testing.T) {
+	req := corridorRequest()
+	req.PremiumRequested = map[string]any{"exclusive": true}
+	driver := corridorDriver("exclusive-empty-ledger-stale-active-pickups", 0, 0, routeCorridor())
+	driver.PremiumCapabilities = map[string]any{"exclusive": true}
+	driver.HasSeatLedger = true
+	driver.ReservedSeats = 0
+	driver.ActivePickups = 4
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected explicit empty seat ledger to override stale activePickups for exclusive occupancy")
+	}
+}
+
 func TestComputeDriverScore_IgnoresFalsePremiumRequirement(t *testing.T) {
 	req := corridorRequest()
 	req.PremiumRequested = map[string]any{"exclusive": false}

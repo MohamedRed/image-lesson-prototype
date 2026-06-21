@@ -729,7 +729,8 @@ func premiumCapabilityRequired(value any) bool {
 }
 
 func driverHasExistingPassengers(driver DriverProfile, seatsUsed int) bool {
-	return seatsUsed > 0 || driver.ActivePickups > 0 || len(driver.CurrentPassengerGenders) > 0
+	legacyActivePickupsOccupied := !driver.HasSeatLedger && driver.ActivePickups > 0
+	return seatsUsed > 0 || legacyActivePickupsOccupied || len(driver.CurrentPassengerGenders) > 0
 }
 
 func seatLoadScore(driver DriverProfile, seatsUsed int) float64 {
