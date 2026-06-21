@@ -1,0 +1,37 @@
+name: Planner CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/planner/**'
+      - '.github/workflows/planner-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/planner/**'
+      - '.github/workflows/planner-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  planner-test-build:
+    name: Go planner test and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/planner
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/planner/go.mod
+          cache-dependency-path: backend/planner/go.sum
+
+      - name: Run planner tests
+        run: go test ./...
+
+      - name: Build planner binary
+        run: go build -o /tmp/rideplanner-build-check .
