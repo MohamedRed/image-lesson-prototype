@@ -1482,7 +1482,7 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 		if !pickupZoneHasCapacity(driver) {
 			continue
 		}
-		if !dropoffZoneHasCapacity(driver) {
+		if !dropoffZoneHasCapacity(req, driver) {
 			continue
 		}
 		curbFactor := driver.CurbFactor
@@ -1510,8 +1510,9 @@ func pickupZoneHasCapacity(driver DriverProfile) bool {
 	return zoneHasCapacity(strings.TrimSpace(driver.PickupZoneID), driver.PickupZoneActivePickups, driver.PickupZoneCapacityCars, false)
 }
 
-func dropoffZoneHasCapacity(driver DriverProfile) bool {
-	return zoneHasCapacity(strings.TrimSpace(driver.DropoffZoneID), driver.DropoffZoneActivePickups, driver.DropoffZoneCapacityCars, true)
+func dropoffZoneHasCapacity(req RideRequest, driver DriverProfile) bool {
+	requireDropoffZone := !req.destinationDriveGeometry().isZero()
+	return zoneHasCapacity(strings.TrimSpace(driver.DropoffZoneID), driver.DropoffZoneActivePickups, driver.DropoffZoneCapacityCars, !requireDropoffZone)
 }
 
 func zoneHasCapacity(zoneID string, activePickups, capacityCars int, allowMissingZone bool) bool {

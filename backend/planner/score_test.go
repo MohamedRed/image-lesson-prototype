@@ -1530,6 +1530,24 @@ func TestPickBestDriverFromProfiles_RejectsFullDropoffZoneBeforeReservation(t *t
 	}
 }
 
+func TestPickBestDriverFromProfiles_RequiresDropoffZoneWhenDestinationDriveGeoPresent(t *testing.T) {
+	req := corridorRequest()
+	req.DestinationDriveGeo = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	missingDropoffZone := corridorDriverWithPickupZone("nearest-missing-dropoff-zone", 0.001, 0, routeCorridor(), "pickup-zone-near")
+	withDropoffZone := corridorDriverWithPickupZone("farther-with-dropoff-zone", 0.02, 0, routeCorridor(), "pickup-zone-far")
+	withDropoffZone.DropoffZoneID = "dropoff-zone-available"
+	withDropoffZone.DropoffZoneActivePickups = 1
+	withDropoffZone.DropoffZoneCapacityCars = 2
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{missingDropoffZone, withDropoffZone}, nil, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected planner to choose a driver with a reservable dropoff zone, got error: %v", err)
+	}
+	if driverID != "farther-with-dropoff-zone" {
+		t.Fatalf("expected destinationDriveGeo requests to require planner-provided dropoffZoneId, got %q", driverID)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RejectsFullPickupZoneBeforeReservation(t *testing.T) {
 	req := corridorRequest()
 	fullZone := corridorDriverWithPickupZone("nearest-full-zone", 0.001, 0, routeCorridor(), "zone-full")
