@@ -856,6 +856,17 @@ func routeOriginProjectionCandidates(points []GeoPoint, req RideRequest, minPos,
 			filtered = append(filtered, candidate)
 		}
 	}
+	if len(filtered) > 0 {
+		return filtered
+	}
+
+	driveCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, originDrive, minPos, maxPos)
+	for _, candidate := range driveCandidates {
+		if !originGeometry.isZero() && !pointInGeoJSONPolygon(candidate.point, originGeometry) {
+			continue
+		}
+		filtered = append(filtered, candidate)
+	}
 	return filtered
 }
 
@@ -1367,7 +1378,14 @@ func firstRoutePositionInGeometry(points []GeoPoint, target GeoPoint, geometry G
 			return pos, true
 		}
 	}
-	return consider(points[len(points)-1], float64(len(points)-1))
+	if pos, ok := consider(points[len(points)-1], float64(len(points)-1)); ok {
+		return pos, true
+	}
+	candidates := routeSegmentGeometryIntersectionCandidates(points, target, geometry, minPos, float64(len(points)-1))
+	if len(candidates) == 0 {
+		return 0, false
+	}
+	return candidates[0].position, true
 }
 
 func driverRouteIntersectsGeometry(driver DriverProfile, geometry GeoJSONGeometry) bool {

@@ -422,6 +422,28 @@ func TestComputeDriverScore_RejectsRouteThatNeverEntersOriginDriveGeo(t *testing
 	}
 }
 
+func TestComputeDriverScore_AllowsRouteCrossingOriginDriveGeoWhenNearestProjectionOutside(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "20000")
+	req := corridorRequest()
+	req.Origin = GeoPoint{Latitude: 0.05, Longitude: 0.05}
+	req.OriWalkIso = rectPolygon(-0.10, -0.10, 0.10, 0.10)
+	req.OriDriveIso = rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	req.Destination = GeoPoint{Latitude: 0, Longitude: 1}
+	req.DestWalkIso = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	driver := corridorDriver("crosses-origin-drive-away-from-raw-origin", 0, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0.10},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected route segment crossing originDriveGeo to satisfy pickup geofence even when raw-origin projection is outside")
+	}
+}
+
 func TestComputeDriverScore_RejectsDestinationDriveGeoOnlyBeforePickup(t *testing.T) {
 	allowLongPickupETA(t)
 	req := corridorRequest()
