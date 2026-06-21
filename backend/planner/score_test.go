@@ -2257,6 +2257,29 @@ func TestBuildSingleHopJourneyAddsRouteRideTimeWhenEtaProfileMissing(t *testing.
 	}
 }
 
+func TestBuildSingleHopJourneyFallsBackWhenRouteEtaProfileHasNoProgress(t *testing.T) {
+	req := corridorRequest()
+	req.Destination = GeoPoint{Latitude: 0, Longitude: 0.01}
+	req.OriWalkIso = rectPolygon(-0.001, -0.0001, 0.001, 0.0001)
+	req.DestWalkIso = rectPolygon(-0.001, 0.009, 0.001, 0.011)
+	req.OriDriveIso = GeoJSONGeometry{}
+	driver := corridorDriver("driver-with-zero-route-eta-profile", 0, -0.001, rectPolygon(-0.001, -0.002, 0.001, 0.011))
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.001},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 0.01},
+	})
+	driver.RouteETAProfileSeconds = []int{0, 0, 0}
+
+	pickupEtaSec := 30
+	journey := buildSingleHopJourney(req, driver, pickupEtaSec)
+	expectedRideSec := int(haversineKm(0, 0, 0, 0.01) / 40.0 * 3600)
+	expectedTotalSec := pickupEtaSec + expectedRideSec
+	if journey.Legs[0].EstimatedTimeSeconds != expectedTotalSec || journey.TotalEstimatedTimeSeconds != expectedTotalSec {
+		t.Fatalf("expected zero-progress route ETA profile to fall back to route-distance ETA %d, got leg=%d total=%d", expectedTotalSec, journey.Legs[0].EstimatedTimeSeconds, journey.TotalEstimatedTimeSeconds)
+	}
+}
+
 func TestBuildSingleHopJourneyUsesRouteEtaProfileForTotalLegEta(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("driver-with-route-eta-profile", 0, -0.10, routeCorridor())

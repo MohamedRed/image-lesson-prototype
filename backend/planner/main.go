@@ -155,7 +155,7 @@ func singleHopRouteRideETASeconds(req RideRequest, driver DriverProfile) (int, b
 		pickupRouteEtaSec := routeETASecondsAtPosition(driver.RouteETAProfileSeconds, pickupProjection.position)
 		dropoffRouteEtaSec := routeETASecondsAtPosition(driver.RouteETAProfileSeconds, dropoffProjection.position)
 		rideEtaSec := dropoffRouteEtaSec - pickupRouteEtaSec
-		if rideEtaSec >= 0 {
+		if rideEtaSec > 0 {
 			return rideEtaSec, true
 		}
 	}
