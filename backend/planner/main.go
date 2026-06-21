@@ -166,14 +166,14 @@ func selectedOrderedPickupDropoff(points []GeoPoint, req RideRequest, minPos, ma
 	pickupCandidates := routeOriginProjectionCandidates(points, req, minPos, maxPos)
 	pick := func(requireWalkFeasible bool) (GeoPoint, float64, GeoPoint, float64, bool) {
 		for _, pickup := range pickupCandidates {
-			if requireWalkFeasible && !projectionSatisfiesWalkGeometry(req, pickup, originWalk) {
+			if requireWalkFeasible && !projectionSatisfiesEffectiveWalkGeometry(req, pickup, originWalk) {
 				continue
 			}
 			dropoffProjection, ok := routeDestinationProjectionAfter(points, req, pickup.position, maxPos)
 			if !ok || dropoffProjection.position <= pickup.position {
 				continue
 			}
-			if requireWalkFeasible && !projectionSatisfiesWalkGeometry(req, dropoffProjection, destinationWalk) {
+			if requireWalkFeasible && !projectionSatisfiesEffectiveWalkGeometry(req, dropoffProjection, destinationWalk) {
 				continue
 			}
 			return pickup.point, pickup.position, dropoffProjection.point, dropoffProjection.position, true
@@ -1153,11 +1153,11 @@ func routeInsertionProjections(req RideRequest, points []GeoPoint) (routeProject
 	destinationWalk := req.destinationWalkGeometry()
 	originCandidates := routeOriginProjectionCandidates(points, req, 0, lastPos)
 	for _, originProjection := range originCandidates {
-		if !projectionSatisfiesWalkGeometry(req, originProjection, originWalk) {
+		if !projectionSatisfiesEffectiveWalkGeometry(req, originProjection, originWalk) {
 			continue
 		}
 		destinationProjection, ok := routeDestinationProjectionAfter(points, req, originProjection.position, lastPos)
-		if ok && destinationProjection.position > originProjection.position && projectionSatisfiesWalkGeometry(req, destinationProjection, destinationWalk) {
+		if ok && destinationProjection.position > originProjection.position && projectionSatisfiesEffectiveWalkGeometry(req, destinationProjection, destinationWalk) {
 			return originProjection, destinationProjection, true
 		}
 	}
@@ -1216,6 +1216,16 @@ func projectionSatisfiesWalkGeometry(req RideRequest, candidate routeProjection,
 		return true
 	}
 	return candidate.snapKm <= effectiveSingleHopWalkMeters(req)/1000.0
+}
+
+func projectionSatisfiesEffectiveWalkGeometry(req RideRequest, candidate routeProjection, geometry GeoJSONGeometry) bool {
+	if !projectionSatisfiesWalkGeometry(req, candidate, geometry) {
+		return false
+	}
+	if req.WalkRadiusM > 0 && candidate.snapKm > effectiveSingleHopWalkMeters(req)/1000.0 {
+		return false
+	}
+	return true
 }
 
 func routeDestinationProjectionAfter(points []GeoPoint, req RideRequest, minPos, maxPos float64) (routeProjection, bool) {
