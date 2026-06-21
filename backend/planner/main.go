@@ -1709,6 +1709,9 @@ func numberAsFloat(value any) (float64, bool) {
 func pointInPolygon(point GeoPoint, polygon []GeoPoint) bool {
 	inside := false
 	for i, j := 0, len(polygon)-1; i < len(polygon); j, i = i, i+1 {
+		if pointOnSegment(point, polygon[j], polygon[i]) {
+			return true
+		}
 		xi, yi := polygon[i].Longitude, polygon[i].Latitude
 		xj, yj := polygon[j].Longitude, polygon[j].Latitude
 		intersects := ((yi > point.Latitude) != (yj > point.Latitude)) &&
@@ -1718,6 +1721,16 @@ func pointInPolygon(point GeoPoint, polygon []GeoPoint) bool {
 		}
 	}
 	return inside
+}
+
+func pointOnSegment(point, start, end GeoPoint) bool {
+	const eps = 1e-12
+	cross := (point.Longitude-start.Longitude)*(end.Latitude-start.Latitude) - (point.Latitude-start.Latitude)*(end.Longitude-start.Longitude)
+	if math.Abs(cross) > eps {
+		return false
+	}
+	return math.Min(start.Longitude, end.Longitude)-eps <= point.Longitude && point.Longitude <= math.Max(start.Longitude, end.Longitude)+eps &&
+		math.Min(start.Latitude, end.Latitude)-eps <= point.Latitude && point.Latitude <= math.Max(start.Latitude, end.Latitude)+eps
 }
 
 func segmentsIntersect(a1, a2, b1, b2 GeoPoint) bool {

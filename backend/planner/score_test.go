@@ -280,6 +280,21 @@ func TestComputeDriverScore_RejectsRouteThatHitsDestinationBeforeOrigin(t *testi
 	}
 }
 
+func TestComputeDriverScore_AllowsRouteOnWalkZoneBoundaries(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "2000")
+	req := corridorRequest()
+	driver := corridorDriver("route-on-walk-zone-boundaries", -0.01, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: -0.01, Longitude: -0.10},
+		{Latitude: -0.01, Longitude: 1.10},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected route touching origin and destination walk-zone boundaries in order to be accepted")
+	}
+}
+
 func TestComputeDriverScore_AllowsRouteThatContinuesAfterDestinationNearOrigin(t *testing.T) {
 	allowLongPickupETA(t)
 	req := corridorRequest()
