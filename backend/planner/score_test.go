@@ -2438,6 +2438,33 @@ func TestPickBestDriverFromProfiles_IgnoresRegressingRouteEtaProfileForPickupRan
 	}
 }
 
+func TestPickBestDriverFromProfiles_IgnoresNegativeRouteEtaProfileForPickupRanking(t *testing.T) {
+	req := corridorRequest()
+	route := encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: -0.05},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+	negativeProfile := corridorDriverWithPickupZone("aaa-negative-profile", 0, -0.10, routeCorridor(), "zone-negative-profile")
+	negativeProfile.RoutePolyline = route
+	negativeProfile.RouteETAProfileSeconds = []int{-600, -570, -540, 1900}
+	validProfile := corridorDriverWithPickupZone("zzz-valid-profile", 0, -0.10, routeCorridor(), "zone-valid-profile")
+	validProfile.RoutePolyline = route
+	validProfile.RouteETAProfileSeconds = []int{0, 300, 600, 1900}
+
+	driverID, etaSec, err := pickBestDriverFromProfiles(req, []DriverProfile{negativeProfile, validProfile}, nil, scoreWeights{ETA: 1, Curb: 1})
+	if err != nil {
+		t.Fatalf("expected route ETA profile winner, got error: %v", err)
+	}
+	if driverID != "zzz-valid-profile" {
+		t.Fatalf("expected negative pickup profile to fall back to route-distance ETA instead of beating valid profile, got %q eta=%d", driverID, etaSec)
+	}
+	if etaSec != 600 {
+		t.Fatalf("expected valid route ETA profile pickup ETA 600, got %d", etaSec)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RanksShorterRiderWalkAboveEqualEta(t *testing.T) {
 	req := corridorRequest()
 	req.WalkRadiusM = 1000
@@ -2739,6 +2766,13 @@ func TestZoneCapacityFromLookupClampsNegativeActivePickups(t *testing.T) {
 	active, capacity := zoneCapacityFromLookup(map[string]any{"activePickups": int64(-3), "capacityCars": int64(2)}, true)
 	if active != 0 || capacity != 2 {
 		t.Fatalf("expected negative zone activePickups to be normalized to zero, got active=%d capacity=%d", active, capacity)
+	}
+}
+
+func TestZoneCapacityFromLookupIgnoresNonFiniteNumericFields(t *testing.T) {
+	active, capacity := zoneCapacityFromLookup(map[string]any{"activePickups": math.Inf(1), "capacityCars": math.NaN()}, true)
+	if active != 0 || capacity != defaultPickupZoneCapacityCars() {
+		t.Fatalf("expected non-finite zone numbers to fall back safely, got active=%d capacity=%d", active, capacity)
 	}
 }
 

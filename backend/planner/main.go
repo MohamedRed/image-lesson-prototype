@@ -176,6 +176,11 @@ func routeETAProfileProgressesBetween(profile []int, startPosition, endPosition 
 	if upperIndex >= len(profile) {
 		upperIndex = len(profile) - 1
 	}
+	for index := lowerIndex; index <= upperIndex; index++ {
+		if profile[index] < 0 {
+			return false
+		}
+	}
 	for index := lowerIndex + 1; index <= upperIndex; index++ {
 		if profile[index] < profile[index-1] {
 			return false
