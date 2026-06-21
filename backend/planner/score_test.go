@@ -1640,6 +1640,31 @@ func TestPickBestDriverFromProfiles_RanksRouteEtaProfileAboveEqualGeometry(t *te
 	}
 }
 
+func TestPickBestDriverFromProfiles_IgnoresZeroProgressRouteEtaProfileForPickupRanking(t *testing.T) {
+	req := corridorRequest()
+	zeroProfile := corridorDriverWithPickupZone("aaa-zero-progress-profile", 0, -0.10, routeCorridor(), "zone-zero-profile")
+	zeroProfile.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+	zeroProfile.RouteETAProfileSeconds = []int{0, 0, 0}
+	validProfile := corridorDriverWithPickupZone("zzz-valid-profile", 0, -0.10, routeCorridor(), "zone-valid-profile")
+	validProfile.RoutePolyline = zeroProfile.RoutePolyline
+	validProfile.RouteETAProfileSeconds = []int{0, 60, 1900}
+
+	driverID, etaSec, err := pickBestDriverFromProfiles(req, []DriverProfile{zeroProfile, validProfile}, nil, scoreWeights{ETA: 1, Curb: 1})
+	if err != nil {
+		t.Fatalf("expected route ETA profile winner, got error: %v", err)
+	}
+	if driverID != "zzz-valid-profile" {
+		t.Fatalf("expected zero-progress profile to fall back to route-distance ETA instead of beating valid profile, got %q eta=%d", driverID, etaSec)
+	}
+	if etaSec != 60 {
+		t.Fatalf("expected valid route ETA profile pickup ETA 60, got %d", etaSec)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RanksShorterRiderWalkAboveEqualEta(t *testing.T) {
 	req := corridorRequest()
 	req.WalkRadiusM = 1000
