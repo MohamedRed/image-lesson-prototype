@@ -502,6 +502,25 @@ func TestComputeDriverScore_RejectsBufferOnlyInsideOriginWalkZoneHole(t *testing
 	}
 }
 
+func TestComputeDriverScore_RejectsBufferOnlyOnOriginWalkZoneHoleBoundary(t *testing.T) {
+	req := corridorRequest()
+	req.OriWalkIso = polygonWithHole(
+		rectRing(-0.05, -0.05, 0.05, 0.05),
+		rectRing(-0.01, -0.01, 0.01, 0.01),
+	)
+	req.OriginWalkIso = req.OriWalkIso
+	req.DestWalkIso = GeoJSONGeometry{}
+	req.DestinationWalkIso = GeoJSONGeometry{}
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	driver := corridorDriver("buffer-on-origin-walk-hole-boundary", 0, 0, rectPolygon(-0.010, -0.005, -0.009, 0.005))
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected bufferPolygon only on an origin walk-zone hole boundary to be rejected")
+	}
+}
+
 func TestComputeDriverScore_RejectsPolylineMissingWalkZoneDespiteBroadBuffer(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("stale-broad-buffer", 0, 0, routeCorridor())

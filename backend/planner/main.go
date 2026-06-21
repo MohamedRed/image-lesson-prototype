@@ -1313,23 +1313,14 @@ func geoJSONPolygonsIntersect(a, b GeoJSONGeometry) bool {
 			}
 		}
 	}
-	for _, aRing := range ringsForSegmentIntersection(aParts) {
-		for _, bRing := range ringsForSegmentIntersection(bParts) {
+	for _, aRing := range outerRingsForSegmentIntersection(aParts) {
+		for _, bRing := range outerRingsForSegmentIntersection(bParts) {
 			if ringsHaveSegmentIntersection(aRing, bRing) {
 				return true
 			}
 		}
 	}
 	return false
-}
-
-func ringsForSegmentIntersection(parts []geoPolygonPart) [][]GeoPoint {
-	rings := [][]GeoPoint{}
-	for _, part := range parts {
-		rings = append(rings, part.outer)
-		rings = append(rings, part.holes...)
-	}
-	return rings
 }
 
 func ringsHaveSegmentIntersection(aRing, bRing []GeoPoint) bool {
