@@ -487,6 +487,7 @@ type DriverProfile struct {
 	ChildSeatInventory      map[string]int
 	ReservedChildSeats      map[string]int
 	PremiumCapabilities     map[string]any
+	CurrentPassengerGenders []string
 }
 
 // TransferPoint represents a curb segment suitable for passenger transfers
@@ -513,7 +514,10 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 		return 0, 0, false
 	}
 
-	// Gender pool handled at query level (not repeated here)
+	// Gender pool compatibility mirrors reservation hard filters.
+	if !genderPoolCompatible(req.RiderGender, driver.CurrentPassengerGenders) {
+		return 0, 0, false
+	}
 
 	// Luggage filter
 	if req.LuggageManifest != nil {
@@ -609,6 +613,18 @@ func effectiveCapacitySeats(driver DriverProfile) int {
 		return driver.CapacitySeats
 	}
 	return 4
+}
+
+func genderPoolCompatible(riderGender string, currentPassengerGenders []string) bool {
+	if riderGender == "" || len(currentPassengerGenders) == 0 {
+		return true
+	}
+	for _, gender := range currentPassengerGenders {
+		if gender != "" && gender != riderGender {
+			return false
+		}
+	}
+	return true
 }
 
 func seatLoadScore(driver DriverProfile, seatsUsed int) float64 {
@@ -2320,18 +2336,19 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			Legs            []struct {
 				Seats int `firestore:"seats"`
 			} `firestore:"legs"`
-			PickupZoneID           string                 `firestore:"pickupZoneId"`
-			RoutePolyline          string                 `firestore:"routePolyline"`
-			RouteETAProfileSeconds []int                  `firestore:"routeEtaProfile"`
-			BufferPolygon          GeoJSONGeometry        `firestore:"bufferPolygon"`
-			RouteBuffer            GeoJSONGeometry        `firestore:"routeBuffer"`
-			LuggageCapacity        map[string]int         `firestore:"luggageCapacity"`
-			CargoLedger            []cargoLedgerEntry     `firestore:"cargoLedger"`
-			PetLimits              map[string]int         `firestore:"petLimits"`
-			PetLedger              []petLedgerEntry       `firestore:"petLedger"`
-			ChildSeatInventory     map[string]int         `firestore:"childSeatInventory"`
-			ChildSeatLedger        []childSeatLedgerEntry `firestore:"childSeatLedger"`
-			PremiumCapabilities    map[string]any         `firestore:"premiumCapabilities"`
+			PickupZoneID            string                 `firestore:"pickupZoneId"`
+			RoutePolyline           string                 `firestore:"routePolyline"`
+			RouteETAProfileSeconds  []int                  `firestore:"routeEtaProfile"`
+			BufferPolygon           GeoJSONGeometry        `firestore:"bufferPolygon"`
+			RouteBuffer             GeoJSONGeometry        `firestore:"routeBuffer"`
+			LuggageCapacity         map[string]int         `firestore:"luggageCapacity"`
+			CargoLedger             []cargoLedgerEntry     `firestore:"cargoLedger"`
+			PetLimits               map[string]int         `firestore:"petLimits"`
+			PetLedger               []petLedgerEntry       `firestore:"petLedger"`
+			ChildSeatInventory      map[string]int         `firestore:"childSeatInventory"`
+			ChildSeatLedger         []childSeatLedgerEntry `firestore:"childSeatLedger"`
+			PremiumCapabilities     map[string]any         `firestore:"premiumCapabilities"`
+			CurrentPassengerGenders []string               `firestore:"currentPassengerGenders"`
 		}
 		if err := d.DataTo(&data); err != nil {
 			continue
@@ -2387,6 +2404,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			ChildSeatInventory:      data.ChildSeatInventory,
 			ReservedChildSeats:      sumChildSeatLedger(data.ChildSeatLedger),
 			PremiumCapabilities:     data.PremiumCapabilities,
+			CurrentPassengerGenders: data.CurrentPassengerGenders,
 		}
 
 		profiles = append(profiles, prof)

@@ -26,6 +26,18 @@ func TestComputeDriverScore_LuggageReject(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsMixedGenderPool(t *testing.T) {
+	req := corridorRequest()
+	req.RiderGender = "female"
+	driver := corridorDriver("male-passenger-pool", 0, 0, routeCorridor())
+	driver.CurrentPassengerGenders = []string{"male"}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected existing male passenger pool to reject female rider")
+	}
+}
+
 func TestComputeDriverScore_UsesLuggageLedgerForCapacity(t *testing.T) {
 	req := RideRequest{
 		Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1,
@@ -472,8 +484,8 @@ func TestComputeDriverScore_AllowsLaterDestinationDriveGeoAfterEarlierOutsideWal
 	req.Destination = GeoPoint{Latitude: 0.05, Longitude: 0.95}
 	req.DestWalkIso = rectPolygon(-0.10, 0.90, 0.10, 1.10)
 	req.DestinationDriveGeo = multiPolygon(
-		rectRing(-0.01, 0.49, 0.01, 0.51),  // earlier drive pass outside destination walk zone
-		rectRing(-0.01, 0.99, 0.01, 1.01),  // legal dropoff drive pass inside destination walk zone
+		rectRing(-0.01, 0.49, 0.01, 0.51), // earlier drive pass outside destination walk zone
+		rectRing(-0.01, 0.99, 0.01, 1.01), // legal dropoff drive pass inside destination walk zone
 	)
 	driver := corridorDriver("later-destination-drive-inside-walk", 0, -0.10, GeoJSONGeometry{})
 	driver.RoutePolyline = encodePolyline([]GeoPoint{
