@@ -1691,6 +1691,7 @@ func segmentIntersectionRepresentative(a1, a2, b1, b2 GeoPoint) (GeoPoint, bool)
 }
 
 func driverEntersOriginDriveGeo(req RideRequest, driver DriverProfile) bool {
+	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 	originDrive := req.originDriveGeometry()
 	if originDrive.isZero() {
 		return true
@@ -1708,6 +1709,7 @@ func driverEntersOriginDriveGeo(req RideRequest, driver DriverProfile) bool {
 }
 
 func driverEntersDestinationDriveGeo(req RideRequest, driver DriverProfile) bool {
+	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 	destinationDrive := req.destinationDriveGeometry()
 	if destinationDrive.isZero() {
 		return true

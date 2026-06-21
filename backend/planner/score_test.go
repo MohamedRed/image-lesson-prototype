@@ -777,6 +777,39 @@ func TestDriverRouteIntersectsGeometry_TreatsInvalidRoutePolylineAsMissing(t *te
 	}
 }
 
+func TestComputeDriverScore_UsesCanonicalRouteBufferWhenRoutePolylineInvalid(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("invalid-route-polyline-route-buffer-fallback", 0.05, 0, GeoJSONGeometry{})
+	driver.RoutePolyline = "not-a-valid-polyline"
+	driver.RouteBuffer = routeCorridor()
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected invalid routePolyline to fall back to canonical routeBuffer corridor")
+	}
+}
+
+func TestDriverEntersOriginDriveGeo_TreatsInvalidRoutePolylineAsMissing(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("invalid-route-polyline-origin-drive-buffer-fallback", 0.20, 0, routeCorridor())
+	driver.RoutePolyline = "not-a-valid-polyline"
+
+	if !driverEntersOriginDriveGeo(req, driver) {
+		t.Fatalf("expected origin-drive helper to ignore unusable routePolyline and use bufferPolygon fallback")
+	}
+}
+
+func TestDriverEntersDestinationDriveGeo_TreatsInvalidRoutePolylineAsMissing(t *testing.T) {
+	req := corridorRequest()
+	req.DestinationDriveGeo = rectPolygon(-0.05, 0.95, 0.05, 1.05)
+	driver := corridorDriver("invalid-route-polyline-destination-drive-buffer-fallback", 0, -0.10, routeCorridor())
+	driver.RoutePolyline = "not-a-valid-polyline"
+
+	if !driverEntersDestinationDriveGeo(req, driver) {
+		t.Fatalf("expected destination-drive helper to ignore unusable routePolyline and use bufferPolygon fallback")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteThatHitsDestinationBeforeOrigin(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("reverse-route", 0, 1, routeCorridor())
