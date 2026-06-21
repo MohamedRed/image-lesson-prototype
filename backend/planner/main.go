@@ -1078,6 +1078,12 @@ func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) boo
 	if !endpointGeometriesOverlap(destinationIso, req.destinationDriveGeometry()) {
 		return false
 	}
+	if !driverBufferIntersectsCommonEndpoint(driver, originIso, req.originDriveGeometry()) {
+		return false
+	}
+	if !driverBufferIntersectsCommonEndpoint(driver, destinationIso, req.destinationDriveGeometry()) {
+		return false
+	}
 	if !originIso.isZero() && !driverRouteIntersectsGeometry(driver, originIso) {
 		return false
 	}
@@ -1101,6 +1107,84 @@ func endpointGeometriesOverlap(walkGeometry, driveGeometry GeoJSONGeometry) bool
 		return true
 	}
 	return geoJSONPolygonsIntersect(walkGeometry, driveGeometry)
+}
+
+func driverBufferIntersectsCommonEndpoint(driver DriverProfile, walkGeometry, driveGeometry GeoJSONGeometry) bool {
+	if driver.RoutePolyline != "" || walkGeometry.isZero() || driveGeometry.isZero() {
+		return true
+	}
+	buffer := driverCorridorBuffer(driver)
+	if buffer.isZero() {
+		return true
+	}
+	return geoJSONPolygonsHaveCommonPoint(buffer, walkGeometry, driveGeometry)
+}
+
+func geoJSONPolygonsHaveCommonPoint(polygons ...GeoJSONGeometry) bool {
+	if len(polygons) == 0 {
+		return false
+	}
+	pointInAll := func(point GeoPoint) bool {
+		for _, polygon := range polygons {
+			if !pointInGeoJSONPolygon(point, polygon) {
+				return false
+			}
+		}
+		return true
+	}
+	ringsByPolygon := make([][][]GeoPoint, 0, len(polygons))
+	for _, polygon := range polygons {
+		rings, ok := polygonOuterRings(polygon)
+		if !ok {
+			return false
+		}
+		ringsByPolygon = append(ringsByPolygon, rings)
+		for _, ring := range rings {
+			for _, point := range ring {
+				if pointInAll(point) {
+					return true
+				}
+			}
+		}
+	}
+	for i := 0; i < len(ringsByPolygon); i++ {
+		for j := i + 1; j < len(ringsByPolygon); j++ {
+			for _, aRing := range ringsByPolygon[i] {
+				for a := 0; a < len(aRing)-1; a++ {
+					for _, bRing := range ringsByPolygon[j] {
+						for b := 0; b < len(bRing)-1; b++ {
+							if point, ok := segmentIntersectionRepresentative(aRing[a], aRing[a+1], bRing[b], bRing[b+1]); ok && pointInAll(point) {
+								return true
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return false
+}
+
+func segmentIntersectionRepresentative(a1, a2, b1, b2 GeoPoint) (GeoPoint, bool) {
+	if !segmentsIntersect(a1, a2, b1, b2) {
+		return GeoPoint{}, false
+	}
+	for _, point := range []GeoPoint{a1, a2, b1, b2} {
+		if pointOnSegment(point, a1, a2) && pointOnSegment(point, b1, b2) {
+			return point, true
+		}
+	}
+	x1, y1 := a1.Longitude, a1.Latitude
+	x2, y2 := a2.Longitude, a2.Latitude
+	x3, y3 := b1.Longitude, b1.Latitude
+	x4, y4 := b2.Longitude, b2.Latitude
+	denom := (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)
+	if math.Abs(denom) < 1e-12 {
+		return GeoPoint{}, false
+	}
+	px := ((x1*y2-y1*x2)*(x3-x4) - (x1-x2)*(x3*y4-y3*x4)) / denom
+	py := ((x1*y2-y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-y3*x4)) / denom
+	return GeoPoint{Latitude: py, Longitude: px}, true
 }
 
 func driverEntersOriginDriveGeo(req RideRequest, driver DriverProfile) bool {

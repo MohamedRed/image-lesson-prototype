@@ -504,6 +504,26 @@ func TestComputeDriverScore_RejectsSeparateOriginWalkAndDriveRoutePasses(t *test
 	}
 }
 
+func TestComputeDriverScore_RejectsBufferSeparateOriginWalkAndDriveIntersections(t *testing.T) {
+	allowLongPickupETA(t)
+	req := corridorRequest()
+	req.Origin = GeoPoint{Latitude: 0.02, Longitude: 0.02}
+	req.OriWalkIso = rectPolygon(0, 0, 0.10, 0.10)
+	req.OriDriveIso = rectPolygon(0.05, 0.05, 0.15, 0.15)
+	req.Destination = GeoPoint{Latitude: 0, Longitude: 1}
+	req.DestWalkIso = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	driver := corridorDriver("buffer-separate-origin-walk-drive", 0.12, 0.12, multiPolygon(
+		rectRing(0.01, 0.01, 0.03, 0.03), // origin walk only
+		rectRing(0.12, 0.12, 0.14, 0.14), // origin drive only
+		rectRing(-0.005, 0.995, 0.005, 1.005),
+	))
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected buffer-only route with separate origin walk/drive intersections and no common pickup point to be rejected")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteInsideDestinationDriveGeoHole(t *testing.T) {
 	req := corridorRequest()
 	req.Origin = GeoPoint{Latitude: 0, Longitude: 0.999}
