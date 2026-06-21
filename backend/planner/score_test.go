@@ -624,6 +624,20 @@ func TestComputeDriverScore_UsesReservedSeatLedgerForCapacity(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_ClampsNegativeReservedSeatLedgerLoad(t *testing.T) {
+	req := corridorRequest()
+	req.PassengerCount = 5
+	driver := corridorDriver("negative-seat-ledger", 0, 0, routeCorridor())
+	driver.CapacitySeats = 4
+	driver.HasSeatLedger = true
+	driver.ReservedSeats = -2
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected negative reserved seat ledger load not to create phantom capacity for an oversized group")
+	}
+}
+
 func TestComputeDriverScore_SeatLedgerOverridesActivePickupCount(t *testing.T) {
 	req := RideRequest{Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 2}
 	driver := DriverProfile{

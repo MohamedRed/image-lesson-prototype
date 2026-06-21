@@ -844,6 +844,9 @@ func requestLevelHardFiltersAllowScoring(req RideRequest) bool {
 
 func reservedSeatCount(driver DriverProfile) int {
 	seatsUsed := driver.ReservedSeats
+	if seatsUsed < 0 {
+		seatsUsed = 0
+	}
 	if !driver.HasSeatLedger && seatsUsed == 0 && driver.ActivePickups > 0 {
 		// Backward compatibility for older driver documents that only tracked
 		// pickup count. New documents use the seat ledger so multi-passenger
