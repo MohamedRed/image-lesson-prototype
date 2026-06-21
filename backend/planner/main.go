@@ -1511,8 +1511,7 @@ func pickupZoneHasCapacity(driver DriverProfile) bool {
 }
 
 func dropoffZoneHasCapacity(req RideRequest, driver DriverProfile) bool {
-	requireDropoffZone := !req.destinationDriveGeometry().isZero()
-	return zoneHasCapacity(strings.TrimSpace(driver.DropoffZoneID), driver.DropoffZoneActivePickups, driver.DropoffZoneCapacityCars, !requireDropoffZone)
+	return zoneHasCapacity(strings.TrimSpace(driver.DropoffZoneID), driver.DropoffZoneActivePickups, driver.DropoffZoneCapacityCars, false)
 }
 
 func zoneHasCapacity(zoneID string, activePickups, capacityCars int, allowMissingZone bool) bool {
