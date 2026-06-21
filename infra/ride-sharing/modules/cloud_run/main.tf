@@ -59,6 +59,12 @@ variable "min_instances" {
   default     = 1
 }
 
+variable "allow_unauthenticated" {
+  description = "Whether to grant allUsers the Cloud Run invoker role. Keep false for production/private services."
+  type        = bool
+  default     = false
+}
+
 # Cloud Run service
 resource "google_cloud_run_v2_service" "service" {
   name     = "${var.service_name}-${var.environment}"
@@ -138,8 +144,11 @@ data "google_service_account" "cloud_run" {
   project    = var.project_id
 }
 
-# Allow unauthenticated access (for internal GCP services)
+# Optional unauthenticated access. Production planner deployments should stay
+# private unless an explicit approval accepts the public invoker risk.
 resource "google_cloud_run_service_iam_member" "public" {
+  count = var.allow_unauthenticated ? 1 : 0
+
   service  = google_cloud_run_v2_service.service.name
   location = google_cloud_run_v2_service.service.location
   role     = "roles/run.invoker"

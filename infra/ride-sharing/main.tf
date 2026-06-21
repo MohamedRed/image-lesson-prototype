@@ -164,6 +164,8 @@ module "planner" {
   service_name = "ride-planner"
   image_url    = "gcr.io/${var.project_id}/ride-planner:latest"
 
+  allow_unauthenticated = false
+
   env_vars = {
     GOOGLE_CLOUD_PROJECT = var.project_id
     BQ_DATASET           = module.bigquery.dataset_id
