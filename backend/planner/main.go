@@ -1029,13 +1029,18 @@ func driverPickupETASeconds(req RideRequest, driver DriverProfile, fallbackPicku
 	if !ok {
 		return int(fallbackPickupKm / 40.0 * 3600)
 	}
+	routeProfileStartETA := routeETASecondsAtPosition(driver.RouteETAProfileSeconds, 0)
 	routeProfilePickupETA := routeETASecondsAtPosition(driver.RouteETAProfileSeconds, pickupProjection.position)
-	if pickupProjection.position > 0 && routeProfilePickupETA <= 0 {
+	routeProfilePickupDelta := routeProfilePickupETA - routeProfileStartETA
+	if pickupProjection.position > 0 && routeProfilePickupDelta <= 0 {
 		return int(fallbackPickupKm / 40.0 * 3600)
 	}
 	routeStartKm := haversineKm(driver.CurrentLocation.Latitude, driver.CurrentLocation.Longitude, points[0].Latitude, points[0].Longitude)
 	routeStartETA := int(routeStartKm / 40.0 * 3600)
-	return routeStartETA + routeProfilePickupETA
+	if routeProfilePickupDelta < 0 {
+		routeProfilePickupDelta = 0
+	}
+	return routeStartETA + routeProfilePickupDelta
 }
 
 func routeETASecondsAtPosition(profile []int, position float64) int {
