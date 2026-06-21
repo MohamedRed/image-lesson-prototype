@@ -694,7 +694,7 @@ func driverVerificationStatusAllowsRides(status string) bool {
 	switch strings.ToLower(strings.TrimSpace(status)) {
 	case "", "approved", "clear", "verified":
 		return true
-	case "expired", "failed", "pending", "rejected", "revoked", "suspended", "unverified":
+	case "expired", "failed", "pending", "pending_review", "rejected", "revoked", "suspended", "unverified":
 		return false
 	default:
 		// Unknown future statuses are treated as non-authoritative for backwards

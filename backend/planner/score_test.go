@@ -108,6 +108,17 @@ func TestComputeDriverScore_RejectsPendingDriverVerificationStatus(t *testing.T)
 	}
 }
 
+func TestComputeDriverScore_RejectsPendingReviewDriverVerificationStatus(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("pending-review-verification-driver", 0, 0, routeCorridor())
+	driver.VerificationStatus = "pending_review"
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected pending_review driver verification status to be rejected before scoring")
+	}
+}
+
 func TestComputeDriverScore_RejectsFailedDriverBackgroundCheck(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("failed-background-check-driver", 0, 0, routeCorridor())
