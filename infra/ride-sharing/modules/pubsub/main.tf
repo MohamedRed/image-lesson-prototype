@@ -113,14 +113,9 @@ resource "google_pubsub_subscription" "cloud_functions_subscriptions" {
     }
   }
 
-  # Filter for specific event types (example)
-  dynamic "filter" {
-    for_each = each.key == "ride-events" ? [1] : []
-    content {
-      # Only process high-priority ride events
-      filter = "attributes.priority = \"high\" OR attributes.event_type = \"ride_completed\""
-    }
-  }
+  # Only process high-priority ride events on the ride-events subscription.
+  # Pub/Sub subscription filter is a string argument, not a nested block.
+  filter = each.key == "ride-events" ? "attributes.priority = \"high\" OR attributes.event_type = \"ride_completed\"" : null
 }
 
 # Analytics subscription with pull delivery

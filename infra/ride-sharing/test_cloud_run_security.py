@@ -16,9 +16,24 @@ ROOT_BACKEND = ROOT / "backend.tf"
 BIGQUERY_MODULE = ROOT / "modules" / "bigquery" / "main.tf"
 MONITORING_BIGQUERY_ALERTS = ROOT / "modules" / "monitoring" / "bigquery_alerts.tf"
 MONITORING_MAIN = ROOT / "modules" / "monitoring" / "main.tf"
+PUBSUB_MODULE = ROOT / "modules" / "pubsub" / "main.tf"
 
 
 class CloudRunSecurityTests(unittest.TestCase):
+    def test_pubsub_subscription_filter_is_argument_not_dynamic_block(self) -> None:
+        pubsub_text = PUBSUB_MODULE.read_text()
+
+        self.assertNotIn(
+            'dynamic "filter"',
+            pubsub_text,
+            "google_pubsub_subscription.filter is an argument, not a nested block",
+        )
+        self.assertRegex(
+            pubsub_text,
+            r'(?m)^\s*filter\s*=\s*each\.key\s*==\s*"ride-events"\s*\?',
+            "ride-events subscription filter should be assigned with the provider-supported filter argument",
+        )
+
     def test_bigquery_monitoring_does_not_use_basic_auth_uptime_check(self) -> None:
         alerts_text = MONITORING_BIGQUERY_ALERTS.read_text()
 
