@@ -540,6 +540,16 @@ func TestComputeDriverScore_RejectsNegativeWalkRadius(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsOutOfRangeCoordinates(t *testing.T) {
+	req := RideRequest{Origin: GeoPoint{Latitude: 0, Longitude: 181}, Destination: GeoPoint{Latitude: 0, Longitude: 181.1}, PassengerCount: 1}
+	driver := DriverProfile{CapacitySeats: 4, CurrentLocation: GeoPoint{Latitude: 0, Longitude: 181}}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected scorer to reject out-of-range origin/destination coordinates before route math")
+	}
+}
+
 func TestComputeDriverScore_RejectsNegativeLuggageRequest(t *testing.T) {
 	req := RideRequest{
 		Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1,

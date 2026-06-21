@@ -870,6 +870,12 @@ func requestLevelHardFiltersAllowScoring(req RideRequest) bool {
 	if req.WalkRadiusM < 0 {
 		return false
 	}
+	if validateGeoPoint("origin", req.Origin) != nil {
+		return false
+	}
+	if validateGeoPoint("destination", req.Destination) != nil {
+		return false
+	}
 	if req.RequiresRiderIdentity && !req.RiderIdentityVerified {
 		return false
 	}
