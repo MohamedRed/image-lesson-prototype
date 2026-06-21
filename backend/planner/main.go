@@ -870,6 +870,15 @@ func requestLevelHardFiltersAllowScoring(req RideRequest) bool {
 	if req.RequiresPaymentAuthorization && !req.PaymentAuthorized {
 		return false
 	}
+	if validateNonNegativeCounts("luggageManifest", req.LuggageManifest) != nil {
+		return false
+	}
+	if validateNonNegativeCounts("pet", req.Pet) != nil {
+		return false
+	}
+	if validateChildPassengers(req.ChildPassengers) != nil {
+		return false
+	}
 	return true
 }
 
