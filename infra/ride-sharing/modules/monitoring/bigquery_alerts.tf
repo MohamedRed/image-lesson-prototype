@@ -89,7 +89,7 @@ resource "google_monitoring_alert_policy" "bigquery_aggregation_success_rate" {
     condition_threshold {
       filter          = "resource.type=\"global\" AND metric.type=\"logging.googleapis.com/user/bigquery_aggregation_success_rate\""
       duration        = "300s"
-      comparison      = "COMPARISON_LESS_THAN"
+      comparison      = "COMPARISON_LT"
       threshold_value = 0.9
 
       aggregations {

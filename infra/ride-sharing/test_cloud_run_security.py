@@ -19,6 +19,29 @@ MONITORING_MAIN = ROOT / "modules" / "monitoring" / "main.tf"
 
 
 class CloudRunSecurityTests(unittest.TestCase):
+    def test_bigquery_monitoring_uses_provider_supported_comparison_enums(self) -> None:
+        alerts_text = MONITORING_BIGQUERY_ALERTS.read_text()
+        allowed_comparisons = {
+            '"COMPARISON_GT"',
+            '"COMPARISON_GE"',
+            '"COMPARISON_LT"',
+            '"COMPARISON_LE"',
+            '"COMPARISON_EQ"',
+            '"COMPARISON_NE"',
+        }
+        comparisons = re.findall(r'comparison\s*=\s*("[^"]+")', alerts_text)
+
+        self.assertNotIn(
+            '"COMPARISON_LESS_THAN"',
+            comparisons,
+            "Terraform google provider expects COMPARISON_LT, not COMPARISON_LESS_THAN",
+        )
+        self.assertTrue(comparisons, "BigQuery alert policies should declare comparison enums")
+        self.assertTrue(
+            set(comparisons).issubset(allowed_comparisons),
+            f"Unsupported monitoring comparison enums: {sorted(set(comparisons) - allowed_comparisons)}",
+        )
+
     def test_bigquery_monitoring_alerts_use_declared_notification_channel(self) -> None:
         alerts_text = MONITORING_BIGQUERY_ALERTS.read_text()
         monitoring_text = MONITORING_MAIN.read_text()
