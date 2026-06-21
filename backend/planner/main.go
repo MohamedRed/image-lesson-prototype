@@ -161,14 +161,29 @@ func selectedSingleHopPickupDropoff(req RideRequest, driver DriverProfile) (GeoP
 }
 
 func selectedOrderedPickupDropoff(points []GeoPoint, req RideRequest, minPos, maxPos float64) (GeoPoint, float64, GeoPoint, float64, bool) {
+	originWalk := req.originWalkGeometry()
+	destinationWalk := req.destinationWalkGeometry()
 	pickupCandidates := routeOriginProjectionCandidates(points, req, minPos, maxPos)
-	for _, pickup := range pickupCandidates {
-		dropoffProjection, ok := routeDestinationProjectionAfter(points, req, pickup.position, maxPos)
-		if ok && dropoffProjection.position > pickup.position {
+	pick := func(requireWalkFeasible bool) (GeoPoint, float64, GeoPoint, float64, bool) {
+		for _, pickup := range pickupCandidates {
+			if requireWalkFeasible && !projectionSatisfiesWalkGeometry(req, pickup, originWalk) {
+				continue
+			}
+			dropoffProjection, ok := routeDestinationProjectionAfter(points, req, pickup.position, maxPos)
+			if !ok || dropoffProjection.position <= pickup.position {
+				continue
+			}
+			if requireWalkFeasible && !projectionSatisfiesWalkGeometry(req, dropoffProjection, destinationWalk) {
+				continue
+			}
 			return pickup.point, pickup.position, dropoffProjection.point, dropoffProjection.position, true
 		}
+		return GeoPoint{}, 0, GeoPoint{}, 0, false
 	}
-	return GeoPoint{}, 0, GeoPoint{}, 0, false
+	if pickup, pickupPos, dropoff, dropoffPos, ok := pick(true); ok {
+		return pickup, pickupPos, dropoff, dropoffPos, true
+	}
+	return pick(false)
 }
 
 func routeProjectionCandidatesInGeometryOrRange(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos, maxPos float64) []routeProjection {

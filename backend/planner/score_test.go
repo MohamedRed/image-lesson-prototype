@@ -1807,6 +1807,31 @@ func TestBuildSingleHopJourneyUsesBackendSelectedRoutePickupAndDropoff(t *testin
 	}
 }
 
+func TestBuildSingleHopJourneySkipsUnwalkableEarlyPickupProjection(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
+	req := corridorRequest()
+	req.OriWalkIso = rectPolygon(-0.0001, -0.0001, 0.0001, 0.0001)
+	req.DestWalkIso = rectPolygon(-0.0001, 0.9999, 0.0001, 1.0001)
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	driver := corridorDriver("journey-later-near-origin-route", 0.05, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0.05, Longitude: -0.10}, // outside walk radius; must not be selected for display
+		{Latitude: 0.05, Longitude: 0.50},
+		{Latitude: 0.002, Longitude: 0}, // first walk-feasible pickup
+		{Latitude: 0, Longitude: 1},
+	})
+
+	journey := buildSingleHopJourney(req, driver, 90)
+	if len(journey.Legs) != 1 {
+		t.Fatalf("expected one leg, got %d", len(journey.Legs))
+	}
+	leg := journey.Legs[0]
+	if math.Abs(leg.Pickup.Latitude-0.002) > 0.000001 || math.Abs(leg.Pickup.Longitude) > 0.000001 {
+		t.Fatalf("expected backend-selected pickup to skip unwalkable early projection, got %#v", leg.Pickup)
+	}
+}
+
 func TestBuildSingleHopJourneyUsesDriveGeosForSelectedPointsWhenWalkZonesMissing(t *testing.T) {
 	req := corridorRequest()
 	req.OriWalkIso = GeoJSONGeometry{}
