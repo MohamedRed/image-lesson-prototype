@@ -493,6 +493,7 @@ type DriverProfile struct {
 	IsAvailable             bool
 	HasLicenseVerification  bool
 	LicenseVerified         bool
+	IsBlocked               bool
 	IsStuck                 bool
 	IsSuspiciousLocation    bool
 }
@@ -633,7 +634,7 @@ func effectiveCapacitySeats(driver DriverProfile) int {
 }
 
 func driverIsOperationallyEligible(driver DriverProfile) bool {
-	if driver.IsStuck || driver.IsSuspiciousLocation {
+	if driver.IsBlocked || driver.IsStuck || driver.IsSuspiciousLocation {
 		return false
 	}
 	if driver.HasAvailabilityState && (!driver.IsOnline || !driver.IsAvailable) {
@@ -2446,6 +2447,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			PremiumCapabilities     map[string]any         `firestore:"premiumCapabilities"`
 			CurrentPassengerGenders []string               `firestore:"currentPassengerGenders"`
 			LicenseVerified         bool                   `firestore:"licenseVerified"`
+			IsBlocked               bool                   `firestore:"isBlocked"`
 			IsStuck                 bool                   `firestore:"isStuck"`
 			IsSuspiciousLocation    bool                   `firestore:"isSuspiciousLocation"`
 		}
@@ -2514,6 +2516,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			IsAvailable:             isAvailable,
 			HasLicenseVerification:  hasLicenseVerification,
 			LicenseVerified:         data.LicenseVerified,
+			IsBlocked:               data.IsBlocked,
 			IsStuck:                 data.IsStuck,
 			IsSuspiciousLocation:    data.IsSuspiciousLocation,
 		}
