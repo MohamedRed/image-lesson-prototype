@@ -156,7 +156,7 @@ func selectedSingleHopPickupDropoff(req RideRequest, driver DriverProfile) (GeoP
 func selectedOrderedPickupDropoff(points []GeoPoint, req RideRequest, minPos, maxPos float64) (GeoPoint, float64, GeoPoint, float64, bool) {
 	pickupCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originOrderGeometry(), minPos, maxPos)
 	for _, pickup := range pickupCandidates {
-		dropoffProjection, ok := routeProjectionInGeometryOrRangeAfter(points, req.Destination, req.destinationOrderGeometry(), pickup.position, maxPos)
+		dropoffProjection, ok := routeDestinationProjectionAfter(points, req, pickup.position, maxPos)
 		if ok && dropoffProjection.position > pickup.position {
 			return pickup.point, pickup.position, dropoffProjection.point, dropoffProjection.position, true
 		}
@@ -509,6 +509,9 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	if !driverSatisfiesSingleHopCorridor(req, driver) {
 		return 0, 0, false
 	}
+	if !driverRouteSupportsSingleHopInsertion(req, driver) {
+		return 0, 0, false
+	}
 	if !driverRouteWalkSnapsWithinThreshold(req, driver) {
 		return 0, 0, false
 	}
@@ -691,6 +694,18 @@ func routeETASecondsAtPosition(profile []int, position float64) int {
 	return int(math.Round(float64(start) + fraction*float64(end-start)))
 }
 
+func driverRouteSupportsSingleHopInsertion(req RideRequest, driver DriverProfile) bool {
+	if driver.RoutePolyline == "" {
+		return true
+	}
+	points, ok := decodePolyline(driver.RoutePolyline)
+	if !ok || len(points) < 2 {
+		return true
+	}
+	_, _, ok = routeInsertionProjections(req, points)
+	return ok
+}
+
 func driverRouteWalkSnapsWithinThreshold(req RideRequest, driver DriverProfile) bool {
 	if driver.RoutePolyline == "" {
 		return true
@@ -755,7 +770,7 @@ func routeInsertionProjections(req RideRequest, points []GeoPoint) (routeProject
 	lastPos := float64(len(points) - 1)
 	originCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originOrderGeometry(), 0, lastPos)
 	for _, originProjection := range originCandidates {
-		destinationProjection, ok := routeProjectionInGeometryOrRangeAfter(points, req.Destination, req.destinationOrderGeometry(), originProjection.position, lastPos)
+		destinationProjection, ok := routeDestinationProjectionAfter(points, req, originProjection.position, lastPos)
 		if ok && destinationProjection.position > originProjection.position {
 			return originProjection, destinationProjection, true
 		}
@@ -773,6 +788,34 @@ func routeProjectionInGeometryOrRangeAfter(points []GeoPoint, target GeoPoint, g
 		}
 	}
 	return nearestRouteProjectionInRange(points, target, minPos, maxPos)
+}
+
+func routeDestinationProjectionAfter(points []GeoPoint, req RideRequest, minPos, maxPos float64) (routeProjection, bool) {
+	destinationDrive := req.destinationDriveGeometry()
+	destinationGeometry := req.destinationOrderGeometry()
+	if destinationDrive.isZero() {
+		return routeProjectionInGeometryOrRangeAfter(points, req.Destination, destinationGeometry, minPos, maxPos)
+	}
+
+	candidates := routeProjectionCandidatesInGeometryOrRange(points, req.Destination, destinationGeometry, minPos, maxPos)
+	for _, candidate := range candidates {
+		if candidate.position <= minPos || candidate.position > maxPos {
+			continue
+		}
+		if !destinationGeometry.isZero() && !pointInGeoJSONPolygon(candidate.point, destinationGeometry) {
+			continue
+		}
+		if pointInGeoJSONPolygon(candidate.point, destinationDrive) {
+			return candidate, true
+		}
+	}
+	if pos, ok := firstRoutePositionInGeometry(points, req.Destination, destinationDrive, minPos); ok && pos <= maxPos {
+		projection := routeProjectionAtPosition(points, pos, req.Destination)
+		if destinationGeometry.isZero() || pointInGeoJSONPolygon(projection.point, destinationGeometry) {
+			return projection, true
+		}
+	}
+	return routeProjection{}, false
 }
 
 func routeProjectionAtPosition(points []GeoPoint, position float64, target GeoPoint) routeProjection {
