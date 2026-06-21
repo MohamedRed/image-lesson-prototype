@@ -61,6 +61,23 @@ export interface PlannerReservationRetryResult {
   excludedDriverIds: string[];
 }
 
+export function normalizeDriverIds(driverIds: string[] = []): string[] {
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+  for (const driverId of driverIds) {
+    const value = String(driverId ?? "").trim();
+    if (!value || seen.has(value)) continue;
+    seen.add(value);
+    normalized.push(value);
+  }
+  return normalized;
+}
+
+function appendUniqueDriverId(driverIds: string[], driverId: string): void {
+  const normalized = normalizeDriverIds([...driverIds, driverId]);
+  driverIds.splice(0, driverIds.length, ...normalized);
+}
+
 export function buildPlannerRequest(
   rideRequest: any,
   geoUpdates: Record<string, any> = {},
@@ -88,7 +105,7 @@ export function buildPlannerRequest(
     destinationWalkIso: rideRequest.destinationWalkIso ?? destWalkIso,
     originDriveGeo: rideRequest.originDriveGeo ?? oriDriveIso,
     destinationDriveGeo,
-    excludedDriverIds,
+    excludedDriverIds: normalizeDriverIds(excludedDriverIds),
   };
 }
 
@@ -185,7 +202,7 @@ export async function planJourneyWithSingleLegReservationRetry({
   fetchImpl = fetch as unknown as FetchLike,
   maxAttempts = 3,
 }: PlannerReservationRetryParams): Promise<PlannerReservationRetryResult> {
-  const excludedDriverIds: string[] = [...(rideRequest.excludedDriverIds || [])];
+  const excludedDriverIds: string[] = normalizeDriverIds(rideRequest.excludedDriverIds || []);
   const attemptedDriverIds: string[] = [];
   const reservationErrors: string[] = [];
 
@@ -210,7 +227,7 @@ export async function planJourneyWithSingleLegReservationRetry({
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       reservationErrors.push(`${driverId}: ${message || "reservation threw"}`);
-      excludedDriverIds.push(driverId);
+      appendUniqueDriverId(excludedDriverIds, driverId);
       continue;
     }
     if (reservation.success) {
@@ -218,7 +235,7 @@ export async function planJourneyWithSingleLegReservationRetry({
     }
 
     reservationErrors.push(`${driverId}: ${reservation.error || "reservation failed"}`);
-    excludedDriverIds.push(driverId);
+    appendUniqueDriverId(excludedDriverIds, driverId);
   }
 
   throw new Error(
