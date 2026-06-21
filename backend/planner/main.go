@@ -2794,6 +2794,12 @@ func validatePlannerRequest(req RideRequest) error {
 	if err := validateGeoPoint("destination", req.Destination); err != nil {
 		return err
 	}
+	if req.RequiresRiderIdentity && !req.RiderIdentityVerified {
+		return fmt.Errorf("rider identity verification required")
+	}
+	if req.RequiresPaymentAuthorization && !req.PaymentAuthorized {
+		return fmt.Errorf("payment authorization required")
+	}
 	return nil
 }
 
