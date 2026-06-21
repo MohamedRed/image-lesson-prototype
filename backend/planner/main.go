@@ -81,6 +81,7 @@ type Journey struct {
 type Leg struct {
 	DriverID             string   `json:"driverId"`
 	PickupZoneID         string   `json:"pickupZoneId,omitempty"`
+	DropoffZoneID        string   `json:"dropoffZoneId,omitempty"`
 	Pickup               GeoPoint `json:"pickup"`
 	Dropoff              GeoPoint `json:"dropoff"`
 	EstimatedTimeSeconds int      `json:"etaSeconds"`
@@ -90,6 +91,7 @@ func buildJourneyLeg(driver DriverProfile, pickup, dropoff GeoPoint, etaSec int)
 	return Leg{
 		DriverID:             driver.ID,
 		PickupZoneID:         strings.TrimSpace(driver.PickupZoneID),
+		DropoffZoneID:        strings.TrimSpace(driver.DropoffZoneID),
 		Pickup:               pickup,
 		Dropoff:              dropoff,
 		EstimatedTimeSeconds: etaSec,
@@ -588,6 +590,9 @@ type DriverProfile struct {
 	PickupZoneID             string
 	PickupZoneActivePickups  int
 	PickupZoneCapacityCars   int
+	DropoffZoneID            string
+	DropoffZoneActivePickups int
+	DropoffZoneCapacityCars  int
 	RoutePolyline            string
 	RouteETAProfileSeconds   []int
 	BufferPolygon            GeoJSONGeometry
@@ -1467,6 +1472,7 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 	for _, driver := range drivers {
 		driver.RoutePolyline = strings.TrimSpace(driver.RoutePolyline)
 		driver.PickupZoneID = strings.TrimSpace(driver.PickupZoneID)
+		driver.DropoffZoneID = strings.TrimSpace(driver.DropoffZoneID)
 		if contains(exclude, driver.ID) {
 			continue
 		}
@@ -1474,6 +1480,9 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 			continue
 		}
 		if !pickupZoneHasCapacity(driver) {
+			continue
+		}
+		if !dropoffZoneHasCapacity(driver) {
 			continue
 		}
 		curbFactor := driver.CurbFactor
@@ -1498,15 +1507,21 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 }
 
 func pickupZoneHasCapacity(driver DriverProfile) bool {
-	pickupZoneID := strings.TrimSpace(driver.PickupZoneID)
-	if pickupZoneID == "" {
-		return false
+	return zoneHasCapacity(strings.TrimSpace(driver.PickupZoneID), driver.PickupZoneActivePickups, driver.PickupZoneCapacityCars, false)
+}
+
+func dropoffZoneHasCapacity(driver DriverProfile) bool {
+	return zoneHasCapacity(strings.TrimSpace(driver.DropoffZoneID), driver.DropoffZoneActivePickups, driver.DropoffZoneCapacityCars, true)
+}
+
+func zoneHasCapacity(zoneID string, activePickups, capacityCars int, allowMissingZone bool) bool {
+	if zoneID == "" {
+		return allowMissingZone
 	}
-	capacityCars := driver.PickupZoneCapacityCars
 	if capacityCars <= 0 {
 		capacityCars = defaultPickupZoneCapacityCars()
 	}
-	return driver.PickupZoneActivePickups < capacityCars
+	return activePickups < capacityCars
 }
 
 func defaultPickupZoneCapacityCars() int {
@@ -2692,6 +2707,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 				Seats int `firestore:"seats"`
 			} `firestore:"legs"`
 			PickupZoneID            string                 `firestore:"pickupZoneId"`
+			DropoffZoneID           string                 `firestore:"dropoffZoneId"`
 			RoutePolyline           string                 `firestore:"routePolyline"`
 			RouteETAProfileSeconds  []int                  `firestore:"routeEtaProfile"`
 			BufferPolygon           GeoJSONGeometry        `firestore:"bufferPolygon"`
@@ -2730,6 +2746,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		}
 
 		pickupZoneID := strings.TrimSpace(data.PickupZoneID)
+		dropoffZoneID := strings.TrimSpace(data.DropoffZoneID)
 		curbFactor := 1.0
 		pickupZoneActivePickups := 0
 		pickupZoneCapacityCars := 0
@@ -2742,6 +2759,16 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 				if v, ok := zoneData["curbLoadFactor"].(float64); ok && v > 0 {
 					curbFactor = v
 				}
+			}
+		}
+		dropoffZoneActivePickups := 0
+		dropoffZoneCapacityCars := 0
+		if dropoffZoneID != "" {
+			zSnap, err := client.Collection("pickupZones").Doc(dropoffZoneID).Get(ctx)
+			if err == nil && zSnap.Exists() {
+				zoneData := zSnap.Data()
+				dropoffZoneActivePickups = intValue(zoneData["activePickups"], 0)
+				dropoffZoneCapacityCars = intValue(zoneData["capacityCars"], defaultPickupZoneCapacityCars())
 			}
 		}
 
@@ -2761,6 +2788,9 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			PickupZoneID:             pickupZoneID,
 			PickupZoneActivePickups:  pickupZoneActivePickups,
 			PickupZoneCapacityCars:   pickupZoneCapacityCars,
+			DropoffZoneID:            dropoffZoneID,
+			DropoffZoneActivePickups: dropoffZoneActivePickups,
+			DropoffZoneCapacityCars:  dropoffZoneCapacityCars,
 			RoutePolyline:            strings.TrimSpace(data.RoutePolyline),
 			RouteETAProfileSeconds:   data.RouteETAProfileSeconds,
 			BufferPolygon:            data.BufferPolygon,
