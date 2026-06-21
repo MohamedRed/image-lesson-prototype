@@ -1059,12 +1059,19 @@ func routeOriginProjectionCandidates(points []GeoPoint, req RideRequest, minPos,
 
 	driveCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, originDrive, minPos, maxPos)
 	for _, candidate := range driveCandidates {
-		if !originGeometry.isZero() && !pointInGeoJSONPolygon(candidate.point, originGeometry) {
+		if !projectionSatisfiesWalkGeometry(req, candidate, originGeometry) {
 			continue
 		}
 		filtered = append(filtered, candidate)
 	}
 	return filtered
+}
+
+func projectionSatisfiesWalkGeometry(req RideRequest, candidate routeProjection, geometry GeoJSONGeometry) bool {
+	if geometry.isZero() || pointInGeoJSONPolygon(candidate.point, geometry) {
+		return true
+	}
+	return candidate.snapKm <= effectiveSingleHopWalkMeters(req)/1000.0
 }
 
 func routeDestinationProjectionAfter(points []GeoPoint, req RideRequest, minPos, maxPos float64) (routeProjection, bool) {
@@ -1349,10 +1356,10 @@ func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) boo
 	if !driverBufferIntersectsCommonEndpoint(driver, destinationIso, req.destinationDriveGeometry()) {
 		return false
 	}
-	if !originIso.isZero() && !driverRouteIntersectsGeometry(driver, originIso) {
+	if !originIso.isZero() && !driverRouteIntersectsOrPassesNearGeometry(req, driver, originIso, req.Origin) {
 		return false
 	}
-	if !destinationIso.isZero() && !driverRouteIntersectsGeometry(driver, destinationIso) {
+	if !destinationIso.isZero() && !driverRouteIntersectsOrPassesNearGeometry(req, driver, destinationIso, req.Destination) {
 		return false
 	}
 	if !driverEntersOriginDriveGeo(req, driver) {
@@ -1528,7 +1535,7 @@ func routePolylineTravelsOriginBeforeDestination(req RideRequest, encodedPolylin
 	lastPos := float64(len(points) - 1)
 	originCandidates := routeOriginProjectionCandidates(points, req, 0, lastPos)
 	for _, origin := range originCandidates {
-		destinationPos, destinationOk := routePositionForOrder(points, req.Destination, req.destinationOrderGeometry(), origin.position)
+		destinationPos, destinationOk := routePositionForOrder(req, points, req.Destination, req.destinationOrderGeometry(), origin.position)
 		if destinationOk && destinationPos > origin.position {
 			return true
 		}
@@ -1550,10 +1557,14 @@ func (req RideRequest) destinationOrderGeometry() GeoJSONGeometry {
 	return req.destinationDriveGeometry()
 }
 
-func routePositionForOrder(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos float64) (float64, bool) {
+func routePositionForOrder(req RideRequest, points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos float64) (float64, bool) {
 	if !geometry.isZero() {
 		if pos, ok := firstRoutePositionInGeometry(points, target, geometry, minPos); ok {
 			return pos, true
+		}
+		projection, ok := nearestRouteProjectionInRange(points, target, minPos, float64(len(points)-1))
+		if ok && projection.snapKm <= effectiveSingleHopWalkMeters(req)/1000.0 {
+			return projection.position, true
 		}
 		return 0, false
 	}
@@ -1601,6 +1612,21 @@ func driverRouteIntersectsGeometry(driver DriverProfile, geometry GeoJSONGeometr
 		return true
 	}
 	return false
+}
+
+func driverRouteIntersectsOrPassesNearGeometry(req RideRequest, driver DriverProfile, geometry GeoJSONGeometry, target GeoPoint) bool {
+	if driverRouteIntersectsGeometry(driver, geometry) {
+		return true
+	}
+	if driver.RoutePolyline == "" {
+		return false
+	}
+	points, ok := decodePolyline(driver.RoutePolyline)
+	if !ok || len(points) < 2 {
+		return false
+	}
+	projection, ok := nearestRouteProjectionInRange(points, target, 0, float64(len(points)-1))
+	return ok && projection.snapKm <= effectiveSingleHopWalkMeters(req)/1000.0
 }
 
 func driverCorridorBuffer(driver DriverProfile) GeoJSONGeometry {
