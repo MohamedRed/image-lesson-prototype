@@ -161,10 +161,9 @@ export async function reserveResourcesTransaction(
       }
 
       // Update current passenger genders for safety
-      if (requirements.riderGender) {
-        const currentGenders = driverData.currentPassengerGenders || [];
-        currentGenders.push(requirements.riderGender);
-        driverUpdates.currentPassengerGenders = currentGenders;
+      const nextPassengerGenders = passengerGenderUpdate(driverData.currentPassengerGenders || [], requirements.riderGender);
+      if (nextPassengerGenders) {
+        driverUpdates.currentPassengerGenders = nextPassengerGenders;
       }
 
       // Update pickup zone
@@ -232,6 +231,30 @@ function getCurrentSeatUsage(legs: any[]): number {
   return legs.reduce((total, leg) => total + (leg.seats || 0), 0);
 }
 
+function currentPassengerGenderPool(currentPassengerGenders: unknown[]): string[] {
+  return currentPassengerGenders
+    .filter((gender): gender is string => typeof gender === "string")
+    .map((gender) => gender.trim())
+    .filter((gender) => gender.length > 0);
+}
+
+function genderPoolCompatible(currentPassengerGenders: unknown[], riderGender?: string): boolean {
+  const normalizedRiderGender = riderGender?.trim();
+  if (!normalizedRiderGender) {
+    return true;
+  }
+  const existingGenders = new Set(currentPassengerGenderPool(currentPassengerGenders));
+  return existingGenders.size === 0 || existingGenders.has(normalizedRiderGender);
+}
+
+function passengerGenderUpdate(currentPassengerGenders: unknown[], riderGender?: string): string[] | undefined {
+  const normalizedRiderGender = riderGender?.trim();
+  if (!normalizedRiderGender) {
+    return undefined;
+  }
+  return [...currentPassengerGenderPool(currentPassengerGenders), normalizedRiderGender];
+}
+
 function validateDriverResources(
   driverData: any,
   requirements: ResourceRequirements
@@ -247,14 +270,11 @@ function validateDriverResources(
   }
 
   // Check gender pool consistency
-  if (requirements.riderGender && driverData.currentPassengerGenders?.length > 0) {
-    const existingGenders = new Set(driverData.currentPassengerGenders);
-    if (!existingGenders.has(requirements.riderGender) && existingGenders.size > 0) {
-      return {
-        valid: false,
-        error: `Gender pool mismatch: driver has ${Array.from(existingGenders)}, requested ${requirements.riderGender}`,
-      };
-    }
+  if (!genderPoolCompatible(driverData.currentPassengerGenders || [], requirements.riderGender)) {
+    return {
+      valid: false,
+      error: `Gender pool mismatch: driver has ${currentPassengerGenderPool(driverData.currentPassengerGenders || [])}, requested ${requirements.riderGender}`,
+    };
   }
 
   // Check luggage capacity
@@ -403,11 +423,8 @@ export async function reserveMultiLegResources(
         }
 
         // Validate gender pool consistency across legs
-        if (leg.requirements.riderGender && driverData.currentPassengerGenders?.length > 0) {
-          const existingGenders = new Set(driverData.currentPassengerGenders);
-          if (!existingGenders.has(leg.requirements.riderGender) && existingGenders.size > 0) {
-            throw new Error(`Gender pool inconsistency on leg ${leg.legNumber}`);
-          }
+        if (!genderPoolCompatible(driverData.currentPassengerGenders || [], leg.requirements.riderGender)) {
+          throw new Error(`Gender pool inconsistency on leg ${leg.legNumber}`);
         }
       }
 
@@ -484,10 +501,9 @@ export async function reserveMultiLegResources(
         }
 
         // Update passenger genders for safety validation
-        if (leg.requirements.riderGender) {
-          const currentGenders = driverData.currentPassengerGenders || [];
-          currentGenders.push(leg.requirements.riderGender);
-          driverUpdates.currentPassengerGenders = currentGenders;
+        const nextPassengerGenders = passengerGenderUpdate(driverData.currentPassengerGenders || [], leg.requirements.riderGender);
+        if (nextPassengerGenders) {
+          driverUpdates.currentPassengerGenders = nextPassengerGenders;
         }
 
         // Update pickup zone
