@@ -2660,6 +2660,8 @@ func segmentsIntersect(a1, a2, b1, b2 GeoPoint) bool {
 	return (o1 > 0) != (o2 > 0) && (o3 > 0) != (o4 > 0)
 }
 
+const maxPlannerRequestBodyBytes int64 = 1 << 20
+
 func healthHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
@@ -2691,7 +2693,12 @@ func planHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req RideRequest
+	r.Body = http.MaxBytesReader(w, r.Body, maxPlannerRequestBodyBytes)
 	if err := decodeSingleRideRequestJSON(r.Body, &req); err != nil {
+		if strings.Contains(err.Error(), "http: request body too large") {
+			http.Error(w, "request body too large", http.StatusRequestEntityTooLarge)
+			return
+		}
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}

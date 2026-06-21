@@ -42,6 +42,22 @@ func TestPlanHandlerRejectsTrailingJSONBeforePlanning(t *testing.T) {
 	}
 }
 
+func TestPlanHandlerRejectsOversizedRequestBeforePlanning(t *testing.T) {
+	t.Setenv("GOOGLE_CLOUD_PROJECT", "")
+	body := `{"origin":{"latitude":1,"longitude":2},"destination":{"latitude":3,"longitude":4},"passengerCount":1,"ignored":"` + strings.Repeat("x", 1<<20) + `"}`
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/plan", strings.NewReader(body))
+	planHandler(recorder, request)
+
+	if recorder.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("expected oversized planner request to return 413 before planner execution, got %d with body %q", recorder.Code, recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), "request body too large") {
+		t.Fatalf("expected request body too large error, got %q", recorder.Body.String())
+	}
+}
+
 func TestComputeDriverScore_LuggageReject(t *testing.T) {
 	req := RideRequest{
 		Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1,
