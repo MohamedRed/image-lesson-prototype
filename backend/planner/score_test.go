@@ -860,6 +860,30 @@ func TestComputeDriverScore_AllowsRoutePointInsideDestinationDriveGeoNearButOuts
 	}
 }
 
+func TestComputeDriverScore_RejectsDestinationWalkDropoffOutsideDestinationDriveGeo(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "100")
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "2000")
+	req := corridorRequest()
+	req.WalkRadiusM = 100
+	req.OriWalkIso = rectPolygon(-0.0002, -0.0002, 0.0002, 0.0002)
+	req.DestWalkIso = rectPolygon(-0.0002, 0.9998, 0.0002, 1.0002)
+	req.OriDriveIso = rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	req.DestinationDriveGeo = rectPolygon(0.009, 0.499, 0.011, 0.501)
+	driver := corridorDriver("destination-walk-outside-destination-drive", 0, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0.01, Longitude: 0.50}, // enters destinationDriveGeo, but far from destination walk zone
+		{Latitude: 0, Longitude: 1},       // reaches destination walk zone outside destinationDriveGeo
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected route dropoff outside destinationDriveGeo to be rejected even after an unrelated drive-geo pass")
+	}
+}
+
 func TestComputeDriverScore_AllowsLaterNearDestinationAfterEarlierDestinationWalkPass(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "100")
