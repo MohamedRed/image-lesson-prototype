@@ -3691,6 +3691,19 @@ func TestBuildLegRequestPreservesOriginalDestinationWalkIsoForFinalLeg(t *testin
 	}
 }
 
+func TestBuildLegRequestPreservesOriginalDestinationDriveGeoForFinalLeg(t *testing.T) {
+	req := corridorRequest()
+	req.WalkRadiusM = 1500
+	req.DestinationDriveGeo = rectPolygon(-0.001, 0.999, 0.001, 1.001)
+	transfer := GeoPoint{Latitude: 0, Longitude: 0.5}
+
+	legReq := buildLegRequest(req, transfer, req.Destination)
+
+	if !reflect.DeepEqual(legReq.DestinationDriveGeo, req.DestinationDriveGeo) {
+		t.Fatalf("expected final leg to preserve original destinationDriveGeo; got %#v", legReq.DestinationDriveGeo)
+	}
+}
+
 func TestBuildLegRequestRebindsDestinationDriveGeoToLegDestination(t *testing.T) {
 	req := corridorRequest()
 	req.WalkRadiusM = 1000
