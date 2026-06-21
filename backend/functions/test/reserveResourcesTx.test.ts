@@ -241,6 +241,42 @@ describe("reserveResourcesTransaction", () => {
     ]);
     expect(result.reservedLegs?.map((leg: any) => leg.dropoffZoneId)).toEqual(["dropoff-a", "dropoff-b"]);
   });
+
+  it("rejects multi-leg reservations when shared transfer zone aggregate capacity would be exceeded", async () => {
+    const updates: Array<{ path: string; data: Record<string, unknown> }> = [];
+    const db = fakeReservationDb({
+      "drivers/driver-a": { capacitySeats: 4, activePickups: 0 },
+      "drivers/driver-b": { capacitySeats: 4, activePickups: 0 },
+      "pickupZones/origin-pickup": { capacityCars: 10, activePickups: 0 },
+      "pickupZones/transfer-zone": { capacityCars: 10, activePickups: 9 },
+      "pickupZones/destination-dropoff": { capacityCars: 10, activePickups: 0 },
+    }, updates);
+
+    const result = await reserveMultiLegResources({
+      rideRequestId: "req-shared-transfer-capacity",
+      totalPassengerCount: 1,
+      legs: [
+        {
+          driverId: "driver-a",
+          pickupZoneId: "origin-pickup",
+          dropoffZoneId: "transfer-zone",
+          legNumber: 1,
+          requirements: { passengerCount: 1, riderGender: "female" },
+        },
+        {
+          driverId: "driver-b",
+          pickupZoneId: "transfer-zone",
+          dropoffZoneId: "destination-dropoff",
+          legNumber: 2,
+          requirements: { passengerCount: 1, riderGender: "female" },
+        },
+      ],
+    }, db as never);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("transfer-zone");
+    expect(updates).toEqual([]);
+  });
 });
 
 function fakeReservationDb(

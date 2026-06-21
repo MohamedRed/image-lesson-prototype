@@ -411,6 +411,43 @@ function validateZoneCapacity(zoneData: any): { valid: boolean; error?: string }
   return { valid: true };
 }
 
+function validateZoneCapacityForPending(
+  zoneData: any,
+  pendingReservations: number,
+  zoneId: string
+): { valid: boolean; error?: string } {
+  const capacity = zoneData.capacityCars || 10;
+  const active = zoneData.activePickups || 0;
+
+  if (active + pendingReservations > capacity) {
+    return {
+      valid: false,
+      error: `Zone ${zoneId} aggregate capacity exceeded: ${active}+${pendingReservations}/${capacity}`,
+    };
+  }
+
+  return { valid: true };
+}
+
+function aggregateMultiLegZoneReservationDeltas(
+  legs: MultiLegResourceRequirements["legs"]
+): Map<string, number> {
+  const deltas = new Map<string, number>();
+
+  for (const leg of legs) {
+    addZoneReservationDelta(deltas, leg.pickupZoneId);
+    if (leg.dropoffZoneId !== leg.pickupZoneId) {
+      addZoneReservationDelta(deltas, leg.dropoffZoneId);
+    }
+  }
+
+  return deltas;
+}
+
+function addZoneReservationDelta(deltas: Map<string, number>, zoneId: string): void {
+  deltas.set(zoneId, (deltas.get(zoneId) || 0) + 1);
+}
+
 function calculateChildSeatRequirements(children: Array<{ ageYears: number; weightKg: number }>): Record<string, number> {
   const requirements: Record<string, number> = {};
   
@@ -458,6 +495,7 @@ export async function reserveMultiLegResources(
   try {
     const result = await db.runTransaction(async (transaction) => {
       const reservedLegs: MultiLegReservationResult["reservedLegs"] = [];
+      const zoneReservationDeltas = aggregateMultiLegZoneReservationDeltas(requirements.legs);
       
       // Phase 1: Validate all legs can be reserved
       for (const leg of requirements.legs) {
@@ -495,13 +533,21 @@ export async function reserveMultiLegResources(
           throw new Error(`Driver validation failed for leg ${leg.legNumber}: ${validation.error}`);
         }
 
-        // Validate pickup/dropoff zone capacity
-        const zoneValidation = validateZoneCapacity(zoneData);
+        // Validate pickup/dropoff zone capacity against aggregate pending increments
+        const zoneValidation = validateZoneCapacityForPending(
+          zoneData,
+          zoneReservationDeltas.get(leg.pickupZoneId) || 1,
+          leg.pickupZoneId
+        );
         if (!zoneValidation.valid) {
           throw new Error(`Zone validation failed for leg ${leg.legNumber}: ${zoneValidation.error}`);
         }
         if (dropoffZoneData) {
-          const dropoffZoneValidation = validateZoneCapacity(dropoffZoneData);
+          const dropoffZoneValidation = validateZoneCapacityForPending(
+            dropoffZoneData,
+            zoneReservationDeltas.get(leg.dropoffZoneId) || 1,
+            leg.dropoffZoneId
+          );
           if (!dropoffZoneValidation.valid) {
             throw new Error(`Dropoff zone validation failed for leg ${leg.legNumber}: ${dropoffZoneValidation.error}`);
           }
