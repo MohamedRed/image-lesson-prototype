@@ -1163,12 +1163,8 @@ func driverDetourKm(req RideRequest, driver DriverProfile, pickupKm, directRideK
 }
 
 func routeInsertionDetourKm(req RideRequest, encodedPolyline string, directRideKm float64) (float64, bool) {
-	encodedPolyline = normalizeRoutePolyline(encodedPolyline)
-	if encodedPolyline == "" {
-		return 0, false
-	}
-	points, ok := decodePolyline(encodedPolyline)
-	if !ok || len(points) < 2 {
+	points, ok := decodeNormalizedRoutePolyline(encodedPolyline)
+	if !ok {
 		return 0, false
 	}
 
@@ -1862,12 +1858,8 @@ func routePolylineEntersGeometryAfterOrigin(req RideRequest, encodedPolyline str
 }
 
 func routePolylineTravelsOriginBeforeDestination(req RideRequest, encodedPolyline string) bool {
-	encodedPolyline = normalizeRoutePolyline(encodedPolyline)
-	if encodedPolyline == "" {
-		return false
-	}
-	points, ok := decodePolyline(encodedPolyline)
-	if !ok || len(points) < 2 {
+	points, ok := decodeNormalizedRoutePolyline(encodedPolyline)
+	if !ok {
 		return false
 	}
 	lastPos := float64(len(points) - 1)
@@ -2053,8 +2045,8 @@ func circlePolygon(center GeoPoint, radiusMeters float64, points int) GeoJSONGeo
 }
 
 func polylineIntersectsPolygon(encoded string, polygon GeoJSONGeometry) bool {
-	line, ok := decodePolyline(encoded)
-	if !ok || len(line) == 0 {
+	line, ok := decodeNormalizedRoutePolyline(encoded)
+	if !ok {
 		return false
 	}
 	parts, ok := polygonParts(polygon)
