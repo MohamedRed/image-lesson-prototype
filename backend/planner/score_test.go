@@ -2612,10 +2612,11 @@ func TestDriverPickupEtaUsesOriginDriveGeoWhenWalkZoneMissing(t *testing.T) {
 	}
 }
 
-func TestBuildSingleHopJourneyIncludesPickupZoneID(t *testing.T) {
+func TestBuildSingleHopJourneyIncludesReservationZoneIDs(t *testing.T) {
 	req := corridorRequest()
-	driver := corridorDriver("driver-with-zone", 0.01, 0, routeCorridor())
+	driver := corridorDriver("driver-with-zones", 0.01, 0, routeCorridor())
 	driver.PickupZoneID = "zone-123"
+	driver.DropoffZoneID = "zone-456"
 
 	journey := buildSingleHopJourney(req, driver, 90)
 
@@ -2625,13 +2626,16 @@ func TestBuildSingleHopJourneyIncludesPickupZoneID(t *testing.T) {
 	if journey.Legs[0].PickupZoneID != "zone-123" {
 		t.Fatalf("expected leg pickupZoneId to preserve driver zone, got %q", journey.Legs[0].PickupZoneID)
 	}
+	if journey.Legs[0].DropoffZoneID != "zone-456" {
+		t.Fatalf("expected leg dropoffZoneId to preserve driver zone, got %q", journey.Legs[0].DropoffZoneID)
+	}
 
 	payload, err := json.Marshal(journey)
 	if err != nil {
 		t.Fatalf("marshal journey: %v", err)
 	}
-	if !json.Valid(payload) || !strings.Contains(string(payload), `"pickupZoneId":"zone-123"`) {
-		t.Fatalf("expected JSON payload to expose pickupZoneId, got %s", payload)
+	if !json.Valid(payload) || !strings.Contains(string(payload), `"pickupZoneId":"zone-123"`) || !strings.Contains(string(payload), `"dropoffZoneId":"zone-456"`) {
+		t.Fatalf("expected JSON payload to expose pickupZoneId and dropoffZoneId, got %s", payload)
 	}
 }
 
