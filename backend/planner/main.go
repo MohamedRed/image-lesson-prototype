@@ -417,24 +417,26 @@ func addResourceTotals(total map[string]int, values map[string]int) {
 
 // DriverProfile is an in-memory representation of driver attributes used for matching.
 type DriverProfile struct {
-	ID                     string
-	CurrentLocation        GeoPoint
-	CapacitySeats          int
-	ActivePickups          int
-	HasSeatLedger          bool
-	ReservedSeats          int
-	PickupZoneID           string
-	RoutePolyline          string
-	RouteETAProfileSeconds []int
-	BufferPolygon          GeoJSONGeometry
-	CurbFactor             float64
-	LuggageCapacity        map[string]int
-	ReservedLuggage        map[string]int
-	PetLimits              map[string]int
-	ReservedPets           map[string]int
-	ChildSeatInventory     map[string]int
-	ReservedChildSeats     map[string]int
-	PremiumCapabilities    map[string]any
+	ID                      string
+	CurrentLocation         GeoPoint
+	CapacitySeats           int
+	ActivePickups           int
+	HasSeatLedger           bool
+	ReservedSeats           int
+	PickupZoneID            string
+	PickupZoneActivePickups int
+	PickupZoneCapacityCars  int
+	RoutePolyline           string
+	RouteETAProfileSeconds  []int
+	BufferPolygon           GeoJSONGeometry
+	CurbFactor              float64
+	LuggageCapacity         map[string]int
+	ReservedLuggage         map[string]int
+	PetLimits               map[string]int
+	ReservedPets            map[string]int
+	ChildSeatInventory      map[string]int
+	ReservedChildSeats      map[string]int
+	PremiumCapabilities     map[string]any
 }
 
 // TransferPoint represents a curb segment suitable for passenger transfers
@@ -969,6 +971,9 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 		if driver.PickupZoneID == "" {
 			continue
 		}
+		if !pickupZoneHasCapacity(driver) {
+			continue
+		}
 		curbFactor := driver.CurbFactor
 		if curbFactor <= 0 {
 			curbFactor = 1
@@ -988,6 +993,16 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 		return ranked[i].score < ranked[j].score
 	})
 	return ranked
+}
+
+func pickupZoneHasCapacity(driver DriverProfile) bool {
+	if driver.PickupZoneID == "" {
+		return false
+	}
+	if driver.PickupZoneCapacityCars <= 0 {
+		return true
+	}
+	return driver.PickupZoneActivePickups < driver.PickupZoneCapacityCars
 }
 
 func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) bool {
@@ -2008,34 +2023,41 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		}
 
 		curbFactor := 1.0
+		pickupZoneActivePickups := 0
+		pickupZoneCapacityCars := 0
 		if data.PickupZoneID != "" {
 			zSnap, err := client.Collection("pickupZones").Doc(data.PickupZoneID).Get(ctx)
 			if err == nil && zSnap.Exists() {
-				if v, ok := zSnap.Data()["curbLoadFactor"].(float64); ok && v > 0 {
+				zoneData := zSnap.Data()
+				pickupZoneActivePickups = intValue(zoneData["activePickups"], 0)
+				pickupZoneCapacityCars = intValue(zoneData["capacityCars"], 10)
+				if v, ok := zoneData["curbLoadFactor"].(float64); ok && v > 0 {
 					curbFactor = v
 				}
 			}
 		}
 
 		prof := DriverProfile{
-			ID:                     d.Ref.ID,
-			CurrentLocation:        GeoPoint{Latitude: data.CurrentLocation.Latitude, Longitude: data.CurrentLocation.Longitude},
-			CapacitySeats:          data.CapacitySeats,
-			ActivePickups:          data.ActivePickups,
-			HasSeatLedger:          hasSeatLedger,
-			ReservedSeats:          sumReservedSeats(data.Legs),
-			PickupZoneID:           data.PickupZoneID,
-			RoutePolyline:          data.RoutePolyline,
-			RouteETAProfileSeconds: data.RouteETAProfileSeconds,
-			BufferPolygon:          data.BufferPolygon,
-			CurbFactor:             curbFactor,
-			LuggageCapacity:        data.LuggageCapacity,
-			ReservedLuggage:        sumCargoLedger(data.CargoLedger),
-			PetLimits:              data.PetLimits,
-			ReservedPets:           sumPetLedger(data.PetLedger),
-			ChildSeatInventory:     data.ChildSeatInventory,
-			ReservedChildSeats:     sumChildSeatLedger(data.ChildSeatLedger),
-			PremiumCapabilities:    data.PremiumCapabilities,
+			ID:                      d.Ref.ID,
+			CurrentLocation:         GeoPoint{Latitude: data.CurrentLocation.Latitude, Longitude: data.CurrentLocation.Longitude},
+			CapacitySeats:           data.CapacitySeats,
+			ActivePickups:           data.ActivePickups,
+			HasSeatLedger:           hasSeatLedger,
+			ReservedSeats:           sumReservedSeats(data.Legs),
+			PickupZoneID:            data.PickupZoneID,
+			PickupZoneActivePickups: pickupZoneActivePickups,
+			PickupZoneCapacityCars:  pickupZoneCapacityCars,
+			RoutePolyline:           data.RoutePolyline,
+			RouteETAProfileSeconds:  data.RouteETAProfileSeconds,
+			BufferPolygon:           data.BufferPolygon,
+			CurbFactor:              curbFactor,
+			LuggageCapacity:         data.LuggageCapacity,
+			ReservedLuggage:         sumCargoLedger(data.CargoLedger),
+			PetLimits:               data.PetLimits,
+			ReservedPets:            sumPetLedger(data.PetLedger),
+			ChildSeatInventory:      data.ChildSeatInventory,
+			ReservedChildSeats:      sumChildSeatLedger(data.ChildSeatLedger),
+			PremiumCapabilities:     data.PremiumCapabilities,
 		}
 
 		profiles = append(profiles, prof)
@@ -2062,6 +2084,23 @@ func contains(arr []string, v string) bool {
 		}
 	}
 	return false
+}
+
+func intValue(value any, fallback int) int {
+	switch v := value.(type) {
+	case int:
+		return v
+	case int64:
+		return int(v)
+	case int32:
+		return int(v)
+	case float64:
+		return int(v)
+	case float32:
+		return int(v)
+	default:
+		return fallback
+	}
 }
 
 func legExcludedDriverIDs(req RideRequest, additional ...string) []string {
