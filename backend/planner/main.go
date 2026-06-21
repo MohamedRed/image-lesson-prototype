@@ -678,7 +678,7 @@ func driverIsOperationallyEligible(driver DriverProfile) bool {
 }
 
 func driverComplianceStatusAllowsRides(status string) bool {
-	switch strings.ToLower(strings.TrimSpace(status)) {
+	switch normalizedStatusToken(status) {
 	case "", "active", "approved", "clear", "compliant", "verified":
 		return true
 	case "blocked", "expired", "rejected", "revoked", "suspended":
@@ -691,7 +691,7 @@ func driverComplianceStatusAllowsRides(status string) bool {
 }
 
 func driverVerificationStatusAllowsRides(status string) bool {
-	switch strings.ToLower(strings.TrimSpace(status)) {
+	switch normalizedStatusToken(status) {
 	case "", "approved", "clear", "verified":
 		return true
 	case "expired", "failed", "pending", "pending_review", "rejected", "revoked", "suspended", "unverified":
@@ -701,6 +701,12 @@ func driverVerificationStatusAllowsRides(status string) bool {
 		// compatibility until the driver document schema is migrated.
 		return true
 	}
+}
+
+func normalizedStatusToken(status string) string {
+	trimmed := strings.ToLower(strings.TrimSpace(status))
+	trimmed = strings.ReplaceAll(trimmed, "-", " ")
+	return strings.Join(strings.Fields(trimmed), "_")
 }
 
 func genderPoolCompatible(riderGender string, currentPassengerGenders []string) bool {

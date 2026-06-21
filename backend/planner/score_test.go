@@ -119,6 +119,17 @@ func TestComputeDriverScore_RejectsPendingReviewDriverVerificationStatus(t *test
 	}
 }
 
+func TestComputeDriverScore_NormalizesSerializedPendingReviewStatus(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("pending-review-hyphen-verification-driver", 0, 0, routeCorridor())
+	driver.VerificationStatus = " Pending-Review "
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected hyphenated pending-review verification status to be normalized and rejected")
+	}
+}
+
 func TestComputeDriverScore_RejectsFailedDriverBackgroundCheck(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("failed-background-check-driver", 0, 0, routeCorridor())
