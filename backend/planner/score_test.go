@@ -669,6 +669,31 @@ func TestComputeDriverScore_EmptySeatLedgerDoesNotFallBackToActivePickupCount(t 
 	}
 }
 
+func TestComputeDriverScore_ClampsNegativeReservedResourceLedgerLoad(t *testing.T) {
+	req := RideRequest{
+		Origin:          GeoPoint{0, 0},
+		Destination:     GeoPoint{1, 1},
+		PassengerCount:  1,
+		LuggageManifest: map[string]int{"suitcase": 2},
+	}
+	driver := DriverProfile{
+		CapacitySeats:   4,
+		CurrentLocation: GeoPoint{0, 0},
+		LuggageCapacity: map[string]int{"suitcase": 1},
+		ReservedLuggage: map[string]int{"suitcase": -2},
+		PickupZoneID:    "zone-negative-resource",
+		DropoffZoneID:   "zone-negative-resource-dropoff",
+		BufferPolygon:   routeCorridor(),
+		HasSeatLedger:   true,
+		ReservedSeats:   0,
+	}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected negative reserved resource ledger load not to create phantom luggage capacity")
+	}
+}
+
 func TestComputeDriverScore_ToddlerRequiresForwardChildSeat(t *testing.T) {
 	req := RideRequest{
 		Origin:         GeoPoint{0, 0},

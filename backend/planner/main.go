@@ -770,7 +770,7 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	// Luggage filter
 	if req.LuggageManifest != nil {
 		for k, v := range req.LuggageManifest {
-			available := driver.LuggageCapacity[k] - driver.ReservedLuggage[k]
+			available := driver.LuggageCapacity[k] - reservedResourceCount(driver.ReservedLuggage, k)
 			if available < v {
 				return 0, 0, false
 			}
@@ -780,7 +780,7 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	// Pet filter
 	if req.Pet != nil {
 		for k, v := range req.Pet {
-			available := driver.PetLimits[k] - driver.ReservedPets[k]
+			available := driver.PetLimits[k] - reservedResourceCount(driver.ReservedPets, k)
 			if available < v {
 				return 0, 0, false
 			}
@@ -791,7 +791,7 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	if len(req.ChildPassengers) > 0 {
 		childSeatNeeds := calculateChildSeatRequirements(req.ChildPassengers)
 		for seatType, needed := range childSeatNeeds {
-			available := driver.ChildSeatInventory[seatType] - driver.ReservedChildSeats[seatType]
+			available := driver.ChildSeatInventory[seatType] - reservedResourceCount(driver.ReservedChildSeats, seatType)
 			if available < needed {
 				return 0, 0, false
 			}
@@ -874,6 +874,14 @@ func reservedSeatCount(driver DriverProfile) int {
 		seatsUsed = driver.ActivePickups
 	}
 	return seatsUsed
+}
+
+func reservedResourceCount(reserved map[string]int, key string) int {
+	count := reserved[key]
+	if count < 0 {
+		return 0
+	}
+	return count
 }
 
 func effectiveCapacitySeats(driver DriverProfile) int {
