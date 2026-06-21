@@ -3811,6 +3811,13 @@ func TestTransferAvailableCapacitySubtractsActivePickups(t *testing.T) {
 	}
 }
 
+func TestTransferAvailableCapacityAcceptsFloatMaxStopSeconds(t *testing.T) {
+	data := map[string]interface{}{"maxStopSeconds": float64(180), "activePickups": int64(1)}
+	if got := transferAvailableCapacity(data); got != 2 {
+		t.Fatalf("expected float maxStopSeconds to produce remaining capacity 2, got %d", got)
+	}
+}
+
 func TestUsableTransferPointsFiltersFullTransferCapacity(t *testing.T) {
 	transfers := []TransferPoint{
 		{ID: "full-transfer", Location: GeoPoint{Latitude: 0, Longitude: 0.25}, AvailableCapacity: 0},

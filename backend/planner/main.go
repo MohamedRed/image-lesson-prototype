@@ -3403,9 +3403,10 @@ func getAvailableTransferPoints(ctx context.Context, origin, destination GeoPoin
 
 // getMaxStopCapacity extracts maximum stopping capacity from curb segment data
 func getMaxStopCapacity(data map[string]interface{}) int {
-	if maxStop, ok := data["maxStopSeconds"].(int64); ok && maxStop > 0 {
+	maxStop := intValue(data["maxStopSeconds"], 0)
+	if maxStop > 0 {
 		// Assume 1 car can stop for every 60 seconds of allowed time
-		return int(maxStop / 60)
+		return maxStop / 60
 	}
 	return 2 // Default capacity
 }
