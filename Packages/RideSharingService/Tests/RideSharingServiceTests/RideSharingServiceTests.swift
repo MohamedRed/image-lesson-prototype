@@ -41,6 +41,24 @@ import Testing
     ])
 }
 
+@Test func journeyDisplayGeometryRejectsPartialLegGeometry() async throws {
+    let journey: [String: AnyCodable] = [
+        "legs": AnyCodable([
+            [
+                "driverId": "driverA",
+                "pickup": ["latitude": 37.1001, "longitude": -122.1001],
+                "dropoff": ["latitude": 37.1501, "longitude": -122.1501],
+            ],
+            [
+                "driverId": "driverB",
+                "pickup": ["latitude": 37.1510, "longitude": -122.1510],
+            ],
+        ])
+    ]
+
+    #expect(rideJourneyDisplayGeometry(from: journey) == nil)
+}
+
 @Test func journeyDisplayGeometryAcceptsPlannerUppercaseCoordinateKeys() async throws {
     let journey: [String: AnyCodable] = [
         "legs": AnyCodable([

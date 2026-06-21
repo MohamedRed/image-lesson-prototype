@@ -44,12 +44,14 @@ public struct RideJourneyDisplayGeometry: Equatable {
 public func rideJourneyDisplayGeometry(from journey: [String: AnyCodable]) -> RideJourneyDisplayGeometry? {
     guard let legs = journeyArray(journey["legs"]) else { return nil }
 
-    let routeSegments = legs.compactMap { leg -> RideCoordinateSegment? in
+    var routeSegments: [RideCoordinateSegment] = []
+    routeSegments.reserveCapacity(legs.count)
+    for leg in legs {
         guard
             let pickup = journeyPoint(in: leg, matching: ["pickup", "Pickup"]),
             let dropoff = journeyPoint(in: leg, matching: ["dropoff", "Dropoff"])
         else { return nil }
-        return RideCoordinateSegment(start: pickup, end: dropoff)
+        routeSegments.append(RideCoordinateSegment(start: pickup, end: dropoff))
     }
 
     let transferPoints: [RideCoordinate]
