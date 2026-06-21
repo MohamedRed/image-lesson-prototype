@@ -2605,11 +2605,10 @@ func TestComputeDriverScore_RejectsOriginDriveGeoOnlyBeforeWalkFeasiblePickup(t 
 	driver := corridorDriver("origin-drive-before-walk-feasible-pickup", 0.006, -0.10, GeoJSONGeometry{})
 	driver.RoutePolyline = encodePolyline([]GeoPoint{
 		{Latitude: 0.006, Longitude: -0.10},
-		{Latitude: 0.006, Longitude: -0.001},
 		{Latitude: 0.006, Longitude: 0},
 		{Latitude: 0.006, Longitude: 1},
 	})
-	driver.RouteETAProfileSeconds = []int{0, 590, 600, 1500}
+	driver.RouteETAProfileSeconds = []int{0, 600, 1500}
 
 	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
 	if ok {
