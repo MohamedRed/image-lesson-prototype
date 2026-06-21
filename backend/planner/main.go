@@ -122,6 +122,7 @@ func singleHopDirectRideETASeconds(req RideRequest) int {
 }
 
 func singleHopRouteRideETASeconds(req RideRequest, driver DriverProfile) (int, bool) {
+	driver.RoutePolyline = strings.TrimSpace(driver.RoutePolyline)
 	if driver.RoutePolyline == "" {
 		return 0, false
 	}
@@ -146,6 +147,7 @@ func singleHopRouteRideETASeconds(req RideRequest, driver DriverProfile) (int, b
 }
 
 func selectedSingleHopPickupDropoff(req RideRequest, driver DriverProfile) (GeoPoint, GeoPoint) {
+	driver.RoutePolyline = strings.TrimSpace(driver.RoutePolyline)
 	if driver.RoutePolyline == "" {
 		return req.Origin, req.Destination
 	}
