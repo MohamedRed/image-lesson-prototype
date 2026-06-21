@@ -590,6 +590,43 @@ func TestComputeDriverScore_RejectsNegativeLuggageRequest(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsNegativePetRequest(t *testing.T) {
+	req := RideRequest{
+		Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1,
+		Pet: map[string]int{"small": -1},
+	}
+	driver := DriverProfile{
+		CapacitySeats:   4,
+		PetLimits:       map[string]int{"small": 0},
+		CurrentLocation: GeoPoint{0, 0},
+	}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected scorer to reject negative pet requests before capacity math")
+	}
+}
+
+func TestComputeDriverScore_RejectsNegativeChildPassengerRequest(t *testing.T) {
+	req := RideRequest{
+		Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1,
+		ChildPassengers: []struct {
+			AgeYears int `json:"ageYears"`
+			WeightKg int `json:"weightKg"`
+		}{{AgeYears: -1, WeightKg: 12}},
+	}
+	driver := DriverProfile{
+		CapacitySeats:      4,
+		ChildSeatInventory: map[string]int{"infant": 0},
+		CurrentLocation:    GeoPoint{0, 0},
+	}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected scorer to reject negative child passenger requests before child-seat math")
+	}
+}
+
 func TestComputeDriverScore_UsesLuggageLedgerForCapacity(t *testing.T) {
 	req := RideRequest{
 		Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1,
