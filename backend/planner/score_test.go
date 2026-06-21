@@ -326,6 +326,16 @@ func TestBoolHelpersRecognizeStringBackedAvailabilityFlags(t *testing.T) {
 	}
 }
 
+func TestDriverComplianceBoolValueUsesStringBackedRawValue(t *testing.T) {
+	raw := map[string]any{"licenseVerified": " true ", "backgroundCheckPassed": " false "}
+	if !driverComplianceBoolValue(raw, "licenseVerified", false) {
+		t.Fatalf("expected string-backed true licenseVerified to override decoded false zero value")
+	}
+	if driverComplianceBoolValue(raw, "backgroundCheckPassed", true) {
+		t.Fatalf("expected string-backed false backgroundCheckPassed to override decoded true fallback")
+	}
+}
+
 func TestComputeDriverScore_RejectsUnverifiedDriverLicense(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("unverified-license-driver", 0, 0, routeCorridor())

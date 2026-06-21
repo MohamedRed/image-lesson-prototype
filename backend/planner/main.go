@@ -3347,9 +3347,9 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			IsOnline:                 isOnline,
 			IsAvailable:              isAvailable,
 			HasLicenseVerification:   hasLicenseVerification,
-			LicenseVerified:          data.LicenseVerified,
+			LicenseVerified:          driverComplianceBoolValue(raw, "licenseVerified", data.LicenseVerified),
 			HasBackgroundCheckPassed: hasBackgroundCheckPassed,
-			BackgroundCheckPassed:    data.BackgroundCheckPassed,
+			BackgroundCheckPassed:    driverComplianceBoolValue(raw, "backgroundCheckPassed", data.BackgroundCheckPassed),
 			VerificationStatus:       data.VerificationStatus,
 			ComplianceStatus:         data.ComplianceStatus,
 			IsBlocked:                data.IsBlocked,
@@ -3418,6 +3418,10 @@ func boolValue(value any, fallback bool) bool {
 		return v
 	}
 	return fallback
+}
+
+func driverComplianceBoolValue(raw map[string]any, field string, decoded bool) bool {
+	return boolValue(raw[field], decoded)
 }
 
 func boolFromValue(value any) (bool, bool) {
