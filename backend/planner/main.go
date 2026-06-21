@@ -3291,8 +3291,15 @@ func intValue(value any, fallback int) int {
 	case int32:
 		return int(v)
 	case float64:
+		if math.IsNaN(v) || math.IsInf(v, 0) {
+			return fallback
+		}
 		return int(v)
 	case float32:
+		f := float64(v)
+		if math.IsNaN(f) || math.IsInf(f, 0) {
+			return fallback
+		}
 		return int(v)
 	default:
 		return fallback

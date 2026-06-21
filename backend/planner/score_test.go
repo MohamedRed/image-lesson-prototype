@@ -2769,6 +2769,18 @@ func TestZoneCapacityFromLookupClampsNegativeActivePickups(t *testing.T) {
 	}
 }
 
+func TestIntValueFallsBackForNonFiniteFloats(t *testing.T) {
+	if got := intValue(math.Inf(1), 7); got != 7 {
+		t.Fatalf("expected +Inf numeric coercion to use fallback 7, got %d", got)
+	}
+	if got := intValue(math.Inf(-1), 7); got != 7 {
+		t.Fatalf("expected -Inf numeric coercion to use fallback 7, got %d", got)
+	}
+	if got := intValue(math.NaN(), 7); got != 7 {
+		t.Fatalf("expected NaN numeric coercion to use fallback 7, got %d", got)
+	}
+}
+
 func TestZoneCapacityFromLookupIgnoresNonFiniteNumericFields(t *testing.T) {
 	active, capacity := zoneCapacityFromLookup(map[string]any{"activePickups": math.Inf(1), "capacityCars": math.NaN()}, true)
 	if active != 0 || capacity != defaultPickupZoneCapacityCars() {
