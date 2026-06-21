@@ -3670,6 +3670,16 @@ func TestCalculateJourneyScoreDefaultsMissingCongestionToNeutral(t *testing.T) {
 	}
 }
 
+func TestCalculateJourneyScoreDefaultsNonFiniteCongestionToNeutral(t *testing.T) {
+	want := calculateJourneyScore(600, 2, 1)
+	for _, factor := range []float64{math.NaN(), math.Inf(1), math.Inf(-1)} {
+		got := calculateJourneyScore(600, 2, factor)
+		if got != want {
+			t.Fatalf("expected non-finite congestion factor %v to be neutral, got %f want %f", factor, got, want)
+		}
+	}
+}
+
 func TestScore2HopJourneyUsesRouteAwareResponseEta(t *testing.T) {
 	req := corridorRequest()
 	transfer := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.5}, TransferTimeSeconds: 7, CongestionFactor: 1}

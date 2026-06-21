@@ -538,7 +538,7 @@ func score3HopJourney(req RideRequest, transfer1 TransferPoint, transfer2 Transf
 }
 
 func neutralCongestionFactor(factor float64) float64 {
-	if factor <= 0 {
+	if math.IsNaN(factor) || math.IsInf(factor, 0) || factor <= 0 {
 		return 1
 	}
 	return factor
