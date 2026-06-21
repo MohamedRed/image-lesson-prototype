@@ -1183,6 +1183,36 @@ func TestComputeDriverScore_AllowsRouteCrossingOriginDriveGeoWhenNearestProjecti
 	}
 }
 
+func TestRoutePolylineEntersGeometryAfterOriginNormalizesRoutePolyline(t *testing.T) {
+	req := corridorRequest()
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	destinationDrive := rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	polyline := " \n" + encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	}) + "\t "
+
+	if !routePolylineEntersGeometryAfterOrigin(req, polyline, destinationDrive) {
+		t.Fatalf("expected destination-drive route-order helper to normalize whitespace-padded routePolyline")
+	}
+}
+
+func TestRoutePolylineEntersGeometryBeforeOriginNormalizesRoutePolyline(t *testing.T) {
+	req := corridorRequest()
+	originDrive := rectPolygon(-0.01, -0.101, 0.01, -0.099)
+	polyline := " \n" + encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	}) + "\t "
+
+	if !routePolylineEntersGeometryBeforeOrigin(req, polyline, originDrive) {
+		t.Fatalf("expected origin-drive route-order helper to normalize whitespace-padded routePolyline")
+	}
+}
+
 func TestComputeDriverScore_RejectsDestinationDriveGeoOnlyBeforePickup(t *testing.T) {
 	allowLongPickupETA(t)
 	req := corridorRequest()
