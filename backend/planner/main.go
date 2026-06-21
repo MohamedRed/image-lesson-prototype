@@ -209,13 +209,98 @@ func routeProjectionCandidatesInGeometryOrRange(points []GeoPoint, target GeoPoi
 	if len(candidates) == 0 {
 		candidates = collect(false)
 	}
+	sortRouteProjections(candidates)
+	return candidates
+}
+
+func routeWalkProjectionCandidates(points []GeoPoint, req RideRequest, target GeoPoint, geometry GeoJSONGeometry, minPos, maxPos float64) []routeProjection {
+	if geometry.isZero() {
+		return routeProjectionCandidatesInGeometryOrRange(points, target, geometry, minPos, maxPos)
+	}
+	inside := routeProjectionCandidatesOnlyInGeometry(points, target, geometry, minPos, maxPos)
+	near := routeNearProjectionCandidates(points, target, minPos, maxPos, math.MaxFloat64)
+	return appendUniqueRouteProjections(inside, near...)
+}
+
+func routeProjectionCandidatesOnlyInGeometry(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos, maxPos float64) []routeProjection {
+	if geometry.isZero() || len(points) == 0 || minPos > maxPos {
+		return nil
+	}
+	candidates := []routeProjection{}
+	consider := func(point GeoPoint, position float64) {
+		if position < minPos || position > maxPos || !pointInGeoJSONPolygon(point, geometry) {
+			return
+		}
+		candidates = append(candidates, routeProjection{
+			point:    point,
+			position: position,
+			snapKm:   haversineKm(point.Latitude, point.Longitude, target.Latitude, target.Longitude),
+		})
+	}
+	for i, point := range points {
+		consider(point, float64(i))
+	}
+	for i := 0; i < len(points)-1; i++ {
+		point, fraction := nearestPointOnSegment(points[i], points[i+1], target)
+		consider(point, float64(i)+fraction)
+	}
+	if len(candidates) == 0 {
+		candidates = append(candidates, routeSegmentGeometryIntersectionCandidates(points, target, geometry, minPos, maxPos)...)
+	}
+	sortRouteProjections(candidates)
+	return candidates
+}
+
+func routeNearProjectionCandidates(points []GeoPoint, target GeoPoint, minPos, maxPos, maxSnapKm float64) []routeProjection {
+	if len(points) < 2 || minPos > maxPos || maxSnapKm <= 0 {
+		return nil
+	}
+	candidates := []routeProjection{}
+	consider := func(point GeoPoint, position float64) {
+		if position < minPos || position > maxPos {
+			return
+		}
+		snapKm := haversineKm(point.Latitude, point.Longitude, target.Latitude, target.Longitude)
+		if snapKm > maxSnapKm {
+			return
+		}
+		candidates = append(candidates, routeProjection{point: point, position: position, snapKm: snapKm})
+	}
+	for i := 0; i < len(points)-1; i++ {
+		point, fraction := nearestPointOnSegment(points[i], points[i+1], target)
+		consider(point, float64(i)+fraction)
+	}
+	sortRouteProjections(candidates)
+	return candidates
+}
+
+func appendUniqueRouteProjections(base []routeProjection, additional ...routeProjection) []routeProjection {
+	seen := map[string]bool{}
+	out := make([]routeProjection, 0, len(base)+len(additional))
+	appendOne := func(candidate routeProjection) {
+		key := fmt.Sprintf("%.9f:%.9f:%.9f", candidate.point.Latitude, candidate.point.Longitude, candidate.position)
+		if seen[key] {
+			return
+		}
+		seen[key] = true
+		out = append(out, candidate)
+	}
+	for _, candidate := range base {
+		appendOne(candidate)
+	}
+	for _, candidate := range additional {
+		appendOne(candidate)
+	}
+	return out
+}
+
+func sortRouteProjections(candidates []routeProjection) {
 	sort.SliceStable(candidates, func(i, j int) bool {
 		if candidates[i].position == candidates[j].position {
 			return candidates[i].snapKm < candidates[j].snapKm
 		}
 		return candidates[i].position < candidates[j].position
 	})
-	return candidates
 }
 
 func routeSegmentGeometryIntersectionCandidates(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos, maxPos float64) []routeProjection {
@@ -1049,10 +1134,15 @@ func riderWalkScore(req RideRequest, driver DriverProfile) float64 {
 
 func routeInsertionProjections(req RideRequest, points []GeoPoint) (routeProjection, routeProjection, bool) {
 	lastPos := float64(len(points) - 1)
+	originWalk := req.originWalkGeometry()
+	destinationWalk := req.destinationWalkGeometry()
 	originCandidates := routeOriginProjectionCandidates(points, req, 0, lastPos)
 	for _, originProjection := range originCandidates {
+		if !projectionSatisfiesWalkGeometry(req, originProjection, originWalk) {
+			continue
+		}
 		destinationProjection, ok := routeDestinationProjectionAfter(points, req, originProjection.position, lastPos)
-		if ok && destinationProjection.position > originProjection.position {
+		if ok && destinationProjection.position > originProjection.position && projectionSatisfiesWalkGeometry(req, destinationProjection, destinationWalk) {
 			return originProjection, destinationProjection, true
 		}
 	}
@@ -1079,11 +1169,11 @@ func routeOriginProjectionCandidates(points []GeoPoint, req RideRequest, minPos,
 	originDrive := req.originDriveGeometry()
 	originGeometry := req.originOrderGeometry()
 	if originDrive.isZero() {
-		return routeProjectionCandidatesInGeometryOrRange(points, req.Origin, originGeometry, minPos, maxPos)
+		return routeWalkProjectionCandidates(points, req, req.Origin, originGeometry, minPos, maxPos)
 	}
 
 	filtered := []routeProjection{}
-	candidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, originGeometry, minPos, maxPos)
+	candidates := routeWalkProjectionCandidates(points, req, req.Origin, originGeometry, minPos, maxPos)
 	for _, candidate := range candidates {
 		if candidate.position < minPos || candidate.position > maxPos {
 			continue

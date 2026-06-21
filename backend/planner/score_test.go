@@ -520,6 +520,30 @@ func TestComputeDriverScore_AllowsRoutePassingNearWalkZonesWithinWalkRadius(t *t
 	}
 }
 
+func TestComputeDriverScore_UsesLaterNearOriginProjectionWhenEarlierSegmentIsOutsideWalkRadius(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "2000")
+	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "200")
+	req := corridorRequest()
+	req.OriWalkIso = rectPolygon(-0.0001, -0.0001, 0.0001, 0.0001)
+	req.DestWalkIso = rectPolygon(-0.0001, 0.9999, 0.0001, 1.0001)
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	driver := corridorDriver("later-near-origin-route", 0.05, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0.05, Longitude: -0.10}, // earlier segment is outside the rider walk radius
+		{Latitude: 0.05, Longitude: 0.50},
+		{Latitude: 0.002, Longitude: 0}, // later usable pickup snap within the effective walk radius
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected route-order fallback to skip earlier outside-walk projections and use the later near-origin pickup")
+	}
+}
+
 func TestComputeDriverScore_AllowsNearDestinationWalkPointInsideDestinationDriveGeo(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "100")
