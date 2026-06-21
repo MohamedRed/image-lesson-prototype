@@ -34,6 +34,7 @@ export interface MultiLegResourceRequirements {
   legs: Array<{
     driverId: string;
     pickupZoneId: string;
+    dropoffZoneId: string;
     requirements: ResourceRequirements;
     legNumber: number;
   }>;
@@ -49,6 +50,7 @@ export interface MultiLegReservationResult {
     legNumber: number;
     driverId: string;
     pickupZoneId: string;
+    dropoffZoneId: string;
     reservedResources: {
       seats: number;
       cargo: Record<string, number>;
@@ -461,10 +463,14 @@ export async function reserveMultiLegResources(
       for (const leg of requirements.legs) {
         const driverRef = db.doc(`drivers/${leg.driverId}`);
         const zoneRef = db.doc(`pickupZones/${leg.pickupZoneId}`);
+        const dropoffZoneRef = leg.dropoffZoneId !== leg.pickupZoneId
+          ? db.doc(`pickupZones/${leg.dropoffZoneId}`)
+          : undefined;
         
-        const [driverSnap, zoneSnap] = await Promise.all([
+        const [driverSnap, zoneSnap, dropoffZoneSnap] = await Promise.all([
           transaction.get(driverRef),
-          transaction.get(zoneRef)
+          transaction.get(zoneRef),
+          dropoffZoneRef ? transaction.get(dropoffZoneRef) : Promise.resolve(undefined)
         ]);
 
         if (!driverSnap.exists) {
@@ -475,8 +481,13 @@ export async function reserveMultiLegResources(
           throw new Error(`Pickup zone ${leg.pickupZoneId} not found for leg ${leg.legNumber}`);
         }
 
+        if (dropoffZoneRef && (!dropoffZoneSnap || !dropoffZoneSnap.exists)) {
+          throw new Error(`Dropoff zone ${leg.dropoffZoneId} not found for leg ${leg.legNumber}`);
+        }
+
         const driverData = driverSnap.data()!;
         const zoneData = zoneSnap.data()!;
+        const dropoffZoneData = dropoffZoneSnap?.data();
 
         // Validate driver constraints for this leg
         const validation = validateDriverResources(driverData, leg.requirements);
@@ -484,10 +495,16 @@ export async function reserveMultiLegResources(
           throw new Error(`Driver validation failed for leg ${leg.legNumber}: ${validation.error}`);
         }
 
-        // Validate pickup zone capacity
+        // Validate pickup/dropoff zone capacity
         const zoneValidation = validateZoneCapacity(zoneData);
         if (!zoneValidation.valid) {
           throw new Error(`Zone validation failed for leg ${leg.legNumber}: ${zoneValidation.error}`);
+        }
+        if (dropoffZoneData) {
+          const dropoffZoneValidation = validateZoneCapacity(dropoffZoneData);
+          if (!dropoffZoneValidation.valid) {
+            throw new Error(`Dropoff zone validation failed for leg ${leg.legNumber}: ${dropoffZoneValidation.error}`);
+          }
         }
 
         // Validate gender pool consistency across legs
@@ -500,11 +517,15 @@ export async function reserveMultiLegResources(
       for (const leg of requirements.legs) {
         const driverRef = db.doc(`drivers/${leg.driverId}`);
         const zoneRef = db.doc(`pickupZones/${leg.pickupZoneId}`);
+        const dropoffZoneRef = leg.dropoffZoneId !== leg.pickupZoneId
+          ? db.doc(`pickupZones/${leg.dropoffZoneId}`)
+          : undefined;
         
         // Get fresh data for reservation calculations
-        const [driverSnap, zoneSnap] = await Promise.all([
+        const [driverSnap] = await Promise.all([
           transaction.get(driverRef),
-          transaction.get(zoneRef)
+          transaction.get(zoneRef),
+          dropoffZoneRef ? transaction.get(dropoffZoneRef) : Promise.resolve(undefined)
         ]);
         
         const driverData = driverSnap.data()!;
@@ -583,12 +604,16 @@ export async function reserveMultiLegResources(
         // Apply updates
         transaction.update(driverRef, driverUpdates);
         transaction.update(zoneRef, zoneUpdates);
+        if (dropoffZoneRef) {
+          transaction.update(dropoffZoneRef, zoneUpdates);
+        }
 
         // Track reserved resources for this leg
         reservedLegs!.push({
           legNumber: leg.legNumber,
           driverId: leg.driverId,
           pickupZoneId: leg.pickupZoneId,
+          dropoffZoneId: leg.dropoffZoneId,
           reservedResources: {
             seats: seatDelta,
             cargo: cargoDeltas,

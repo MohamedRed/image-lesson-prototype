@@ -1,4 +1,4 @@
-import { calculateAvailableSeats, reserveResourcesTransaction } from "../src/ride-sharing/reserveResourcesTx";
+import { calculateAvailableSeats, reserveMultiLegResources, reserveResourcesTransaction } from "../src/ride-sharing/reserveResourcesTx";
 
 describe("reserve resource capacity helpers", () => {
   it("uses reserved seat ledger instead of pickup count for available seats", () => {
@@ -196,6 +196,50 @@ describe("reserveResourcesTransaction", () => {
 
     expect(result.success).toBe(true);
     expect(updates.map((update) => update.path)).toEqual(["drivers/driver-1", "pickupZones/zone-1"]);
+  });
+
+  it("reserves planner-selected pickup and dropoff zones for every multi-leg leg", async () => {
+    const updates: Array<{ path: string; data: Record<string, unknown> }> = [];
+    const db = fakeReservationDb({
+      "drivers/driver-a": { capacitySeats: 4, activePickups: 0 },
+      "drivers/driver-b": { capacitySeats: 4, activePickups: 0 },
+      "pickupZones/pickup-a": { capacityCars: 10, activePickups: 0 },
+      "pickupZones/dropoff-a": { capacityCars: 10, activePickups: 0 },
+      "pickupZones/pickup-b": { capacityCars: 10, activePickups: 0 },
+      "pickupZones/dropoff-b": { capacityCars: 10, activePickups: 0 },
+    }, updates);
+
+    const result = await reserveMultiLegResources({
+      rideRequestId: "req-multi-dropoff",
+      totalPassengerCount: 1,
+      legs: [
+        {
+          driverId: "driver-a",
+          pickupZoneId: "pickup-a",
+          dropoffZoneId: "dropoff-a",
+          legNumber: 1,
+          requirements: { passengerCount: 1, riderGender: "female" },
+        },
+        {
+          driverId: "driver-b",
+          pickupZoneId: "pickup-b",
+          dropoffZoneId: "dropoff-b",
+          legNumber: 2,
+          requirements: { passengerCount: 1, riderGender: "female" },
+        },
+      ],
+    }, db as never);
+
+    expect(result.success).toBe(true);
+    expect(updates.map((update) => update.path)).toEqual([
+      "drivers/driver-a",
+      "pickupZones/pickup-a",
+      "pickupZones/dropoff-a",
+      "drivers/driver-b",
+      "pickupZones/pickup-b",
+      "pickupZones/dropoff-b",
+    ]);
+    expect(result.reservedLegs?.map((leg: any) => leg.dropoffZoneId)).toEqual(["dropoff-a", "dropoff-b"]);
   });
 });
 

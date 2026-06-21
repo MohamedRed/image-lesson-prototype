@@ -386,12 +386,12 @@ describe("planner client", () => {
     expect(fetchBodies.map((body) => body.excludedDriverIds)).toEqual([[], ["driverA"]]);
   });
 
-  it("builds multi-leg reservation requirements only from planner-provided pickup zones", () => {
+  it("builds multi-leg reservation requirements only from planner-provided pickup/dropoff zones", () => {
     const requirements = buildMultiLegReservationRequirements(
       {
         legs: [
-          { driverId: "driverA", pickupZoneId: "zone-a", etaSeconds: 120 },
-          { driverId: "driverB", pickupZoneId: "zone-b", etaSeconds: 240 },
+          { driverId: "driverA", pickupZoneId: "zone-a", dropoffZoneId: "dropoff-a", etaSeconds: 120 },
+          { driverId: "driverB", pickupZoneId: "zone-b", dropoffZoneId: "dropoff-b", etaSeconds: 240 },
         ],
       },
       {
@@ -408,6 +408,7 @@ describe("planner client", () => {
         {
           driverId: "driverA",
           pickupZoneId: "zone-a",
+          dropoffZoneId: "dropoff-a",
           legNumber: 1,
           requirements: {
             passengerCount: 2,
@@ -421,6 +422,7 @@ describe("planner client", () => {
         {
           driverId: "driverB",
           pickupZoneId: "zone-b",
+          dropoffZoneId: "dropoff-b",
           legNumber: 2,
           requirements: {
             passengerCount: 2,
@@ -441,12 +443,25 @@ describe("planner client", () => {
     expect(() => buildMultiLegReservationRequirements(
       {
         legs: [
-          { driverId: "driverA", pickupZoneId: "zone-a" },
-          { driverId: "driverB" },
+          { driverId: "driverA", pickupZoneId: "zone-a", dropoffZoneId: "dropoff-a" },
+          { driverId: "driverB", dropoffZoneId: "dropoff-b" },
         ],
       },
       { passengerCount: 1, riderGender: "female" },
       "req-456"
     )).toThrow("Planner leg 2 missing pickupZoneId for driver driverB");
+  });
+
+  it("rejects multi-leg planner responses missing dropoffZoneId instead of skipping destination curb reservation", () => {
+    expect(() => buildMultiLegReservationRequirements(
+      {
+        legs: [
+          { driverId: "driverA", pickupZoneId: "zone-a", dropoffZoneId: "dropoff-a" },
+          { driverId: "driverB", pickupZoneId: "zone-b" },
+        ],
+      },
+      { passengerCount: 1, riderGender: "female" },
+      "req-789"
+    )).toThrow("Planner leg 2 missing dropoffZoneId for driver driverB");
   });
 });

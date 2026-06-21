@@ -226,9 +226,13 @@ export function buildMultiLegReservationRequirements(
       if (!leg.pickupZoneId) {
         throw new Error(`Planner leg ${index + 1} missing pickupZoneId for driver ${leg.driverId}`);
       }
+      if (!leg.dropoffZoneId) {
+        throw new Error(`Planner leg ${index + 1} missing dropoffZoneId for driver ${leg.driverId}`);
+      }
       return {
         driverId: leg.driverId,
         pickupZoneId: leg.pickupZoneId,
+        dropoffZoneId: leg.dropoffZoneId,
         legNumber: index + 1,
         requirements,
       };
