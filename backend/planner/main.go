@@ -1280,8 +1280,8 @@ func projectionSatisfiesEffectiveWalkGeometry(req RideRequest, candidate routePr
 	if !projectionSatisfiesWalkGeometry(req, candidate, geometry) {
 		return false
 	}
-	if req.WalkRadiusM > 0 && candidate.snapKm > effectiveSingleHopWalkMeters(req)/1000.0 {
-		return false
+	if req.WalkRadiusM > 0 || os.Getenv("MAX_SINGLE_HOP_WALK_METERS") != "" {
+		return candidate.snapKm <= effectiveSingleHopWalkMeters(req)/1000.0
 	}
 	return true
 }
