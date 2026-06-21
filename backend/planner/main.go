@@ -704,6 +704,7 @@ func driverVerificationStatusAllowsRides(status string) bool {
 }
 
 func genderPoolCompatible(riderGender string, currentPassengerGenders []string) bool {
+	riderGender = strings.TrimSpace(riderGender)
 	if riderGender == "" || len(currentPassengerGenders) == 0 {
 		return true
 	}

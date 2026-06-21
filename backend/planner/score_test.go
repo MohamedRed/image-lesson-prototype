@@ -167,6 +167,18 @@ func TestComputeDriverScore_RejectsMixedGenderPool(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_TrimsRiderGenderBeforePoolCompatibility(t *testing.T) {
+	req := corridorRequest()
+	req.RiderGender = " female "
+	driver := corridorDriver("female-passenger-pool", 0, 0, routeCorridor())
+	driver.CurrentPassengerGenders = []string{"female"}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected riderGender whitespace to be normalized before gender-pool compatibility")
+	}
+}
+
 func TestComputeDriverScore_RejectsExclusiveRequestWithExistingReservedSeats(t *testing.T) {
 	req := corridorRequest()
 	req.RiderGender = "female"
