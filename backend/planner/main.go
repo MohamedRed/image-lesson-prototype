@@ -429,6 +429,7 @@ type DriverProfile struct {
 	RoutePolyline           string
 	RouteETAProfileSeconds  []int
 	BufferPolygon           GeoJSONGeometry
+	RouteBuffer             GeoJSONGeometry
 	CurbFactor              float64
 	LuggageCapacity         map[string]int
 	ReservedLuggage         map[string]int
@@ -1040,8 +1041,8 @@ func driverEntersOriginDriveGeo(req RideRequest, driver DriverProfile) bool {
 	if driver.RoutePolyline != "" {
 		return polylineIntersectsPolygon(driver.RoutePolyline, originDrive)
 	}
-	if !driver.BufferPolygon.isZero() {
-		return geoJSONPolygonsIntersect(driver.BufferPolygon, originDrive)
+	if buffer := driverCorridorBuffer(driver); !buffer.isZero() {
+		return geoJSONPolygonsIntersect(buffer, originDrive)
 	}
 	return false
 }
@@ -1057,8 +1058,8 @@ func driverEntersDestinationDriveGeo(req RideRequest, driver DriverProfile) bool
 	if driver.RoutePolyline != "" {
 		return polylineIntersectsPolygon(driver.RoutePolyline, destinationDrive)
 	}
-	if !driver.BufferPolygon.isZero() {
-		return geoJSONPolygonsIntersect(driver.BufferPolygon, destinationDrive)
+	if buffer := driverCorridorBuffer(driver); !buffer.isZero() {
+		return geoJSONPolygonsIntersect(buffer, destinationDrive)
 	}
 	return false
 }
@@ -1119,10 +1120,17 @@ func driverRouteIntersectsGeometry(driver DriverProfile, geometry GeoJSONGeometr
 	if driver.RoutePolyline != "" {
 		return polylineIntersectsPolygon(driver.RoutePolyline, geometry)
 	}
-	if !driver.BufferPolygon.isZero() && geoJSONPolygonsIntersect(driver.BufferPolygon, geometry) {
+	if buffer := driverCorridorBuffer(driver); !buffer.isZero() && geoJSONPolygonsIntersect(buffer, geometry) {
 		return true
 	}
 	return false
+}
+
+func driverCorridorBuffer(driver DriverProfile) GeoJSONGeometry {
+	if !driver.BufferPolygon.isZero() {
+		return driver.BufferPolygon
+	}
+	return driver.RouteBuffer
 }
 
 func (req RideRequest) originWalkGeometry() GeoJSONGeometry {
@@ -1997,6 +2005,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			RoutePolyline          string                 `firestore:"routePolyline"`
 			RouteETAProfileSeconds []int                  `firestore:"routeEtaProfile"`
 			BufferPolygon          GeoJSONGeometry        `firestore:"bufferPolygon"`
+			RouteBuffer            GeoJSONGeometry        `firestore:"routeBuffer"`
 			LuggageCapacity        map[string]int         `firestore:"luggageCapacity"`
 			CargoLedger            []cargoLedgerEntry     `firestore:"cargoLedger"`
 			PetLimits              map[string]int         `firestore:"petLimits"`
@@ -2050,6 +2059,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			RoutePolyline:           data.RoutePolyline,
 			RouteETAProfileSeconds:  data.RouteETAProfileSeconds,
 			BufferPolygon:           data.BufferPolygon,
+			RouteBuffer:             data.RouteBuffer,
 			CurbFactor:              curbFactor,
 			LuggageCapacity:         data.LuggageCapacity,
 			ReservedLuggage:         sumCargoLedger(data.CargoLedger),

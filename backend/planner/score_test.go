@@ -477,6 +477,17 @@ func TestComputeDriverScore_RejectsPolylineMissingWalkZoneDespiteBroadBuffer(t *
 	}
 }
 
+func TestComputeDriverScore_AcceptsCanonicalRouteBufferAlias(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("canonical-route-buffer", 0.05, 0, GeoJSONGeometry{})
+	driver.RouteBuffer = routeCorridor()
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected canonical routeBuffer corridor to be accepted like legacy bufferPolygon")
+	}
+}
+
 func TestPickBestDriverFromProfiles_RanksCorridorMatchAboveNearestWrongDirection(t *testing.T) {
 	req := corridorRequest()
 	drivers := []DriverProfile{
