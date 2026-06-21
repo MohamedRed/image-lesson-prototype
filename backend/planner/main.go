@@ -467,38 +467,40 @@ func addResourceTotals(total map[string]int, values map[string]int) {
 
 // DriverProfile is an in-memory representation of driver attributes used for matching.
 type DriverProfile struct {
-	ID                      string
-	CurrentLocation         GeoPoint
-	CapacitySeats           int
-	ActivePickups           int
-	HasSeatLedger           bool
-	ReservedSeats           int
-	PickupZoneID            string
-	PickupZoneActivePickups int
-	PickupZoneCapacityCars  int
-	RoutePolyline           string
-	RouteETAProfileSeconds  []int
-	BufferPolygon           GeoJSONGeometry
-	RouteBuffer             GeoJSONGeometry
-	CurbFactor              float64
-	LuggageCapacity         map[string]int
-	ReservedLuggage         map[string]int
-	PetLimits               map[string]int
-	ReservedPets            map[string]int
-	ChildSeatInventory      map[string]int
-	ReservedChildSeats      map[string]int
-	PremiumCapabilities     map[string]any
-	CurrentPassengerGenders []string
-	HasAvailabilityState    bool
-	IsOnline                bool
-	IsAvailable             bool
-	HasLicenseVerification  bool
-	LicenseVerified         bool
-	VerificationStatus      string
-	ComplianceStatus        string
-	IsBlocked               bool
-	IsStuck                 bool
-	IsSuspiciousLocation    bool
+	ID                       string
+	CurrentLocation          GeoPoint
+	CapacitySeats            int
+	ActivePickups            int
+	HasSeatLedger            bool
+	ReservedSeats            int
+	PickupZoneID             string
+	PickupZoneActivePickups  int
+	PickupZoneCapacityCars   int
+	RoutePolyline            string
+	RouteETAProfileSeconds   []int
+	BufferPolygon            GeoJSONGeometry
+	RouteBuffer              GeoJSONGeometry
+	CurbFactor               float64
+	LuggageCapacity          map[string]int
+	ReservedLuggage          map[string]int
+	PetLimits                map[string]int
+	ReservedPets             map[string]int
+	ChildSeatInventory       map[string]int
+	ReservedChildSeats       map[string]int
+	PremiumCapabilities      map[string]any
+	CurrentPassengerGenders  []string
+	HasAvailabilityState     bool
+	IsOnline                 bool
+	IsAvailable              bool
+	HasLicenseVerification   bool
+	LicenseVerified          bool
+	HasBackgroundCheckPassed bool
+	BackgroundCheckPassed    bool
+	VerificationStatus       string
+	ComplianceStatus         string
+	IsBlocked                bool
+	IsStuck                  bool
+	IsSuspiciousLocation     bool
 }
 
 // TransferPoint represents a curb segment suitable for passenger transfers
@@ -644,6 +646,9 @@ func driverIsOperationallyEligible(driver DriverProfile) bool {
 		return false
 	}
 	if driver.HasLicenseVerification && !driver.LicenseVerified {
+		return false
+	}
+	if driver.HasBackgroundCheckPassed && !driver.BackgroundCheckPassed {
 		return false
 	}
 	if !driverVerificationStatusAllowsRides(driver.VerificationStatus) {
@@ -2482,6 +2487,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			PremiumCapabilities     map[string]any         `firestore:"premiumCapabilities"`
 			CurrentPassengerGenders []string               `firestore:"currentPassengerGenders"`
 			LicenseVerified         bool                   `firestore:"licenseVerified"`
+			BackgroundCheckPassed   bool                   `firestore:"backgroundCheckPassed"`
 			VerificationStatus      string                 `firestore:"verificationStatus"`
 			ComplianceStatus        string                 `firestore:"complianceStatus"`
 			IsBlocked               bool                   `firestore:"isBlocked"`
@@ -2524,40 +2530,43 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		isOnline := boolValue(raw["isOnline"], true)
 		isAvailable := boolValue(raw["isAvailable"], boolValue(raw["isActive"], true))
 		hasLicenseVerification := rawBoolExists(raw, "licenseVerified")
+		hasBackgroundCheckPassed := rawBoolExists(raw, "backgroundCheckPassed")
 
 		prof := DriverProfile{
-			ID:                      d.Ref.ID,
-			CurrentLocation:         GeoPoint{Latitude: data.CurrentLocation.Latitude, Longitude: data.CurrentLocation.Longitude},
-			CapacitySeats:           data.CapacitySeats,
-			ActivePickups:           data.ActivePickups,
-			HasSeatLedger:           hasSeatLedger,
-			ReservedSeats:           sumReservedSeats(data.Legs),
-			PickupZoneID:            data.PickupZoneID,
-			PickupZoneActivePickups: pickupZoneActivePickups,
-			PickupZoneCapacityCars:  pickupZoneCapacityCars,
-			RoutePolyline:           data.RoutePolyline,
-			RouteETAProfileSeconds:  data.RouteETAProfileSeconds,
-			BufferPolygon:           data.BufferPolygon,
-			RouteBuffer:             data.RouteBuffer,
-			CurbFactor:              curbFactor,
-			LuggageCapacity:         data.LuggageCapacity,
-			ReservedLuggage:         sumCargoLedger(data.CargoLedger),
-			PetLimits:               data.PetLimits,
-			ReservedPets:            sumPetLedger(data.PetLedger),
-			ChildSeatInventory:      data.ChildSeatInventory,
-			ReservedChildSeats:      sumChildSeatLedger(data.ChildSeatLedger),
-			PremiumCapabilities:     data.PremiumCapabilities,
-			CurrentPassengerGenders: data.CurrentPassengerGenders,
-			HasAvailabilityState:    hasAvailabilityState,
-			IsOnline:                isOnline,
-			IsAvailable:             isAvailable,
-			HasLicenseVerification:  hasLicenseVerification,
-			LicenseVerified:         data.LicenseVerified,
-			VerificationStatus:      data.VerificationStatus,
-			ComplianceStatus:        data.ComplianceStatus,
-			IsBlocked:               data.IsBlocked,
-			IsStuck:                 data.IsStuck,
-			IsSuspiciousLocation:    data.IsSuspiciousLocation,
+			ID:                       d.Ref.ID,
+			CurrentLocation:          GeoPoint{Latitude: data.CurrentLocation.Latitude, Longitude: data.CurrentLocation.Longitude},
+			CapacitySeats:            data.CapacitySeats,
+			ActivePickups:            data.ActivePickups,
+			HasSeatLedger:            hasSeatLedger,
+			ReservedSeats:            sumReservedSeats(data.Legs),
+			PickupZoneID:             data.PickupZoneID,
+			PickupZoneActivePickups:  pickupZoneActivePickups,
+			PickupZoneCapacityCars:   pickupZoneCapacityCars,
+			RoutePolyline:            data.RoutePolyline,
+			RouteETAProfileSeconds:   data.RouteETAProfileSeconds,
+			BufferPolygon:            data.BufferPolygon,
+			RouteBuffer:              data.RouteBuffer,
+			CurbFactor:               curbFactor,
+			LuggageCapacity:          data.LuggageCapacity,
+			ReservedLuggage:          sumCargoLedger(data.CargoLedger),
+			PetLimits:                data.PetLimits,
+			ReservedPets:             sumPetLedger(data.PetLedger),
+			ChildSeatInventory:       data.ChildSeatInventory,
+			ReservedChildSeats:       sumChildSeatLedger(data.ChildSeatLedger),
+			PremiumCapabilities:      data.PremiumCapabilities,
+			CurrentPassengerGenders:  data.CurrentPassengerGenders,
+			HasAvailabilityState:     hasAvailabilityState,
+			IsOnline:                 isOnline,
+			IsAvailable:              isAvailable,
+			HasLicenseVerification:   hasLicenseVerification,
+			LicenseVerified:          data.LicenseVerified,
+			HasBackgroundCheckPassed: hasBackgroundCheckPassed,
+			BackgroundCheckPassed:    data.BackgroundCheckPassed,
+			VerificationStatus:       data.VerificationStatus,
+			ComplianceStatus:         data.ComplianceStatus,
+			IsBlocked:                data.IsBlocked,
+			IsStuck:                  data.IsStuck,
+			IsSuspiciousLocation:     data.IsSuspiciousLocation,
 		}
 
 		profiles = append(profiles, prof)
