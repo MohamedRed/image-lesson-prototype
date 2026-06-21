@@ -336,6 +336,16 @@ func TestDriverComplianceBoolValueUsesStringBackedRawValue(t *testing.T) {
 	}
 }
 
+func TestDriverSafetyBoolValueUsesStringBackedRawValue(t *testing.T) {
+	raw := map[string]any{"isBlocked": " true ", "isStuck": " false "}
+	if !driverSafetyBoolValue(raw, "isBlocked", false) {
+		t.Fatalf("expected string-backed true isBlocked to override decoded false zero value")
+	}
+	if driverSafetyBoolValue(raw, "isStuck", true) {
+		t.Fatalf("expected string-backed false isStuck to override decoded true fallback")
+	}
+}
+
 func TestComputeDriverScore_RejectsUnverifiedDriverLicense(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("unverified-license-driver", 0, 0, routeCorridor())
@@ -3952,6 +3962,26 @@ func TestBuildSingleHopJourneyUsesEarlierPickupProjectionWhenOriginWalkZoneMissi
 	leg := journey.Legs[0]
 	assertGeoPointNear(t, leg.Pickup, GeoPoint{Latitude: 0, Longitude: 0})
 	assertGeoPointNear(t, leg.Dropoff, GeoPoint{Latitude: 0, Longitude: 1.00})
+}
+
+func TestBuildSingleHopJourneySkipsDestinationWalkPointOutsideDriveGeo(t *testing.T) {
+	req := corridorRequest()
+	req.DestWalkIso = rectPolygon(-0.02, 0.98, 0.02, 1.02)
+	req.DestinationDriveGeo = rectPolygon(0.009, 0.999, 0.011, 1.001)
+	driver := corridorDriver("driver-later-legal-destination-drive-dropoff", 0.01, 0, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1.00},    // destination walk only, outside destinationDriveGeo
+		{Latitude: 0.01, Longitude: 1.00}, // legal walk+drive dropoff
+	})
+
+	journey := buildSingleHopJourney(req, driver, 90)
+	if len(journey.Legs) != 1 {
+		t.Fatalf("expected one leg, got %d", len(journey.Legs))
+	}
+	leg := journey.Legs[0]
+	assertGeoPointNear(t, leg.Dropoff, GeoPoint{Latitude: 0.01, Longitude: 1.00})
 }
 
 func TestCalculateJourneyScoreDefaultsMissingCongestionToNeutral(t *testing.T) {

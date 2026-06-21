@@ -3352,9 +3352,9 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			BackgroundCheckPassed:    driverComplianceBoolValue(raw, "backgroundCheckPassed", data.BackgroundCheckPassed),
 			VerificationStatus:       data.VerificationStatus,
 			ComplianceStatus:         data.ComplianceStatus,
-			IsBlocked:                data.IsBlocked,
-			IsStuck:                  data.IsStuck,
-			IsSuspiciousLocation:     data.IsSuspiciousLocation,
+			IsBlocked:                driverSafetyBoolValue(raw, "isBlocked", data.IsBlocked),
+			IsStuck:                  driverSafetyBoolValue(raw, "isStuck", data.IsStuck),
+			IsSuspiciousLocation:     driverSafetyBoolValue(raw, "isSuspiciousLocation", data.IsSuspiciousLocation),
 		}
 
 		profiles = append(profiles, prof)
@@ -3421,6 +3421,10 @@ func boolValue(value any, fallback bool) bool {
 }
 
 func driverComplianceBoolValue(raw map[string]any, field string, decoded bool) bool {
+	return boolValue(raw[field], decoded)
+}
+
+func driverSafetyBoolValue(raw map[string]any, field string, decoded bool) bool {
 	return boolValue(raw[field], decoded)
 }
 
