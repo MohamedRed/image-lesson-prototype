@@ -1021,9 +1021,6 @@ func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) boo
 	if !driverEntersDestinationDriveGeo(req, driver) {
 		return false
 	}
-	if originIso.isZero() && destinationIso.isZero() {
-		return true
-	}
 	if driver.RoutePolyline != "" && !routePolylineTravelsOriginBeforeDestination(req, driver.RoutePolyline) {
 		return false
 	}

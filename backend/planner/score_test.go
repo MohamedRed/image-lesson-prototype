@@ -280,6 +280,26 @@ func TestComputeDriverScore_RejectsRouteThatHitsDestinationBeforeOrigin(t *testi
 	}
 }
 
+func TestComputeDriverScore_RejectsReverseRouteWhenOnlyDriveGeoAvailable(t *testing.T) {
+	allowLongPickupETA(t)
+	req := RideRequest{
+		Origin:         GeoPoint{Latitude: 0, Longitude: 0},
+		Destination:    GeoPoint{Latitude: 0, Longitude: 1},
+		PassengerCount: 1,
+		OriDriveIso:    rectPolygon(-0.05, -0.05, 0.05, 0.05),
+	}
+	driver := corridorDriver("reverse-route-drive-geo-only", 0, 1, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 1},
+		{Latitude: 0, Longitude: 0},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected reverse-direction route to be rejected even when only originDriveGeo is available")
+	}
+}
+
 func TestComputeDriverScore_AllowsRouteOnWalkZoneBoundaries(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "2000")
 	req := corridorRequest()
