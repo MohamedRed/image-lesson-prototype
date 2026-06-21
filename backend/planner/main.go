@@ -1587,10 +1587,10 @@ func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) boo
 	if !hasRoutePolyline && !endpointGeometriesOverlap(destinationIso, req.destinationDriveGeometry()) {
 		return false
 	}
-	if !driverBufferIntersectsCommonEndpoint(driver, originIso, req.originDriveGeometry()) {
+	if !driverBufferIntersectsCommonEndpoint(req, driver, originIso, req.originDriveGeometry(), req.Origin) {
 		return false
 	}
-	if !driverBufferIntersectsCommonEndpoint(driver, destinationIso, req.destinationDriveGeometry()) {
+	if !driverBufferIntersectsCommonEndpoint(req, driver, destinationIso, req.destinationDriveGeometry(), req.Destination) {
 		return false
 	}
 	if !originIso.isZero() && !driverRouteIntersectsOrPassesNearGeometry(req, driver, originIso, req.Origin) {
@@ -1618,7 +1618,7 @@ func endpointGeometriesOverlap(walkGeometry, driveGeometry GeoJSONGeometry) bool
 	return geoJSONPolygonsIntersect(walkGeometry, driveGeometry)
 }
 
-func driverBufferIntersectsCommonEndpoint(driver DriverProfile, walkGeometry, driveGeometry GeoJSONGeometry) bool {
+func driverBufferIntersectsCommonEndpoint(req RideRequest, driver DriverProfile, walkGeometry, driveGeometry GeoJSONGeometry, target GeoPoint) bool {
 	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 	if driver.RoutePolyline != "" || walkGeometry.isZero() || driveGeometry.isZero() {
 		return true
@@ -1626,6 +1626,9 @@ func driverBufferIntersectsCommonEndpoint(driver DriverProfile, walkGeometry, dr
 	buffer := driverCorridorBuffer(driver)
 	if buffer.isZero() {
 		return true
+	}
+	if explicitSingleHopWalkCapConfigured(req) {
+		return geoJSONPolygonsHaveCommonPointWithinDistance(target, effectiveSingleHopWalkMeters(req)/1000.0, buffer, walkGeometry, driveGeometry)
 	}
 	return geoJSONPolygonsHaveCommonPoint(buffer, walkGeometry, driveGeometry)
 }

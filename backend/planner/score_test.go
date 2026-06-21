@@ -714,6 +714,20 @@ func TestComputeDriverScore_GlobalWalkLimitAllowsBufferOnlyEdgeWithinWalkCap(t *
 	}
 }
 
+func TestComputeDriverScore_GlobalWalkLimitRejectsBufferOnlyOriginWalkAndDriveCommonPointOutsideCap(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
+	req := corridorRequest()
+	req.OriWalkIso = rectPolygon(-0.01, -0.01, 0.06, 0.01)
+	req.OriDriveIso = rectPolygon(0.049, -0.01, 0.051, 0.01)
+	req.DestWalkIso = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	driver := corridorDriver("buffer-only-origin-drive-common-point-too-far", 0.002, 0, rectPolygon(0.002, -0.01, 0.051, 1.01))
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected buffer-only origin walk+drive common point outside explicit walk cap to be rejected")
+	}
+}
+
 func TestRoutePolylineTravelsOriginBeforeDestinationSkipsDestinationOutsideExplicitWalkCap(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
 	req := corridorRequest()
@@ -1279,7 +1293,7 @@ func TestDriverBufferIntersectsCommonEndpoint_TreatsInvalidRoutePolylineAsMissin
 	))
 	driver.RoutePolyline = "not-a-valid-polyline"
 
-	if driverBufferIntersectsCommonEndpoint(driver, walk, drive) {
+	if driverBufferIntersectsCommonEndpoint(corridorRequest(), driver, walk, drive, GeoPoint{Latitude: 0, Longitude: 0}) {
 		t.Fatalf("expected common-endpoint helper to treat invalid routePolyline as missing and reject separate buffer walk/drive intersections")
 	}
 }
