@@ -442,7 +442,7 @@ resource "google_bigquery_routine" "refresh_hourly_aggregation" {
   routine_type = "PROCEDURE"
   language     = "SQL"
 
-  definition_body = file("${path.module}/../../../infra/bigquery_procedures.sql")
+  definition_body = file("${path.module}/../../bigquery_procedures.sql")
 }
 
 # Outputs

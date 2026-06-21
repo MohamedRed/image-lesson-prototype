@@ -13,9 +13,23 @@ ROOT = Path(__file__).resolve().parent
 CLOUD_RUN_MODULE = ROOT / "modules" / "cloud_run" / "main.tf"
 ROOT_MAIN = ROOT / "main.tf"
 ROOT_BACKEND = ROOT / "backend.tf"
+BIGQUERY_MODULE = ROOT / "modules" / "bigquery" / "main.tf"
 
 
 class CloudRunSecurityTests(unittest.TestCase):
+    def test_bigquery_procedure_path_resolves_inside_ride_sharing_config(self) -> None:
+        module_text = BIGQUERY_MODULE.read_text()
+
+        self.assertIn(
+            'definition_body = file("${path.module}/../../bigquery_procedures.sql")',
+            module_text,
+            "BigQuery routine should load the SQL file that is checked into infra/ride-sharing",
+        )
+        self.assertTrue(
+            (ROOT / "bigquery_procedures.sql").is_file(),
+            "BigQuery procedure SQL file must be distributed with the Terraform configuration",
+        )
+
     def test_root_required_providers_declared_once(self) -> None:
         root_text = ROOT_MAIN.read_text() + "\n" + ROOT_BACKEND.read_text()
 
