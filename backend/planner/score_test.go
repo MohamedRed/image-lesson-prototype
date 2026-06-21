@@ -74,6 +74,18 @@ func TestComputeDriverScore_RejectsExplicitUnavailableDriver(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsUnverifiedDriverLicense(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("unverified-license-driver", 0, 0, routeCorridor())
+	driver.HasLicenseVerification = true
+	driver.LicenseVerified = false
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected explicitly unverified driver license to be rejected before scoring")
+	}
+}
+
 func TestComputeDriverScore_RejectsMixedGenderPool(t *testing.T) {
 	req := corridorRequest()
 	req.RiderGender = "female"

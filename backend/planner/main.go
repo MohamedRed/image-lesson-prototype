@@ -491,6 +491,8 @@ type DriverProfile struct {
 	HasAvailabilityState    bool
 	IsOnline                bool
 	IsAvailable             bool
+	HasLicenseVerification  bool
+	LicenseVerified         bool
 	IsStuck                 bool
 	IsSuspiciousLocation    bool
 }
@@ -635,6 +637,9 @@ func driverIsOperationallyEligible(driver DriverProfile) bool {
 		return false
 	}
 	if driver.HasAvailabilityState && (!driver.IsOnline || !driver.IsAvailable) {
+		return false
+	}
+	if driver.HasLicenseVerification && !driver.LicenseVerified {
 		return false
 	}
 	return true
@@ -2440,6 +2445,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			ChildSeatLedger         []childSeatLedgerEntry `firestore:"childSeatLedger"`
 			PremiumCapabilities     map[string]any         `firestore:"premiumCapabilities"`
 			CurrentPassengerGenders []string               `firestore:"currentPassengerGenders"`
+			LicenseVerified         bool                   `firestore:"licenseVerified"`
 			IsStuck                 bool                   `firestore:"isStuck"`
 			IsSuspiciousLocation    bool                   `firestore:"isSuspiciousLocation"`
 		}
@@ -2478,6 +2484,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		hasAvailabilityState := rawBoolExists(raw, "isOnline") || rawBoolExists(raw, "isAvailable") || rawBoolExists(raw, "isActive")
 		isOnline := boolValue(raw["isOnline"], true)
 		isAvailable := boolValue(raw["isAvailable"], boolValue(raw["isActive"], true))
+		hasLicenseVerification := rawBoolExists(raw, "licenseVerified")
 
 		prof := DriverProfile{
 			ID:                      d.Ref.ID,
@@ -2505,6 +2512,8 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			HasAvailabilityState:    hasAvailabilityState,
 			IsOnline:                isOnline,
 			IsAvailable:             isAvailable,
+			HasLicenseVerification:  hasLicenseVerification,
+			LicenseVerified:         data.LicenseVerified,
 			IsStuck:                 data.IsStuck,
 			IsSuspiciousLocation:    data.IsSuspiciousLocation,
 		}
