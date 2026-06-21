@@ -488,6 +488,9 @@ type DriverProfile struct {
 	ReservedChildSeats      map[string]int
 	PremiumCapabilities     map[string]any
 	CurrentPassengerGenders []string
+	HasAvailabilityState    bool
+	IsOnline                bool
+	IsAvailable             bool
 	IsStuck                 bool
 	IsSuspiciousLocation    bool
 }
@@ -512,7 +515,7 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	seatsUsed := reservedSeatCount(driver)
 	capacitySeats := effectiveCapacitySeats(driver)
 	seatsLeft := capacitySeats - seatsUsed
-	if driver.IsStuck || driver.IsSuspiciousLocation {
+	if !driverIsOperationallyEligible(driver) {
 		return 0, 0, false
 	}
 	if seatsLeft < passCnt {
@@ -625,6 +628,16 @@ func effectiveCapacitySeats(driver DriverProfile) int {
 		return driver.CapacitySeats
 	}
 	return 4
+}
+
+func driverIsOperationallyEligible(driver DriverProfile) bool {
+	if driver.IsStuck || driver.IsSuspiciousLocation {
+		return false
+	}
+	if driver.HasAvailabilityState && (!driver.IsOnline || !driver.IsAvailable) {
+		return false
+	}
+	return true
 }
 
 func genderPoolCompatible(riderGender string, currentPassengerGenders []string) bool {
@@ -2462,6 +2475,10 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			}
 		}
 
+		hasAvailabilityState := rawBoolExists(raw, "isOnline") || rawBoolExists(raw, "isAvailable") || rawBoolExists(raw, "isActive")
+		isOnline := boolValue(raw["isOnline"], true)
+		isAvailable := boolValue(raw["isAvailable"], boolValue(raw["isActive"], true))
+
 		prof := DriverProfile{
 			ID:                      d.Ref.ID,
 			CurrentLocation:         GeoPoint{Latitude: data.CurrentLocation.Latitude, Longitude: data.CurrentLocation.Longitude},
@@ -2485,6 +2502,9 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			ReservedChildSeats:      sumChildSeatLedger(data.ChildSeatLedger),
 			PremiumCapabilities:     data.PremiumCapabilities,
 			CurrentPassengerGenders: data.CurrentPassengerGenders,
+			HasAvailabilityState:    hasAvailabilityState,
+			IsOnline:                isOnline,
+			IsAvailable:             isAvailable,
 			IsStuck:                 data.IsStuck,
 			IsSuspiciousLocation:    data.IsSuspiciousLocation,
 		}
@@ -2530,6 +2550,18 @@ func intValue(value any, fallback int) int {
 	default:
 		return fallback
 	}
+}
+
+func rawBoolExists(raw map[string]any, field string) bool {
+	_, ok := raw[field].(bool)
+	return ok
+}
+
+func boolValue(value any, fallback bool) bool {
+	if v, ok := value.(bool); ok {
+		return v
+	}
+	return fallback
 }
 
 func legExcludedDriverIDs(req RideRequest, additional ...string) []string {

@@ -48,6 +48,32 @@ func TestComputeDriverScore_RejectsSuspiciousLocationDriver(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsExplicitOfflineDriver(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("offline-driver", 0, 0, routeCorridor())
+	driver.HasAvailabilityState = true
+	driver.IsOnline = false
+	driver.IsAvailable = true
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected explicitly offline driver to be rejected before scoring")
+	}
+}
+
+func TestComputeDriverScore_RejectsExplicitUnavailableDriver(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("unavailable-driver", 0, 0, routeCorridor())
+	driver.HasAvailabilityState = true
+	driver.IsOnline = true
+	driver.IsAvailable = false
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected explicitly unavailable driver to be rejected before scoring")
+	}
+}
+
 func TestComputeDriverScore_RejectsMixedGenderPool(t *testing.T) {
 	req := corridorRequest()
 	req.RiderGender = "female"
