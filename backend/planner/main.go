@@ -1386,10 +1386,11 @@ func defaultPickupZoneCapacityCars() int {
 func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) bool {
 	originIso := req.originWalkGeometry()
 	destinationIso := req.destinationWalkGeometry()
-	if !endpointGeometriesOverlap(originIso, req.originDriveGeometry()) {
+	hasRoutePolyline := driver.RoutePolyline != ""
+	if !hasRoutePolyline && !endpointGeometriesOverlap(originIso, req.originDriveGeometry()) {
 		return false
 	}
-	if !endpointGeometriesOverlap(destinationIso, req.destinationDriveGeometry()) {
+	if !hasRoutePolyline && !endpointGeometriesOverlap(destinationIso, req.destinationDriveGeometry()) {
 		return false
 	}
 	if !driverBufferIntersectsCommonEndpoint(driver, originIso, req.originDriveGeometry()) {

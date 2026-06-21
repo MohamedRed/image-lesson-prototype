@@ -544,6 +544,30 @@ func TestComputeDriverScore_AllowsNearDestinationWalkPointInsideDestinationDrive
 	}
 }
 
+func TestComputeDriverScore_AllowsRoutePointInsideDestinationDriveGeoNearButOutsideTinyWalkZone(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "100")
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "2000")
+	req := corridorRequest()
+	req.WalkRadiusM = 100
+	req.OriWalkIso = rectPolygon(-0.0002, -0.0002, 0.0002, 0.0002)
+	req.DestWalkIso = rectPolygon(-0.0002, 0.9998, 0.0002, 1.0002)
+	req.OriDriveIso = rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	req.DestinationDriveGeo = rectPolygon(0.0005, 0.9998, 0.0007, 1.0002)
+	driver := corridorDriver("route-near-destination-walk-inside-disjoint-drive", 0.0006, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0.0006, Longitude: -0.10},
+		{Latitude: 0.0006, Longitude: 0},
+		{Latitude: 0.0006, Longitude: 1},
+		{Latitude: 0.0006, Longitude: 1.10},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected route point inside destinationDriveGeo and within rider walk radius to satisfy tiny disjoint destination walk zone")
+	}
+}
+
 func TestComputeDriverScore_AllowsLaterNearDestinationAfterEarlierDestinationWalkPass(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "100")
