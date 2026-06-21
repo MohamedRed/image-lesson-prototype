@@ -1308,6 +1308,35 @@ func TestComputeDriverScore_RejectsDestinationDriveGeoOnlyBeforePickup(t *testin
 	}
 }
 
+func TestComputeDriverScore_RejectsDestinationDriveGeoOnlyBeforeWalkFeasiblePickupOffLaterPath(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "20000")
+	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "200")
+	req := corridorRequest()
+	req.Origin = GeoPoint{Latitude: 0, Longitude: 0}
+	req.OriWalkIso = rectPolygon(-0.003, -0.003, 0.003, 0.003)
+	req.OriginWalkIso = GeoJSONGeometry{}
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	req.Destination = GeoPoint{Latitude: 0, Longitude: 1}
+	req.DestWalkIso = rectPolygon(-0.003, 0.997, 0.003, 1.003)
+	req.DestinationWalkIso = GeoJSONGeometry{}
+	req.DestinationDriveGeo = rectPolygon(0.047, 0.197, 0.053, 0.203)
+	driver := corridorDriver("destination-drive-only-before-walk-feasible-pickup", 0.05, 0, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0.05, Longitude: 0},
+		{Latitude: 0.05, Longitude: 0.20},
+		{Latitude: 0.002, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected destinationDriveGeo pass before the actual walk-feasible pickup to be rejected")
+	}
+}
+
 func TestComputeDriverScore_RejectsDestinationDriveGeoOnlyBeforeWalkFeasiblePickup(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")

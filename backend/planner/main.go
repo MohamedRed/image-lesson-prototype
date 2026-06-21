@@ -1328,6 +1328,9 @@ func routeDestinationProjectionAfter(points []GeoPoint, req RideRequest, minPos,
 		if candidate.position <= minPos || candidate.position > maxPos {
 			continue
 		}
+		if !pointInGeoJSONPolygon(candidate.point, destinationDrive) {
+			continue
+		}
 		if projectionSatisfiesEffectiveWalkGeometry(req, candidate, destinationGeometry) {
 			return candidate, true
 		}
