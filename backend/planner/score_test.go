@@ -1160,6 +1160,24 @@ func TestComputeDriverScore_RejectsRouteThatNeverEntersOriginDriveGeo(t *testing
 	}
 }
 
+func TestComputeDriverScore_PrefersCanonicalOriginDriveGeoOverStaleLegacy(t *testing.T) {
+	allowLongPickupETA(t)
+	req := corridorRequest()
+	req.OriDriveIso = rectPolygon(10, 10, 11, 11) // stale legacy geometry
+	req.OriginDriveGeo = rectPolygon(-0.05, -0.05, 0.05, 0.05)
+	driver := corridorDriver("canonical-origin-drive", 0, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected canonical originDriveGeo to override stale legacy oriDriveIso")
+	}
+}
+
 func TestComputeDriverScore_AllowsRouteCrossingOriginDriveGeoWhenNearestProjectionOutside(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "20000")

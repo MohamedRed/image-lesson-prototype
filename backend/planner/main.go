@@ -2005,11 +2005,11 @@ func (req RideRequest) destinationWalkGeometry() GeoJSONGeometry {
 }
 
 func (req RideRequest) originDriveGeometry() GeoJSONGeometry {
-	if !req.OriDriveIso.isZero() {
-		return req.OriDriveIso
-	}
 	if !req.OriginDriveGeo.isZero() {
 		return req.OriginDriveGeo
+	}
+	if !req.OriDriveIso.isZero() {
+		return req.OriDriveIso
 	}
 	return GeoJSONGeometry{}
 }
