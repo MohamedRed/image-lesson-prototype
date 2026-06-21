@@ -1468,6 +1468,37 @@ func TestPickBestDriverFromProfiles_RanksShorterRiderWalkAboveEqualEta(t *testin
 	}
 }
 
+func TestPickBestDriverFromProfiles_NormalizesRoutePolylineBeforeRiderWalkRanking(t *testing.T) {
+	req := corridorRequest()
+	req.WalkRadiusM = 1000
+	req.OriWalkIso = rectPolygon(-0.01, -0.02, 0.01, 0.02)
+	req.DestWalkIso = rectPolygon(-0.01, 0.98, 0.01, 1.02)
+	req.OriDriveIso = GeoJSONGeometry{}
+
+	farWalk := corridorDriverWithPickupZone("aaa-far-walk-whitespace-route", 0.006, -0.10, GeoJSONGeometry{}, "zone-far-walk-whitespace")
+	farWalk.RoutePolyline = " \n" + encodePolyline([]GeoPoint{
+		{Latitude: 0.006, Longitude: -0.10},
+		{Latitude: 0.006, Longitude: 0},
+		{Latitude: 0.006, Longitude: 1},
+	}) + "\t "
+	farWalk.RouteETAProfileSeconds = []int{0, 60, 600}
+	nearWalk := corridorDriverWithPickupZone("zzz-near-walk-normal-route", 0, -0.10, GeoJSONGeometry{}, "zone-near-walk-normal")
+	nearWalk.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+	nearWalk.RouteETAProfileSeconds = []int{0, 60, 600}
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{farWalk, nearWalk}, nil, scoreWeights{ETA: 1, Walk: 1, Curb: 1})
+	if err != nil {
+		t.Fatalf("expected rider-walk ranking winner, got error: %v", err)
+	}
+	if driverID != "zzz-near-walk-normal-route" {
+		t.Fatalf("expected whitespace-padded routePolyline to still receive rider-walk penalty, got %q", driverID)
+	}
+}
+
 func TestDriverPickupDistanceUsesRoutePositionNotRiderWalkSnap(t *testing.T) {
 	req := corridorRequest()
 	req.WalkRadiusM = 1000

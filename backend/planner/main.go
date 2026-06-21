@@ -133,13 +133,18 @@ func normalizeRoutePolyline(encoded string) string {
 	return trimmed
 }
 
-func singleHopRouteRideETASeconds(req RideRequest, driver DriverProfile) (int, bool) {
-	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
-	if driver.RoutePolyline == "" {
-		return 0, false
+func decodeNormalizedRoutePolyline(encoded string) ([]GeoPoint, bool) {
+	encoded = normalizeRoutePolyline(encoded)
+	if encoded == "" {
+		return nil, false
 	}
-	points, ok := decodePolyline(driver.RoutePolyline)
-	if !ok || len(points) < 2 {
+	points, ok := decodePolyline(encoded)
+	return points, ok && len(points) >= 2
+}
+
+func singleHopRouteRideETASeconds(req RideRequest, driver DriverProfile) (int, bool) {
+	points, ok := decodeNormalizedRoutePolyline(driver.RoutePolyline)
+	if !ok {
 		return 0, false
 	}
 	pickupProjection, dropoffProjection, ok := routeInsertionProjections(req, points)
@@ -1004,11 +1009,8 @@ func childSeatLoadScore(req RideRequest, driver DriverProfile) float64 {
 }
 
 func driverPickupDistanceKm(req RideRequest, driver DriverProfile, fallbackKm float64) float64 {
-	if driver.RoutePolyline == "" {
-		return fallbackKm
-	}
-	points, ok := decodePolyline(driver.RoutePolyline)
-	if !ok || len(points) < 2 {
+	points, ok := decodeNormalizedRoutePolyline(driver.RoutePolyline)
+	if !ok {
 		return fallbackKm
 	}
 	pickupProjection, _, ok := routeInsertionProjections(req, points)
@@ -1020,11 +1022,11 @@ func driverPickupDistanceKm(req RideRequest, driver DriverProfile, fallbackKm fl
 }
 
 func driverPickupETASeconds(req RideRequest, driver DriverProfile, fallbackPickupKm float64) int {
-	if driver.RoutePolyline == "" || len(driver.RouteETAProfileSeconds) == 0 {
+	if len(driver.RouteETAProfileSeconds) == 0 {
 		return int(fallbackPickupKm / 40.0 * 3600)
 	}
-	points, ok := decodePolyline(driver.RoutePolyline)
-	if !ok || len(points) < 2 || len(driver.RouteETAProfileSeconds) != len(points) {
+	points, ok := decodeNormalizedRoutePolyline(driver.RoutePolyline)
+	if !ok || len(driver.RouteETAProfileSeconds) != len(points) {
 		return int(fallbackPickupKm / 40.0 * 3600)
 	}
 	pickupProjection, _, ok := routeInsertionProjections(req, points)
@@ -1055,11 +1057,8 @@ func routeETASecondsAtPosition(profile []int, position float64) int {
 }
 
 func driverRouteSupportsSingleHopInsertion(req RideRequest, driver DriverProfile) bool {
-	if driver.RoutePolyline == "" {
-		return true
-	}
-	points, ok := decodePolyline(driver.RoutePolyline)
-	if !ok || len(points) < 2 {
+	points, ok := decodeNormalizedRoutePolyline(driver.RoutePolyline)
+	if !ok {
 		return true
 	}
 	_, _, ok = routeInsertionProjections(req, points)
@@ -1067,11 +1066,8 @@ func driverRouteSupportsSingleHopInsertion(req RideRequest, driver DriverProfile
 }
 
 func driverRouteWalkSnapsWithinThreshold(req RideRequest, driver DriverProfile) bool {
-	if driver.RoutePolyline == "" {
-		return true
-	}
-	points, ok := decodePolyline(driver.RoutePolyline)
-	if !ok || len(points) < 2 {
+	points, ok := decodeNormalizedRoutePolyline(driver.RoutePolyline)
+	if !ok {
 		return true
 	}
 	pickupProjection, dropoffProjection, ok := routeInsertionProjections(req, points)
@@ -1083,11 +1079,8 @@ func driverRouteWalkSnapsWithinThreshold(req RideRequest, driver DriverProfile) 
 }
 
 func riderPickupWalkSeconds(req RideRequest, driver DriverProfile) int {
-	if driver.RoutePolyline == "" {
-		return 0
-	}
-	points, ok := decodePolyline(driver.RoutePolyline)
-	if !ok || len(points) < 2 {
+	points, ok := decodeNormalizedRoutePolyline(driver.RoutePolyline)
+	if !ok {
 		return 0
 	}
 	pickupProjection, _, ok := routeInsertionProjections(req, points)
@@ -1099,11 +1092,11 @@ func riderPickupWalkSeconds(req RideRequest, driver DriverProfile) int {
 
 func pickupLeadSecondsFromOriginDrive(req RideRequest, driver DriverProfile, fallbackPickupETASeconds int) int {
 	originDrive := req.originDriveGeometry()
-	if originDrive.isZero() || driver.RoutePolyline == "" {
+	if originDrive.isZero() {
 		return fallbackPickupETASeconds
 	}
-	points, ok := decodePolyline(driver.RoutePolyline)
-	if !ok || len(points) < 2 {
+	points, ok := decodeNormalizedRoutePolyline(driver.RoutePolyline)
+	if !ok {
 		return fallbackPickupETASeconds
 	}
 	pickupProjection, _, ok := routeInsertionProjections(req, points)
@@ -1188,11 +1181,8 @@ func routeInsertionDetourKm(req RideRequest, encodedPolyline string, directRideK
 }
 
 func riderWalkScore(req RideRequest, driver DriverProfile) float64 {
-	if driver.RoutePolyline == "" {
-		return 0
-	}
-	points, ok := decodePolyline(driver.RoutePolyline)
-	if !ok || len(points) < 2 {
+	points, ok := decodeNormalizedRoutePolyline(driver.RoutePolyline)
+	if !ok {
 		return 0
 	}
 	pickupProjection, dropoffProjection, ok := routeInsertionProjections(req, points)
