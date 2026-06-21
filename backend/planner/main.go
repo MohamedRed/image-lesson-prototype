@@ -494,6 +494,7 @@ type DriverProfile struct {
 	IsAvailable             bool
 	HasLicenseVerification  bool
 	LicenseVerified         bool
+	VerificationStatus      string
 	ComplianceStatus        string
 	IsBlocked               bool
 	IsStuck                 bool
@@ -645,6 +646,9 @@ func driverIsOperationallyEligible(driver DriverProfile) bool {
 	if driver.HasLicenseVerification && !driver.LicenseVerified {
 		return false
 	}
+	if !driverVerificationStatusAllowsRides(driver.VerificationStatus) {
+		return false
+	}
 	if !driverComplianceStatusAllowsRides(driver.ComplianceStatus) {
 		return false
 	}
@@ -656,6 +660,19 @@ func driverComplianceStatusAllowsRides(status string) bool {
 	case "", "active", "approved", "clear", "compliant", "verified":
 		return true
 	case "blocked", "expired", "rejected", "revoked", "suspended":
+		return false
+	default:
+		// Unknown future statuses are treated as non-authoritative for backwards
+		// compatibility until the driver document schema is migrated.
+		return true
+	}
+}
+
+func driverVerificationStatusAllowsRides(status string) bool {
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case "", "approved", "clear", "verified":
+		return true
+	case "expired", "failed", "pending", "rejected", "revoked", "suspended", "unverified":
 		return false
 	default:
 		// Unknown future statuses are treated as non-authoritative for backwards
@@ -2465,6 +2482,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			PremiumCapabilities     map[string]any         `firestore:"premiumCapabilities"`
 			CurrentPassengerGenders []string               `firestore:"currentPassengerGenders"`
 			LicenseVerified         bool                   `firestore:"licenseVerified"`
+			VerificationStatus      string                 `firestore:"verificationStatus"`
 			ComplianceStatus        string                 `firestore:"complianceStatus"`
 			IsBlocked               bool                   `firestore:"isBlocked"`
 			IsStuck                 bool                   `firestore:"isStuck"`
@@ -2535,6 +2553,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			IsAvailable:             isAvailable,
 			HasLicenseVerification:  hasLicenseVerification,
 			LicenseVerified:         data.LicenseVerified,
+			VerificationStatus:      data.VerificationStatus,
 			ComplianceStatus:        data.ComplianceStatus,
 			IsBlocked:               data.IsBlocked,
 			IsStuck:                 data.IsStuck,
