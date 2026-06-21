@@ -867,6 +867,9 @@ func requestLevelHardFiltersAllowScoring(req RideRequest) bool {
 	if req.PassengerCount <= 0 || req.PassengerCount > maxRideRequestPassengerCount {
 		return false
 	}
+	if req.WalkRadiusM < 0 {
+		return false
+	}
 	if req.RequiresRiderIdentity && !req.RiderIdentityVerified {
 		return false
 	}
