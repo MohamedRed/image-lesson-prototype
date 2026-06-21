@@ -185,8 +185,9 @@ docs/_build/
 docs/.doctrees/
 
 # Package manager lock files (keep Package.resolved for Swift packages)
-# But ignore npm/yarn lock files in root
+# But ignore npm/yarn lock files in root; track backend lockfiles that CI uses.
 package-lock.json
+!backend/functions/package-lock.json
 yarn.lock
 
 # Backup files
