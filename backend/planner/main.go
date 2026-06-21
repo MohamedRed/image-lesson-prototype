@@ -1210,7 +1210,7 @@ func polylineIntersectsPolygon(encoded string, polygon GeoJSONGeometry) bool {
 			return true
 		}
 	}
-	rings := ringsForSegmentIntersection(parts)
+	rings := outerRingsForSegmentIntersection(parts)
 	for i := 0; i < len(line)-1; i++ {
 		for _, ring := range rings {
 			for j := 0; j < len(ring)-1; j++ {
@@ -1221,6 +1221,14 @@ func polylineIntersectsPolygon(encoded string, polygon GeoJSONGeometry) bool {
 		}
 	}
 	return false
+}
+
+func outerRingsForSegmentIntersection(parts []geoPolygonPart) [][]GeoPoint {
+	rings := [][]GeoPoint{}
+	for _, part := range parts {
+		rings = append(rings, part.outer)
+	}
+	return rings
 }
 
 func pointInGeoJSONPolygon(point GeoPoint, polygon GeoJSONGeometry) bool {

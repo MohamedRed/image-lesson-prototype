@@ -459,6 +459,30 @@ func TestComputeDriverScore_RejectsRouteOnlyInsideOriginDriveGeoHole(t *testing.
 	}
 }
 
+func TestComputeDriverScore_RejectsRouteOnlyOnOriginDriveGeoHoleBoundary(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "200000")
+	req := RideRequest{
+		Origin:         GeoPoint{Latitude: 0, Longitude: 0},
+		Destination:    GeoPoint{Latitude: 0, Longitude: 1},
+		PassengerCount: 1,
+		OriDriveIso: polygonWithHole(
+			rectRing(-0.05, -0.05, 0.05, 0.05),
+			rectRing(-0.01, -0.01, 0.01, 0.01),
+		),
+	}
+	driver := corridorDriver("route-on-origin-drive-hole-boundary", 0.20, 0, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: -0.01, Longitude: -0.005},
+		{Latitude: -0.01, Longitude: 0.005},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected routePolyline only on an originDriveGeo hole boundary to be rejected")
+	}
+}
+
 func TestComputeDriverScore_RejectsBufferOnlyInsideOriginWalkZoneHole(t *testing.T) {
 	req := corridorRequest()
 	req.OriWalkIso = polygonWithHole(
