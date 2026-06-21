@@ -1339,6 +1339,20 @@ func TestComputeDriverScore_RejectsDestinationDriveGeoOutsideWalkZone(t *testing
 	}
 }
 
+func TestComputeDriverScore_RejectsBufferDestinationDriveGeoOutsideWalkZone(t *testing.T) {
+	allowLongPickupETA(t)
+	req := corridorRequest()
+	req.Destination = GeoPoint{Latitude: 0, Longitude: 0.95}
+	req.DestWalkIso = rectPolygon(-0.01, 0.90, 0.01, 0.96)
+	req.DestinationDriveGeo = rectPolygon(-0.01, 0.995, 0.01, 1.005)
+	driver := corridorDriver("buffer-destination-drive-outside-walk", 0, -0.10, routeCorridor())
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected buffer-only candidate with disjoint destination walk/drive zones to be rejected")
+	}
+}
+
 func TestBuildSingleHopJourneyPrefersRoutePointsInsideWalkZones(t *testing.T) {
 	req := corridorRequest()
 	req.OriWalkIso = rectPolygon(-0.01, 0.010, 0.01, 0.020)

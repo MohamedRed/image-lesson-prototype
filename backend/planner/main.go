@@ -1078,6 +1078,12 @@ func pickupZoneHasCapacity(driver DriverProfile) bool {
 func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) bool {
 	originIso := req.originWalkGeometry()
 	destinationIso := req.destinationWalkGeometry()
+	if !endpointGeometriesOverlap(originIso, req.originDriveGeometry()) {
+		return false
+	}
+	if !endpointGeometriesOverlap(destinationIso, req.destinationDriveGeometry()) {
+		return false
+	}
 	if !originIso.isZero() && !driverRouteIntersectsGeometry(driver, originIso) {
 		return false
 	}
@@ -1094,6 +1100,13 @@ func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) boo
 		return false
 	}
 	return true
+}
+
+func endpointGeometriesOverlap(walkGeometry, driveGeometry GeoJSONGeometry) bool {
+	if walkGeometry.isZero() || driveGeometry.isZero() {
+		return true
+	}
+	return geoJSONPolygonsIntersect(walkGeometry, driveGeometry)
 }
 
 func driverEntersOriginDriveGeo(req RideRequest, driver DriverProfile) bool {
