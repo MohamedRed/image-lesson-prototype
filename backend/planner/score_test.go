@@ -5,6 +5,7 @@ import (
 	"math"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -23,6 +24,26 @@ func TestRegisterPlannerRoutes_HealthEndpointReturnsOK(t *testing.T) {
 	}
 	if strings.TrimSpace(recorder.Body.String()) != "ok" {
 		t.Fatalf("expected /health body to be ok, got %q", recorder.Body.String())
+	}
+}
+
+func TestPlannerDockerfileProductionContract(t *testing.T) {
+	content, err := os.ReadFile("Dockerfile")
+	if err != nil {
+		t.Fatalf("planner service must include backend/planner/Dockerfile for docker-compose and Cloud Run image builds: %v", err)
+	}
+	text := string(content)
+	checks := map[string]string{
+		"multi-stage Go build":      "FROM golang:",
+		"distroless runtime":        "FROM gcr.io/distroless/",
+		"Cloud Run port exposure":   "EXPOSE 8080",
+		"non-root runtime user":     "USER nonroot:nonroot",
+		"planner binary entrypoint": "ENTRYPOINT [\"/planner\"]",
+	}
+	for name, needle := range checks {
+		if !strings.Contains(text, needle) {
+			t.Fatalf("Dockerfile missing %s contract %q", name, needle)
+		}
 	}
 }
 

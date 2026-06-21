@@ -35,3 +35,6 @@ jobs:
 
       - name: Build planner binary
         run: go build -o /tmp/rideplanner-build-check .
+
+      - name: Build planner container image
+        run: docker build -t rideplanner:test .
