@@ -855,7 +855,7 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	detourKm := driverDetourKm(req, driver, pickupKm, rideDistKm)
 
 	baseScore := wDetour*detourKm + wEta*(float64(etaSec)/60.0) + seatLoadScore(driver, seatsUsed) + cargoLoadScore(req, driver) + petLoadScore(req, driver) + childSeatLoadScore(req, driver)
-	if curbFactor <= 0 {
+	if math.IsNaN(curbFactor) || math.IsInf(curbFactor, 0) || curbFactor <= 0 {
 		curbFactor = 1
 	}
 	score := baseScore * math.Pow(curbFactor, wCurb)
@@ -1633,6 +1633,33 @@ func defaultScoreWeights() scoreWeights {
 	return scoreWeights{Detour: 0.7, ETA: 0.3, Walk: 0.1, Curb: 1.0}
 }
 
+func nonFiniteFloat(value float64) bool {
+	return math.IsNaN(value) || math.IsInf(value, 0)
+}
+
+func sanitizeScoreWeights(weights scoreWeights) scoreWeights {
+	defaults := defaultScoreWeights()
+	if nonFiniteFloat(weights.Detour) {
+		weights.Detour = defaults.Detour
+	}
+	if nonFiniteFloat(weights.ETA) {
+		weights.ETA = defaults.ETA
+	}
+	if nonFiniteFloat(weights.Walk) {
+		weights.Walk = defaults.Walk
+	}
+	if nonFiniteFloat(weights.Curb) {
+		weights.Curb = defaults.Curb
+	}
+	if weights.Detour == 0 && weights.ETA == 0 && weights.Walk == 0 {
+		weights = defaults
+	}
+	if weights.Curb == 0 {
+		weights.Curb = defaults.Curb
+	}
+	return weights
+}
+
 func pickBestDriverFromProfiles(req RideRequest, drivers []DriverProfile, exclude []string, weights scoreWeights) (string, int, error) {
 	driver, etaSec, err := pickBestDriverProfileFromProfiles(req, drivers, exclude, weights)
 	if err != nil {
@@ -1661,12 +1688,7 @@ func pickBestDriverFromProfilesWithReservation(req RideRequest, drivers []Driver
 }
 
 func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []string, weights scoreWeights) []scoredDriver {
-	if weights.Detour == 0 && weights.ETA == 0 && weights.Walk == 0 {
-		weights = defaultScoreWeights()
-	}
-	if weights.Curb == 0 {
-		weights.Curb = 1
-	}
+	weights = sanitizeScoreWeights(weights)
 	exclude = legExcludedDriverIDs(req, exclude...)
 
 	ranked := make([]scoredDriver, 0, len(drivers))

@@ -2336,6 +2336,57 @@ func TestPickBestDriverFromProfiles_RanksLowerRouteDetourAboveLoopingCorridor(t 
 	}
 }
 
+func TestPickBestDriverFromProfiles_DefaultsNonFiniteScoreWeights(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "200000")
+	req := corridorRequest()
+	direct := corridorDriverWithPickupZone("zzz-direct-corridor", 0, 0, routeCorridor(), "zone-direct")
+	direct.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+	looping := corridorDriverWithPickupZone("aaa-looping-corridor", 0, 0, routeCorridor(), "zone-looping")
+	looping.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 1, Longitude: 0},
+		{Latitude: 1, Longitude: 1},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{looping, direct}, nil, scoreWeights{Detour: math.NaN(), ETA: math.Inf(1), Walk: math.Inf(-1), Curb: math.NaN()})
+	if err != nil {
+		t.Fatalf("expected valid corridor driver with sanitized weights, got error: %v", err)
+	}
+	if driverID != "zzz-direct-corridor" {
+		t.Fatalf("expected non-finite score weights to fall back before ranking, got %q", driverID)
+	}
+}
+
+func TestPickBestDriverFromProfiles_DefaultsNonFiniteCurbFactor(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "200000")
+	req := corridorRequest()
+	direct := corridorDriverWithPickupZone("zzz-direct-corridor", 0, 0, routeCorridor(), "zone-direct")
+	direct.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+	looping := corridorDriverWithPickupZone("aaa-looping-corridor", 0, 0, routeCorridor(), "zone-looping")
+	looping.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 1, Longitude: 0},
+		{Latitude: 1, Longitude: 1},
+		{Latitude: 0, Longitude: 1},
+	})
+	looping.CurbFactor = math.NaN()
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{looping, direct}, nil, scoreWeights{Detour: 1, ETA: 0, Curb: 1})
+	if err != nil {
+		t.Fatalf("expected valid corridor driver with sanitized curb factor, got error: %v", err)
+	}
+	if driverID != "zzz-direct-corridor" {
+		t.Fatalf("expected non-finite curb factor to be neutral before ranking, got %q", driverID)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RanksRouteEtaProfileAboveEqualGeometry(t *testing.T) {
 	req := corridorRequest()
 	slowProfile := corridorDriverWithPickupZone("aaa-slow-profile", 0, -0.10, routeCorridor(), "zone-slow")
