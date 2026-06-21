@@ -2279,6 +2279,47 @@ func TestPickBestDriverFromProfiles_RanksShorterRiderWalkAboveEqualEta(t *testin
 	}
 }
 
+func TestPickBestDriverFromProfiles_RanksWalkUsingDestinationDriveConstrainedDropoff(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "5000")
+	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "200")
+	req := corridorRequest()
+	req.WalkRadiusM = 5000
+	req.OriWalkIso = rectPolygon(-0.01, -0.02, 0.01, 0.02)
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.Destination = GeoPoint{Latitude: 0, Longitude: 1}
+	req.DestWalkIso = rectPolygon(-0.05, 0.95, 0.05, 1.05)
+	req.DestinationWalkIso = GeoJSONGeometry{}
+	req.DestinationDriveGeo = multiPolygon(
+		rectRing(0.019, 0.99, 0.021, 1.01),
+		rectRing(0.004, 0.99, 0.006, 1.01),
+	)
+
+	farLegalDropoff := corridorDriverWithPickupZone("aaa-far-legal-dropoff", 0, -0.10, GeoJSONGeometry{}, "zone-far-legal-dropoff")
+	farLegalDropoff.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},    // near destination walk zone, but outside destinationDriveGeo
+		{Latitude: 0.02, Longitude: 1}, // first legal destination-drive dropoff, farther walk
+	})
+	farLegalDropoff.RouteETAProfileSeconds = []int{0, 60, 300, 600}
+
+	nearLegalDropoff := corridorDriverWithPickupZone("zzz-near-legal-dropoff", 0, -0.10, GeoJSONGeometry{}, "zone-near-legal-dropoff")
+	nearLegalDropoff.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0.005, Longitude: 1}, // legal destination-drive dropoff, closer walk
+	})
+	nearLegalDropoff.RouteETAProfileSeconds = []int{0, 60, 600}
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{farLegalDropoff, nearLegalDropoff}, nil, scoreWeights{ETA: 1, Walk: 1, Curb: 1})
+	if err != nil {
+		t.Fatalf("expected rider-walk ranking winner using destination-drive-constrained dropoff, got error: %v", err)
+	}
+	if driverID != "zzz-near-legal-dropoff" {
+		t.Fatalf("expected rider-walk ranking to ignore destination-walk-only snap outside destinationDriveGeo, got %q", driverID)
+	}
+}
+
 func TestPickBestDriverFromProfiles_NormalizesRoutePolylineBeforeRiderWalkRanking(t *testing.T) {
 	req := corridorRequest()
 	req.WalkRadiusM = 1000
