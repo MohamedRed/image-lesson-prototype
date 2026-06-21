@@ -10,6 +10,7 @@ describe("planner client", () => {
   const oriWalkIso = { type: "Polygon", coordinates: [[[0, 0], [1, 0], [1, 1], [0, 0]]] };
   const destWalkIso = { type: "Polygon", coordinates: [[[2, 2], [3, 2], [3, 3], [2, 2]]] };
   const oriDriveIso = { type: "Polygon", coordinates: [[[4, 4], [5, 4], [5, 5], [4, 4]]] };
+  const destinationDriveGeo = { type: "Polygon", coordinates: [[[6, 6], [7, 6], [7, 7], [6, 6]]] };
 
   it("passes rider isochrones and excluded drivers to planner", () => {
     const request = buildPlannerRequest(
@@ -21,7 +22,7 @@ describe("planner client", () => {
         luggageManifest: { suitcase: 1 },
         walkRadiusM: 80,
       },
-      { oriWalkIso, destWalkIso, oriDriveIso },
+      { oriWalkIso, destWalkIso, oriDriveIso, destinationDriveGeo },
       ["driverA"]
     );
 
@@ -38,6 +39,7 @@ describe("planner client", () => {
       originWalkIso: oriWalkIso,
       destinationWalkIso: destWalkIso,
       originDriveGeo: oriDriveIso,
+      destinationDriveGeo,
       excludedDriverIds: ["driverA"],
     });
   });

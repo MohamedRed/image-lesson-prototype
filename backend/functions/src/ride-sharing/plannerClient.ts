@@ -16,6 +16,7 @@ export interface PlannerRideRequest {
   originWalkIso?: any;
   destinationWalkIso?: any;
   originDriveGeo?: any;
+  destinationDriveGeo?: any;
   excludedDriverIds?: string[];
 }
 
@@ -68,6 +69,7 @@ export function buildPlannerRequest(
   const oriWalkIso = rideRequest.oriWalkIso ?? geoUpdates.oriWalkIso;
   const destWalkIso = rideRequest.destWalkIso ?? geoUpdates.destWalkIso;
   const oriDriveIso = rideRequest.oriDriveIso ?? geoUpdates.oriDriveIso;
+  const destinationDriveGeo = rideRequest.destinationDriveGeo ?? geoUpdates.destinationDriveGeo;
 
   return {
     origin: rideRequest.origin,
@@ -85,6 +87,7 @@ export function buildPlannerRequest(
     originWalkIso: rideRequest.originWalkIso ?? oriWalkIso,
     destinationWalkIso: rideRequest.destinationWalkIso ?? destWalkIso,
     originDriveGeo: rideRequest.originDriveGeo ?? oriDriveIso,
+    destinationDriveGeo,
     excludedDriverIds,
   };
 }
