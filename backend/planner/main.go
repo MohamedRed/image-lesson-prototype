@@ -2439,7 +2439,7 @@ func geoPointsFromRingCoordinates(coords [][]float64) ([]GeoPoint, bool) {
 	}
 	ring := make([]GeoPoint, 0, len(coords)+1)
 	for _, pair := range coords {
-		if len(pair) < 2 {
+		if len(pair) < 2 || nonFiniteFloat(pair[0]) || nonFiniteFloat(pair[1]) {
 			return nil, false
 		}
 		ring = append(ring, GeoPoint{Latitude: pair[1], Longitude: pair[0]})
@@ -2715,18 +2715,27 @@ func numericPair(value any) ([]float64, bool) {
 }
 
 func numberAsFloat(value any) (float64, bool) {
+	finite := func(number float64) (float64, bool) {
+		if nonFiniteFloat(number) {
+			return 0, false
+		}
+		return number, true
+	}
 	switch n := value.(type) {
 	case float64:
-		return n, true
+		return finite(n)
 	case float32:
-		return float64(n), true
+		return finite(float64(n))
 	case int:
 		return float64(n), true
 	case int64:
 		return float64(n), true
 	case json.Number:
 		f, err := n.Float64()
-		return f, err == nil
+		if err != nil {
+			return 0, false
+		}
+		return finite(f)
 	default:
 		return 0, false
 	}
