@@ -1642,6 +1642,33 @@ func TestComputeDriverScore_RejectsRouteOnlyInsideOriginWalkZoneHole(t *testing.
 	}
 }
 
+func TestComputeDriverScore_AllowsRouteExitingOriginWalkHoleWithinWalkCap(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "200")
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "2000")
+	req := corridorRequest()
+	req.WalkRadiusM = 200
+	req.Origin = GeoPoint{Latitude: 0, Longitude: 0}
+	req.OriWalkIso = polygonWithHole(
+		rectRing(-0.05, -0.05, 0.05, 0.05),
+		rectRing(-0.001, -0.001, 0.001, 0.001),
+	)
+	req.OriginWalkIso = req.OriWalkIso
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	driver := corridorDriver("route-exits-origin-walk-hole", 0, -0.0005, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.0005},
+		{Latitude: 0, Longitude: -0.002},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected route crossing from a walk-zone hole into the valid ring within walk cap to be accepted")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteOnlyInsideDestinationWalkZoneHole(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "100")

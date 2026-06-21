@@ -234,7 +234,7 @@ func routeProjectionCandidatesInGeometryOrRange(points []GeoPoint, target GeoPoi
 			point, fraction := nearestPointOnSegment(points[i], points[i+1], target)
 			consider(point, float64(i)+fraction)
 		}
-		if requireGeometry && len(candidates) == 0 {
+		if requireGeometry && (len(candidates) == 0 || polygonHasInteriorHoles(geometry)) {
 			candidates = append(candidates, routeSegmentGeometryIntersectionCandidates(points, target, geometry, minPos, maxPos)...)
 		}
 		return candidates
@@ -282,7 +282,7 @@ func routeProjectionCandidatesOnlyInGeometry(points []GeoPoint, target GeoPoint,
 		point, fraction := nearestPointOnSegment(points[i], points[i+1], target)
 		consider(point, float64(i)+fraction)
 	}
-	if len(candidates) == 0 {
+	if len(candidates) == 0 || polygonHasInteriorHoles(geometry) {
 		candidates = append(candidates, routeSegmentGeometryIntersectionCandidates(points, target, geometry, minPos, maxPos)...)
 	}
 	sortRouteProjections(candidates)
@@ -345,7 +345,7 @@ func routeSegmentGeometryIntersectionCandidates(points []GeoPoint, target GeoPoi
 	if geometry.isZero() || len(points) < 2 || minPos > maxPos {
 		return nil
 	}
-	rings, ok := polygonOuterRings(geometry)
+	rings, ok := polygonBoundaryRings(geometry)
 	if !ok {
 		return nil
 	}
@@ -374,7 +374,11 @@ func routeSegmentGeometryIntersectionCandidates(points []GeoPoint, target GeoPoi
 					continue
 				}
 				_, fraction := nearestPointOnSegment(points[i], points[i+1], point)
-				consider(point, float64(i)+fraction)
+				position := float64(i) + fraction
+				consider(point, position)
+				for _, adjacent := range adjacentRoutePositionsInsideSegment(float64(i), position, float64(i+1)) {
+					consider(routePointAtPosition(points, adjacent), adjacent)
+				}
 			}
 		}
 	}
@@ -385,6 +389,50 @@ func routeSegmentGeometryIntersectionCandidates(points []GeoPoint, target GeoPoi
 		return candidates[i].position < candidates[j].position
 	})
 	return candidates
+}
+
+func adjacentRoutePositionsInsideSegment(segmentStart, position, segmentEnd float64) []float64 {
+	const eps = 1e-6
+	positions := []float64{}
+	if before := position - eps; before > segmentStart {
+		positions = append(positions, before)
+	}
+	if after := position + eps; after < segmentEnd {
+		positions = append(positions, after)
+	}
+	return positions
+}
+
+func polygonBoundaryRings(g GeoJSONGeometry) ([][]GeoPoint, bool) {
+	parts, ok := polygonParts(g)
+	if !ok {
+		return nil, false
+	}
+	rings := [][]GeoPoint{}
+	for _, part := range parts {
+		if len(part.outer) > 0 {
+			rings = append(rings, part.outer)
+		}
+		for _, hole := range part.holes {
+			if len(hole) > 0 {
+				rings = append(rings, hole)
+			}
+		}
+	}
+	return rings, len(rings) > 0
+}
+
+func polygonHasInteriorHoles(g GeoJSONGeometry) bool {
+	parts, ok := polygonParts(g)
+	if !ok {
+		return false
+	}
+	for _, part := range parts {
+		if len(part.holes) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func nearestRoutePointInGeometry(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos, maxPos float64) (GeoPoint, float64, bool) {
