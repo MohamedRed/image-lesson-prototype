@@ -83,9 +83,12 @@ export function buildPlannerRequest(
   geoUpdates: Record<string, any> = {},
   excludedDriverIds: string[] = rideRequest.excludedDriverIds || []
 ): PlannerRideRequest {
-  const oriWalkIso = rideRequest.oriWalkIso ?? geoUpdates.oriWalkIso;
-  const destWalkIso = rideRequest.destWalkIso ?? geoUpdates.destWalkIso;
-  const oriDriveIso = rideRequest.oriDriveIso ?? geoUpdates.oriDriveIso;
+  const oriWalkIso = rideRequest.oriWalkIso ?? geoUpdates.oriWalkIso ?? rideRequest.originWalkIso ?? geoUpdates.originWalkIso;
+  const destWalkIso = rideRequest.destWalkIso ?? geoUpdates.destWalkIso ?? rideRequest.destinationWalkIso ?? geoUpdates.destinationWalkIso;
+  const oriDriveIso = rideRequest.oriDriveIso ?? geoUpdates.oriDriveIso ?? rideRequest.originDriveGeo ?? geoUpdates.originDriveGeo;
+  const originWalkIso = rideRequest.originWalkIso ?? geoUpdates.originWalkIso ?? oriWalkIso;
+  const destinationWalkIso = rideRequest.destinationWalkIso ?? geoUpdates.destinationWalkIso ?? destWalkIso;
+  const originDriveGeo = rideRequest.originDriveGeo ?? geoUpdates.originDriveGeo ?? oriDriveIso;
   const destinationDriveGeo = rideRequest.destinationDriveGeo ?? geoUpdates.destinationDriveGeo;
 
   return {
@@ -101,9 +104,9 @@ export function buildPlannerRequest(
     oriWalkIso,
     destWalkIso,
     oriDriveIso,
-    originWalkIso: rideRequest.originWalkIso ?? oriWalkIso,
-    destinationWalkIso: rideRequest.destinationWalkIso ?? destWalkIso,
-    originDriveGeo: rideRequest.originDriveGeo ?? oriDriveIso,
+    originWalkIso,
+    destinationWalkIso,
+    originDriveGeo,
     destinationDriveGeo,
     excludedDriverIds: normalizeDriverIds(excludedDriverIds),
   };

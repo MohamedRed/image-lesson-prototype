@@ -663,6 +663,29 @@ func TestComputeDriverScore_RiderWalkRadiusCapsBroadStaleWalkPolygon(t *testing.
 	}
 }
 
+func TestComputeDriverScore_GlobalWalkLimitCapsBroadStaleDestinationWalkPolygon(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "2000")
+	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "200")
+	req := corridorRequest()
+	req.OriWalkIso = rectPolygon(-0.0001, -0.0001, 0.0001, 0.0001)
+	req.DestWalkIso = rectPolygon(-0.10, 0.40, 0.10, 1.10)
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	driver := corridorDriver("global-walk-limit-destination-route", 0, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0.05, Longitude: 0.50}, // inside stale destination walk polygon but outside global walk limit
+		{Latitude: 0.002, Longitude: 1},   // later dropoff candidate inside global walk limit
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected global MAX_SINGLE_HOP_WALK_METERS to skip stale broad destination polygon points and allow the later walk-feasible dropoff")
+	}
+}
+
 func TestComputeDriverScore_RiderWalkRadiusCapsBroadStaleDestinationWalkPolygon(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "1000")

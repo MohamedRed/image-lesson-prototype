@@ -44,6 +44,27 @@ describe("planner client", () => {
     });
   });
 
+  it("passes canonical geo update aliases to planner in the same invocation", () => {
+    const originWalkIso = { type: "Polygon", coordinates: [[[10, 10], [11, 10], [11, 11], [10, 10]]] };
+    const destinationWalkIso = { type: "Polygon", coordinates: [[[12, 12], [13, 12], [13, 13], [12, 12]]] };
+    const originDriveGeo = { type: "Polygon", coordinates: [[[14, 14], [15, 14], [15, 15], [14, 14]]] };
+    const request = buildPlannerRequest(
+      { origin, destination, passengerCount: 1 },
+      { originWalkIso, destinationWalkIso, originDriveGeo, destinationDriveGeo },
+      []
+    );
+
+    expect(request).toMatchObject({
+      oriWalkIso: originWalkIso,
+      destWalkIso: destinationWalkIso,
+      oriDriveIso: originDriveGeo,
+      originWalkIso,
+      destinationWalkIso,
+      originDriveGeo,
+      destinationDriveGeo,
+    });
+  });
+
   it("requires planner pickup/dropoff points before attempting reservation", async () => {
     const fetchImpl = jest.fn(async () => ({
       ok: true,
