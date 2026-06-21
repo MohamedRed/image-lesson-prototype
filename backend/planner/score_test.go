@@ -728,6 +728,19 @@ func TestComputeDriverScore_GlobalWalkLimitRejectsBufferOnlyOriginWalkAndDriveCo
 	}
 }
 
+func TestComputeDriverScore_GlobalWalkLimitRejectsBufferOnlyDestinationWalkAndDriveCommonPointOutsideCap(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
+	req := corridorRequest()
+	req.DestWalkIso = rectPolygon(-0.01, 0.99, 0.06, 1.01)
+	req.DestinationDriveGeo = rectPolygon(0.049, 0.99, 0.051, 1.01)
+	driver := corridorDriver("buffer-only-destination-drive-common-point-too-far", 0.002, 0, rectPolygon(0.002, -0.01, 0.051, 1.01))
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected buffer-only destination walk+drive common point outside explicit walk cap to be rejected")
+	}
+}
+
 func TestRoutePolylineTravelsOriginBeforeDestinationSkipsDestinationOutsideExplicitWalkCap(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
 	req := corridorRequest()
@@ -1255,6 +1268,26 @@ func TestComputeDriverScore_AllowsRouteCrossingOriginDriveGeoWhenNearestProjecti
 	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
 	if !ok {
 		t.Fatalf("expected route segment crossing originDriveGeo to satisfy pickup geofence even when raw-origin projection is outside")
+	}
+}
+
+func TestRoutePolylineEntersGeometryAfterOriginSkipsOriginOutsideExplicitWalkCap(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
+	req := corridorRequest()
+	req.Origin = GeoPoint{Latitude: 0, Longitude: 0}
+	req.OriWalkIso = rectPolygon(-0.10, -0.10, 0.10, 0.10)
+	req.OriginWalkIso = GeoJSONGeometry{}
+	req.DestinationDriveGeo = GeoJSONGeometry{}
+	destinationDrive := rectPolygon(0.047, 0.197, 0.053, 0.203)
+	route := encodePolyline([]GeoPoint{
+		{Latitude: 0.05, Longitude: 0},
+		{Latitude: 0.05, Longitude: 0.20},
+		{Latitude: 0.002, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	if routePolylineEntersGeometryAfterOrigin(req, route, destinationDrive) {
+		t.Fatalf("expected destination-drive route-order helper to skip origin candidates outside explicit walk cap")
 	}
 }
 

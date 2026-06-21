@@ -1825,12 +1825,16 @@ func routePolylineEntersGeometryBeforeOrigin(req RideRequest, encodedPolyline st
 		return false
 	}
 	lastPos := float64(len(points) - 1)
+	originGeometry := req.originOrderGeometry()
 	originCandidates := routeOriginProjectionCandidates(points, req, 0, lastPos)
 	originDrivePos, ok := firstRoutePositionInGeometry(points, req.Origin, geometry, 0)
 	if !ok {
 		return false
 	}
 	for _, origin := range originCandidates {
+		if !projectionSatisfiesEffectiveWalkGeometry(req, origin, originGeometry) {
+			continue
+		}
 		if originDrivePos <= origin.position+1e-9 {
 			return true
 		}
@@ -1844,8 +1848,12 @@ func routePolylineEntersGeometryAfterOrigin(req RideRequest, encodedPolyline str
 		return false
 	}
 	lastPos := float64(len(points) - 1)
+	originGeometry := req.originOrderGeometry()
 	originCandidates := routeOriginProjectionCandidates(points, req, 0, lastPos)
 	for _, origin := range originCandidates {
+		if !projectionSatisfiesEffectiveWalkGeometry(req, origin, originGeometry) {
+			continue
+		}
 		if destinationDrivePos, ok := firstRoutePositionInGeometry(points, req.Destination, geometry, origin.position+1e-9); ok && destinationDrivePos > origin.position {
 			return true
 		}
