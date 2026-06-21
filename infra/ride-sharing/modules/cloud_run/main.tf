@@ -65,6 +65,12 @@ variable "allow_unauthenticated" {
   default     = false
 }
 
+variable "invoker_members" {
+  description = "Explicit IAM members allowed to invoke the Cloud Run service. Example: serviceAccount:name@project.iam.gserviceaccount.com"
+  type        = set(string)
+  default     = []
+}
+
 # Cloud Run service
 resource "google_cloud_run_v2_service" "service" {
   name     = "${var.service_name}-${var.environment}"
@@ -153,6 +159,15 @@ resource "google_cloud_run_service_iam_member" "public" {
   location = google_cloud_run_v2_service.service.location
   role     = "roles/run.invoker"
   member   = "allUsers"
+}
+
+resource "google_cloud_run_service_iam_member" "invokers" {
+  for_each = var.invoker_members
+
+  service  = google_cloud_run_v2_service.service.name
+  location = google_cloud_run_v2_service.service.location
+  role     = "roles/run.invoker"
+  member   = each.value
 }
 
 # Output the service URL
