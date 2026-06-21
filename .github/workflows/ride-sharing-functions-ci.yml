@@ -1,0 +1,56 @@
+name: Ride Sharing Functions CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/functions/src/ride-sharing/**'
+      - 'backend/functions/test/ridePlannerClient.test.ts'
+      - 'backend/functions/test/reserveResourcesTx.test.ts'
+      - 'backend/functions/package.json'
+      - 'backend/functions/package-lock.json'
+      - 'backend/functions/tsconfig.json'
+      - 'backend/functions/jest.config.js'
+      - '.github/workflows/ride-sharing-functions-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/functions/src/ride-sharing/**'
+      - 'backend/functions/test/ridePlannerClient.test.ts'
+      - 'backend/functions/test/reserveResourcesTx.test.ts'
+      - 'backend/functions/package.json'
+      - 'backend/functions/package-lock.json'
+      - 'backend/functions/tsconfig.json'
+      - 'backend/functions/jest.config.js'
+      - '.github/workflows/ride-sharing-functions-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  ride-sharing-functions:
+    name: Planner/reservation seam tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/functions
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/functions/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Run ride-sharing seam tests
+        run: npx jest test/ridePlannerClient.test.ts test/reserveResourcesTx.test.ts --runInBand
+
+      - name: Typecheck ride-sharing seam
+        run: >-
+          npx tsc --noEmit --target ES2022 --module commonjs --esModuleInterop
+          --skipLibCheck --strict
+          src/ride-sharing/plannerClient.ts src/ride-sharing/reserveResourcesTx.ts
