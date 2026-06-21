@@ -460,6 +460,29 @@ func TestComputeDriverScore_AllowsNearDestinationWalkPointInsideDestinationDrive
 	}
 }
 
+func TestComputeDriverScore_AllowsLaterNearDestinationAfterEarlierDestinationWalkPass(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "100")
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "2000")
+	req := corridorRequest()
+	req.WalkRadiusM = 100
+	req.OriWalkIso = rectPolygon(-0.0002, -0.0002, 0.0002, 0.0002)
+	req.DestWalkIso = rectPolygon(-0.0002, 0.9998, 0.0002, 1.0002)
+	req.OriDriveIso = rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	driver := corridorDriver("later-near-destination-after-early-dest", 0, 1, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 1},      // destination walk zone before pickup; not a valid dropoff
+		{Latitude: 0, Longitude: 0},      // legal pickup
+		{Latitude: 0.0006, Longitude: 1}, // later dropoff near destination walk zone within walk radius
+		{Latitude: 0.0006, Longitude: 1.1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected later near-destination projection after pickup to be accepted despite an earlier destination walk-zone pass")
+	}
+}
+
 func TestComputeDriverScore_RejectsCorridorMissingOriginWalkZone(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("miss-origin", 0, 0.1, rectPolygon(-0.005, 0.20, 0.005, 1.01))

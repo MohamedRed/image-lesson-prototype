@@ -1024,10 +1024,14 @@ func routeInsertionProjections(req RideRequest, points []GeoPoint) (routeProject
 	return routeProjection{}, routeProjection{}, false
 }
 
-func routeProjectionInGeometryOrRangeAfter(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos, maxPos float64) (routeProjection, bool) {
+func routeProjectionInGeometryOrRangeAfter(req RideRequest, points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos, maxPos float64) (routeProjection, bool) {
 	if !geometry.isZero() {
 		if pos, ok := firstRoutePositionInGeometry(points, target, geometry, minPos); ok && pos <= maxPos {
 			return routeProjectionAtPosition(points, pos, target), true
+		}
+		projection, projectionOk := nearestRouteProjectionInRange(points, target, minPos, maxPos)
+		if projectionOk && projectionSatisfiesWalkGeometry(req, projection, geometry) {
+			return projection, true
 		}
 		if _, existsBeforeRange := firstRoutePositionInGeometry(points, target, geometry, 0); existsBeforeRange {
 			return routeProjection{}, false
@@ -1078,7 +1082,7 @@ func routeDestinationProjectionAfter(points []GeoPoint, req RideRequest, minPos,
 	destinationDrive := req.destinationDriveGeometry()
 	destinationGeometry := req.destinationOrderGeometry()
 	if destinationDrive.isZero() {
-		return routeProjectionInGeometryOrRangeAfter(points, req.Destination, destinationGeometry, minPos, maxPos)
+		return routeProjectionInGeometryOrRangeAfter(req, points, req.Destination, destinationGeometry, minPos, maxPos)
 	}
 
 	candidates := routeProjectionCandidatesInGeometryOrRange(points, req.Destination, destinationGeometry, minPos, maxPos)
