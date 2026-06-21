@@ -2447,6 +2447,9 @@ func geoPointsFromRingCoordinates(coords [][]float64) ([]GeoPoint, bool) {
 	if ring[0] != ring[len(ring)-1] {
 		ring = append(ring, ring[0])
 	}
+	if len(ring) < 4 {
+		return nil, false
+	}
 	return ring, true
 }
 
