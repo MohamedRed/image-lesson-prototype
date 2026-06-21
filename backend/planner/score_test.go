@@ -1262,6 +1262,52 @@ func TestComputeDriverScore_RejectsRouteOnlyOnOriginDriveGeoHoleBoundary(t *test
 	}
 }
 
+func TestComputeDriverScore_RejectsRouteOnlyInsideOriginWalkZoneHole(t *testing.T) {
+	allowLongPickupETA(t)
+	req := corridorRequest()
+	req.OriWalkIso = polygonWithHole(
+		rectRing(-0.05, -0.05, 0.05, 0.05),
+		rectRing(-0.01, -0.01, 0.01, 0.01),
+	)
+	req.OriginWalkIso = req.OriWalkIso
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	driver := corridorDriver("route-in-origin-walk-hole", 0, 0, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected routePolyline entirely inside an origin walk-zone interior hole at pickup to be rejected")
+	}
+}
+
+func TestComputeDriverScore_RejectsRouteOnlyInsideDestinationWalkZoneHole(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "100")
+	req := corridorRequest()
+	req.WalkRadiusM = 100
+	req.DestWalkIso = polygonWithHole(
+		rectRing(-0.05, 0.95, 0.05, 1.05),
+		rectRing(-0.01, 0.99, 0.01, 1.01),
+	)
+	req.DestinationWalkIso = req.DestWalkIso
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	driver := corridorDriver("route-in-destination-walk-hole", 0, 0, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected routePolyline whose only walk-feasible dropoff is inside a destination walk-zone interior hole to be rejected")
+	}
+}
+
 func TestComputeDriverScore_RejectsBufferOnlyInsideOriginWalkZoneHole(t *testing.T) {
 	req := corridorRequest()
 	req.OriWalkIso = polygonWithHole(

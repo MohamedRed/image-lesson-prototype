@@ -1257,7 +1257,23 @@ func projectionSatisfiesWalkGeometry(req RideRequest, candidate routeProjection,
 	if geometry.isZero() || pointInGeoJSONPolygon(candidate.point, geometry) {
 		return true
 	}
+	if pointInGeoJSONOuterRing(candidate.point, geometry) {
+		return false
+	}
 	return candidate.snapKm <= effectiveSingleHopWalkMeters(req)/1000.0
+}
+
+func pointInGeoJSONOuterRing(point GeoPoint, polygon GeoJSONGeometry) bool {
+	parts, ok := polygonParts(polygon)
+	if !ok {
+		return false
+	}
+	for _, part := range parts {
+		if pointInPolygon(point, part.outer) {
+			return true
+		}
+	}
+	return false
 }
 
 func projectionSatisfiesEffectiveWalkGeometry(req RideRequest, candidate routeProjection, geometry GeoJSONGeometry) bool {
