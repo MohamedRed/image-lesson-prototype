@@ -2085,7 +2085,7 @@ func validGeoJSONPolygonGeometry(geometry GeoJSONGeometry) bool {
 	if geometry.isZero() {
 		return false
 	}
-	_, ok := polygonOuterRings(geometry)
+	_, ok := polygonParts(geometry)
 	return ok
 }
 
@@ -2466,7 +2466,7 @@ func geoPolygonPartFromCoordinateSets(ringCoordinateSets [][][]float64) (geoPoly
 	for _, holeCoords := range ringCoordinateSets[1:] {
 		hole, ok := geoPointsFromRingCoordinates(holeCoords)
 		if !ok {
-			continue
+			return geoPolygonPart{}, false
 		}
 		part.holes = append(part.holes, hole)
 	}

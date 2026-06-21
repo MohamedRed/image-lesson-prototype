@@ -1465,6 +1465,19 @@ func TestRideRequestFallsBackToLegacyGeometryAliasesWhenCanonicalMalformed(t *te
 	if got := req.originDriveGeometry(); !reflect.DeepEqual(got, legacyOriginDrive) {
 		t.Fatalf("expected valid legacy oriDriveIso when canonical originDriveGeo is malformed, got %#v", got)
 	}
+
+	canonicalWithMalformedHole := GeoJSONGeometry{
+		Type: "Polygon",
+		Coordinates: [][][]float64{
+			rectRing(-0.05, -0.05, 0.05, 0.05),
+			{{0, 0}}, // malformed hole: valid outer ring, invalid interior ring
+		},
+	}
+	req.OriWalkIso = legacyOriginWalk
+	req.OriginWalkIso = canonicalWithMalformedHole
+	if got := req.originWalkGeometry(); !reflect.DeepEqual(got, legacyOriginWalk) {
+		t.Fatalf("expected valid legacy oriWalkIso when canonical originWalkIso has malformed holes, got %#v", got)
+	}
 }
 
 func TestComputeDriverScore_PrefersCanonicalDestinationWalkIsoOverStaleLegacy(t *testing.T) {
