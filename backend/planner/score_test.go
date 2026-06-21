@@ -1328,6 +1328,20 @@ func TestPickBestDriverFromProfiles_RequiresPickupZoneIDForReservation(t *testin
 	}
 }
 
+func TestPickBestDriverFromProfiles_RejectsBlankPickupZoneIDForReservation(t *testing.T) {
+	req := corridorRequest()
+	blankZone := corridorDriverWithPickupZone("nearest-blank-zone", 0.001, 0, routeCorridor(), "  \n	  ")
+	withZone := corridorDriverWithPickupZone("farther-valid-with-zone", 0.02, 0, routeCorridor(), "zone-reservable")
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{blankZone, withZone}, nil, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected planner to choose reservable corridor driver, got error: %v", err)
+	}
+	if driverID != "farther-valid-with-zone" {
+		t.Fatalf("expected blank pickupZoneId to be rejected before reservation, got %q", driverID)
+	}
+}
+
 func TestPickBestDriverFromProfiles_DefaultsMissingPickupZoneCapacityBeforeReservation(t *testing.T) {
 	req := corridorRequest()
 	fullDefaultZone := corridorDriverWithPickupZone("nearest-full-default-zone", 0.001, 0, routeCorridor(), "zone-full-default")

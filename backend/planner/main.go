@@ -88,7 +88,7 @@ type Leg struct {
 func buildJourneyLeg(driver DriverProfile, pickup, dropoff GeoPoint, etaSec int) Leg {
 	return Leg{
 		DriverID:             driver.ID,
-		PickupZoneID:         driver.PickupZoneID,
+		PickupZoneID:         strings.TrimSpace(driver.PickupZoneID),
 		Pickup:               pickup,
 		Dropoff:              dropoff,
 		EstimatedTimeSeconds: etaSec,
@@ -1325,6 +1325,7 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 	ranked := make([]scoredDriver, 0, len(drivers))
 	for _, driver := range drivers {
 		driver.RoutePolyline = strings.TrimSpace(driver.RoutePolyline)
+		driver.PickupZoneID = strings.TrimSpace(driver.PickupZoneID)
 		if contains(exclude, driver.ID) {
 			continue
 		}
@@ -1356,7 +1357,8 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 }
 
 func pickupZoneHasCapacity(driver DriverProfile) bool {
-	if driver.PickupZoneID == "" {
+	pickupZoneID := strings.TrimSpace(driver.PickupZoneID)
+	if pickupZoneID == "" {
 		return false
 	}
 	capacityCars := driver.PickupZoneCapacityCars
@@ -2585,11 +2587,12 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			continue
 		}
 
+		pickupZoneID := strings.TrimSpace(data.PickupZoneID)
 		curbFactor := 1.0
 		pickupZoneActivePickups := 0
 		pickupZoneCapacityCars := 0
-		if data.PickupZoneID != "" {
-			zSnap, err := client.Collection("pickupZones").Doc(data.PickupZoneID).Get(ctx)
+		if pickupZoneID != "" {
+			zSnap, err := client.Collection("pickupZones").Doc(pickupZoneID).Get(ctx)
 			if err == nil && zSnap.Exists() {
 				zoneData := zSnap.Data()
 				pickupZoneActivePickups = intValue(zoneData["activePickups"], 0)
@@ -2613,7 +2616,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			ActivePickups:            data.ActivePickups,
 			HasSeatLedger:            hasSeatLedger,
 			ReservedSeats:            sumReservedSeats(data.Legs),
-			PickupZoneID:             data.PickupZoneID,
+			PickupZoneID:             pickupZoneID,
 			PickupZoneActivePickups:  pickupZoneActivePickups,
 			PickupZoneCapacityCars:   pickupZoneCapacityCars,
 			RoutePolyline:            strings.TrimSpace(data.RoutePolyline),
