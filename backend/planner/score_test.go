@@ -1541,6 +1541,31 @@ func TestComputeDriverScore_RejectsRouteInsideDestinationDriveGeoHole(t *testing
 	}
 }
 
+func TestComputeDriverScore_AllowsRouteExitingDestinationDriveGeoHoleAfterPickup(t *testing.T) {
+	allowLongPickupETA(t)
+	req := corridorRequest()
+	req.Destination = GeoPoint{Latitude: 0, Longitude: 1}
+	req.DestWalkIso = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	req.DestinationWalkIso = req.DestWalkIso
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	req.DestinationDriveGeo = polygonWithHole(
+		rectRing(-0.05, 0.95, 0.05, 1.05),
+		rectRing(-0.001, 0.999, 0.001, 1.001),
+	)
+	driver := corridorDriver("route-exits-destination-drive-hole", 0, 0, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1.0005},
+		{Latitude: 0, Longitude: 1.002},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected route crossing from a destinationDriveGeo hole into the valid drive ring after pickup to be accepted")
+	}
+}
+
 func TestComputeDriverScore_EnforcesOriginDriveGeoWithoutWalkZones(t *testing.T) {
 	req := RideRequest{
 		Origin:         GeoPoint{Latitude: 0, Longitude: 0},
@@ -1571,6 +1596,31 @@ func TestComputeDriverScore_RejectsDriverInsideOriginDriveGeoHole(t *testing.T) 
 	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
 	if ok {
 		t.Fatalf("expected driver inside an originDriveGeo interior hole to be rejected")
+	}
+}
+
+func TestComputeDriverScore_AllowsRouteExitingOriginDriveGeoHoleBeforePickup(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "2000")
+	req := corridorRequest()
+	req.Origin = GeoPoint{Latitude: 0, Longitude: 0}
+	req.OriWalkIso = rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	req.OriginWalkIso = req.OriWalkIso
+	req.OriDriveIso = polygonWithHole(
+		rectRing(-0.05, -0.05, 0.05, 0.05),
+		rectRing(-0.001, -0.001, 0.001, 0.001),
+	)
+	req.OriginDriveGeo = req.OriDriveIso
+	driver := corridorDriver("route-exits-origin-drive-hole", 0, -0.0005, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.0005},
+		{Latitude: 0, Longitude: -0.002},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected route crossing from an originDriveGeo hole into the valid drive ring before pickup to be accepted")
 	}
 }
 
