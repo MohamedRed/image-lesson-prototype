@@ -204,7 +204,15 @@ export async function planJourneyWithSingleLegReservationRetry({
     const pickupZoneId = firstLeg.pickupZoneId;
     attemptedDriverIds.push(driverId);
 
-    const reservation = await reserveResources(driverId, pickupZoneId, resourceRequirements);
+    let reservation: ReservationResult;
+    try {
+      reservation = await reserveResources(driverId, pickupZoneId, resourceRequirements);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      reservationErrors.push(`${driverId}: ${message || "reservation threw"}`);
+      excludedDriverIds.push(driverId);
+      continue;
+    }
     if (reservation.success) {
       return { journey, reservation, pickupZoneId, attemptedDriverIds, excludedDriverIds };
     }
