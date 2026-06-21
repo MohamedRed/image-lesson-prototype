@@ -2491,6 +2491,31 @@ func TestBuildSingleHopJourneySkipsUnwalkableEarlyPickupProjection(t *testing.T)
 	}
 }
 
+func TestBuildSingleHopJourneySkipsUnwalkableEarlyDropoffProjection(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
+	req := corridorRequest()
+	req.OriWalkIso = rectPolygon(-0.0001, -0.0001, 0.0001, 0.0001)
+	req.DestWalkIso = rectPolygon(-0.01, 0.40, 0.01, 1.001) // stale/broad polygon contains the early far dropoff candidate
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	driver := corridorDriver("journey-later-walk-feasible-dropoff-route", 0, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0.01, Longitude: 0.40}, // inside stale broad destination polygon, but outside explicit walk cap
+		{Latitude: 0.002, Longitude: 1},  // first walk-feasible dropoff
+	})
+
+	journey := buildSingleHopJourney(req, driver, 90)
+	if len(journey.Legs) != 1 {
+		t.Fatalf("expected one leg, got %d", len(journey.Legs))
+	}
+	leg := journey.Legs[0]
+	if math.Abs(leg.Dropoff.Latitude-0.002) > 0.000001 || math.Abs(leg.Dropoff.Longitude-1) > 0.000001 {
+		t.Fatalf("expected backend-selected dropoff to skip stale unwalkable early projection, got %#v", leg.Dropoff)
+	}
+}
+
 func TestBuildSingleHopJourneyUsesDriveGeosForSelectedPointsWhenWalkZonesMissing(t *testing.T) {
 	req := corridorRequest()
 	req.OriWalkIso = GeoJSONGeometry{}
