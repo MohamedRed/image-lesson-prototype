@@ -1441,6 +1441,32 @@ func TestBuildSingleHopJourneyInterpolatesRoutePointsInsideWalkZones(t *testing.
 	}
 }
 
+func TestBuildSingleHopJourneyUsesWalkZoneBoundaryWhenNearestProjectionIsOutside(t *testing.T) {
+	req := corridorRequest()
+	req.Origin = GeoPoint{Latitude: 0.05, Longitude: 0.05}
+	req.OriWalkIso = rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	req.DestWalkIso = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	driver := corridorDriver("driver-crosses-origin-zone-away-from-raw-origin", 0.01, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0.10},
+		{Latitude: 0, Longitude: 0.90},
+		{Latitude: 0, Longitude: 1.10},
+	})
+
+	journey := buildSingleHopJourney(req, driver, 90)
+	if len(journey.Legs) != 1 {
+		t.Fatalf("expected one leg, got %d", len(journey.Legs))
+	}
+	leg := journey.Legs[0]
+	if !pointInGeoJSONPolygon(leg.Pickup, req.OriWalkIso) {
+		t.Fatalf("expected pickup to use a route/walk-zone boundary point, got pickup=%#v", leg.Pickup)
+	}
+	if math.Abs(leg.Pickup.Longitude+0.01) > 0.000001 || math.Abs(leg.Dropoff.Longitude-1) > 0.000001 {
+		t.Fatalf("expected first legal boundary pickup and interpolated dropoff, got pickup=%#v dropoff=%#v", leg.Pickup, leg.Dropoff)
+	}
+}
+
 func TestBuildSingleHopJourneyUsesWalkZoneOrderForRouteThatContinuesNearOrigin(t *testing.T) {
 	req := corridorRequest()
 	req.Origin = GeoPoint{Latitude: 0.004, Longitude: 0}

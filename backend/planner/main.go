@@ -189,6 +189,9 @@ func routeProjectionCandidatesInGeometryOrRange(points []GeoPoint, target GeoPoi
 			point, fraction := nearestPointOnSegment(points[i], points[i+1], target)
 			consider(point, float64(i)+fraction)
 		}
+		if requireGeometry && len(candidates) == 0 {
+			candidates = append(candidates, routeSegmentGeometryIntersectionCandidates(points, target, geometry, minPos, maxPos)...)
+		}
 		return candidates
 	}
 
@@ -198,6 +201,52 @@ func routeProjectionCandidatesInGeometryOrRange(points []GeoPoint, target GeoPoi
 	}
 	if len(candidates) == 0 {
 		candidates = collect(false)
+	}
+	sort.SliceStable(candidates, func(i, j int) bool {
+		if candidates[i].position == candidates[j].position {
+			return candidates[i].snapKm < candidates[j].snapKm
+		}
+		return candidates[i].position < candidates[j].position
+	})
+	return candidates
+}
+
+func routeSegmentGeometryIntersectionCandidates(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos, maxPos float64) []routeProjection {
+	if geometry.isZero() || len(points) < 2 || minPos > maxPos {
+		return nil
+	}
+	rings, ok := polygonOuterRings(geometry)
+	if !ok {
+		return nil
+	}
+	candidates := []routeProjection{}
+	seen := map[string]bool{}
+	consider := func(point GeoPoint, position float64) {
+		if position < minPos || position > maxPos || !pointInGeoJSONPolygon(point, geometry) {
+			return
+		}
+		key := fmt.Sprintf("%.9f:%.9f:%.9f", point.Latitude, point.Longitude, position)
+		if seen[key] {
+			return
+		}
+		seen[key] = true
+		candidates = append(candidates, routeProjection{
+			point:    point,
+			position: position,
+			snapKm:   haversineKm(point.Latitude, point.Longitude, target.Latitude, target.Longitude),
+		})
+	}
+	for i := 0; i < len(points)-1; i++ {
+		for _, ring := range rings {
+			for j := 0; j < len(ring)-1; j++ {
+				point, ok := segmentIntersectionRepresentative(points[i], points[i+1], ring[j], ring[j+1])
+				if !ok {
+					continue
+				}
+				_, fraction := nearestPointOnSegment(points[i], points[i+1], point)
+				consider(point, float64(i)+fraction)
+			}
+		}
 	}
 	sort.SliceStable(candidates, func(i, j int) bool {
 		if candidates[i].position == candidates[j].position {
