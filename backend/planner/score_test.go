@@ -2580,28 +2580,32 @@ func TestPickBestDriverFromProfiles_DefaultsNonFiniteScoreWeights(t *testing.T) 
 }
 
 func TestPickBestDriverFromProfiles_DefaultsNonFiniteCurbFactor(t *testing.T) {
-	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "200000")
-	req := corridorRequest()
-	direct := corridorDriverWithPickupZone("zzz-direct-corridor", 0, 0, routeCorridor(), "zone-direct")
-	direct.RoutePolyline = encodePolyline([]GeoPoint{
-		{Latitude: 0, Longitude: 0},
-		{Latitude: 0, Longitude: 1},
-	})
-	looping := corridorDriverWithPickupZone("aaa-looping-corridor", 0, 0, routeCorridor(), "zone-looping")
-	looping.RoutePolyline = encodePolyline([]GeoPoint{
-		{Latitude: 0, Longitude: 0},
-		{Latitude: 1, Longitude: 0},
-		{Latitude: 1, Longitude: 1},
-		{Latitude: 0, Longitude: 1},
-	})
-	looping.CurbFactor = math.NaN()
+	for name, curbFactor := range map[string]float64{"nan": math.NaN(), "positive-infinity": math.Inf(1)} {
+		t.Run(name, func(t *testing.T) {
+			t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "200000")
+			req := corridorRequest()
+			direct := corridorDriverWithPickupZone("zzz-direct-corridor", 0, 0, routeCorridor(), "zone-direct")
+			direct.RoutePolyline = encodePolyline([]GeoPoint{
+				{Latitude: 0, Longitude: 0},
+				{Latitude: 0, Longitude: 1},
+			})
+			looping := corridorDriverWithPickupZone("aaa-looping-corridor", 0, 0, routeCorridor(), "zone-looping")
+			looping.RoutePolyline = encodePolyline([]GeoPoint{
+				{Latitude: 0, Longitude: 0},
+				{Latitude: 1, Longitude: 0},
+				{Latitude: 1, Longitude: 1},
+				{Latitude: 0, Longitude: 1},
+			})
+			looping.CurbFactor = curbFactor
 
-	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{looping, direct}, nil, scoreWeights{Detour: 1, ETA: 0, Curb: 1})
-	if err != nil {
-		t.Fatalf("expected valid corridor driver with sanitized curb factor, got error: %v", err)
-	}
-	if driverID != "zzz-direct-corridor" {
-		t.Fatalf("expected non-finite curb factor to be neutral before ranking, got %q", driverID)
+			driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{looping, direct}, nil, scoreWeights{Detour: 1, ETA: 0, Curb: 1})
+			if err != nil {
+				t.Fatalf("expected valid corridor driver with sanitized curb factor, got error: %v", err)
+			}
+			if driverID != "zzz-direct-corridor" {
+				t.Fatalf("expected non-finite curb factor to be neutral before ranking, got %q", driverID)
+			}
+		})
 	}
 }
 
@@ -3054,6 +3058,15 @@ func TestZoneCapacityFromLookupIgnoresNonFiniteNumericFields(t *testing.T) {
 	active, capacity := zoneCapacityFromLookup(map[string]any{"activePickups": math.Inf(1), "capacityCars": math.NaN()}, true)
 	if active != 0 || capacity != defaultPickupZoneCapacityCars() {
 		t.Fatalf("expected non-finite zone numbers to fall back safely, got active=%d capacity=%d", active, capacity)
+	}
+}
+
+func TestCurbFactorFromZoneDataAcceptsIntegerAndRejectsNonFinite(t *testing.T) {
+	if got := curbFactorFromZoneData(map[string]any{"curbLoadFactor": int64(2)}); got != 2 {
+		t.Fatalf("expected integer curbLoadFactor to be accepted, got %f", got)
+	}
+	if got := curbFactorFromZoneData(map[string]any{"curbLoadFactor": math.Inf(1)}); got != 1 {
+		t.Fatalf("expected non-finite curbLoadFactor to fall back to neutral 1.0, got %f", got)
 	}
 }
 

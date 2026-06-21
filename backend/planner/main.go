@@ -1809,6 +1809,35 @@ func zoneCapacityFromLookup(zoneData map[string]any, exists bool) (int, int) {
 	return activePickups, capacityCars
 }
 
+func curbFactorFromZoneData(zoneData map[string]any) float64 {
+	if value, ok := positiveFiniteFloatValue(zoneData["curbLoadFactor"]); ok {
+		return value
+	}
+	return 1.0
+}
+
+func positiveFiniteFloatValue(value any) (float64, bool) {
+	var parsed float64
+	switch v := value.(type) {
+	case int:
+		parsed = float64(v)
+	case int64:
+		parsed = float64(v)
+	case int32:
+		parsed = float64(v)
+	case float64:
+		parsed = v
+	case float32:
+		parsed = float64(v)
+	default:
+		return 0, false
+	}
+	if parsed <= 0 || nonFiniteFloat(parsed) {
+		return 0, false
+	}
+	return parsed, true
+}
+
 func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) bool {
 	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 	originIso := req.originWalkGeometry()
@@ -3267,9 +3296,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			}
 			pickupZoneActivePickups, pickupZoneCapacityCars = zoneCapacityFromLookup(zoneData, exists)
 			if exists {
-				if v, ok := zoneData["curbLoadFactor"].(float64); ok && v > 0 {
-					curbFactor = v
-				}
+				curbFactor = curbFactorFromZoneData(zoneData)
 			}
 		}
 		dropoffZoneActivePickups := 0
