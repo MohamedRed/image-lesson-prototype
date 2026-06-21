@@ -583,7 +583,7 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	if etaSec > maxSingleHopPickupETASeconds() {
 		return 0, 0, false
 	}
-	if etaSec+pickupWalkTimingGraceSeconds() < riderPickupWalkSeconds(req, driver) {
+	if pickupLeadSecondsFromOriginDrive(req, driver, etaSec)+pickupWalkTimingGraceSeconds() < riderPickupWalkSeconds(req, driver) {
 		return 0, 0, false
 	}
 
@@ -827,6 +827,55 @@ func riderPickupWalkSeconds(req RideRequest, driver DriverProfile) int {
 		return 0
 	}
 	return int(math.Ceil(pickupProjection.snapKm * 12.0 * 60.0))
+}
+
+func pickupLeadSecondsFromOriginDrive(req RideRequest, driver DriverProfile, fallbackPickupETASeconds int) int {
+	originDrive := req.originDriveGeometry()
+	if originDrive.isZero() || driver.RoutePolyline == "" {
+		return fallbackPickupETASeconds
+	}
+	points, ok := decodePolyline(driver.RoutePolyline)
+	if !ok || len(points) < 2 {
+		return fallbackPickupETASeconds
+	}
+	pickupProjection, _, ok := routeInsertionProjections(req, points)
+	if !ok {
+		return fallbackPickupETASeconds
+	}
+	entryPos, ok := firstRouteEntryPositionInGeometry(points, originDrive, 0)
+	if !ok {
+		return fallbackPickupETASeconds
+	}
+	if entryPos >= pickupProjection.position {
+		return 0
+	}
+	if len(driver.RouteETAProfileSeconds) == len(points) {
+		lead := routeETASecondsAtPosition(driver.RouteETAProfileSeconds, pickupProjection.position) - routeETASecondsAtPosition(driver.RouteETAProfileSeconds, entryPos)
+		if lead >= 0 {
+			return lead
+		}
+	}
+	leadKm := routeDistanceBetweenPositions(points, entryPos, pickupProjection.position)
+	return int(leadKm / 40.0 * 3600)
+}
+
+func firstRouteEntryPositionInGeometry(points []GeoPoint, geometry GeoJSONGeometry, minPos float64) (float64, bool) {
+	if geometry.isZero() || len(points) == 0 || minPos > float64(len(points)-1) {
+		return 0, false
+	}
+	bestPos := math.MaxFloat64
+	consider := func(point GeoPoint, pos float64) {
+		if pos >= minPos && pointInGeoJSONPolygon(point, geometry) && pos < bestPos {
+			bestPos = pos
+		}
+	}
+	for i, point := range points {
+		consider(point, float64(i))
+	}
+	for _, candidate := range routeSegmentGeometryIntersectionCandidates(points, points[0], geometry, minPos, float64(len(points)-1)) {
+		consider(candidate.point, candidate.position)
+	}
+	return bestPos, bestPos < math.MaxFloat64
 }
 
 func pickupWalkTimingGraceSeconds() int {
