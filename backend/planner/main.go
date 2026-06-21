@@ -488,6 +488,8 @@ type DriverProfile struct {
 	ReservedChildSeats      map[string]int
 	PremiumCapabilities     map[string]any
 	CurrentPassengerGenders []string
+	IsStuck                 bool
+	IsSuspiciousLocation    bool
 }
 
 // TransferPoint represents a curb segment suitable for passenger transfers
@@ -510,6 +512,9 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	seatsUsed := reservedSeatCount(driver)
 	capacitySeats := effectiveCapacitySeats(driver)
 	seatsLeft := capacitySeats - seatsUsed
+	if driver.IsStuck || driver.IsSuspiciousLocation {
+		return 0, 0, false
+	}
 	if seatsLeft < passCnt {
 		return 0, 0, false
 	}
@@ -2422,6 +2427,8 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			ChildSeatLedger         []childSeatLedgerEntry `firestore:"childSeatLedger"`
 			PremiumCapabilities     map[string]any         `firestore:"premiumCapabilities"`
 			CurrentPassengerGenders []string               `firestore:"currentPassengerGenders"`
+			IsStuck                 bool                   `firestore:"isStuck"`
+			IsSuspiciousLocation    bool                   `firestore:"isSuspiciousLocation"`
 		}
 		if err := d.DataTo(&data); err != nil {
 			continue
@@ -2478,6 +2485,8 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			ReservedChildSeats:      sumChildSeatLedger(data.ChildSeatLedger),
 			PremiumCapabilities:     data.PremiumCapabilities,
 			CurrentPassengerGenders: data.CurrentPassengerGenders,
+			IsStuck:                 data.IsStuck,
+			IsSuspiciousLocation:    data.IsSuspiciousLocation,
 		}
 
 		profiles = append(profiles, prof)

@@ -26,6 +26,28 @@ func TestComputeDriverScore_LuggageReject(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsStuckDriver(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("stuck-driver", 0, 0, routeCorridor())
+	driver.IsStuck = true
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected stuck driver to be rejected before scoring")
+	}
+}
+
+func TestComputeDriverScore_RejectsSuspiciousLocationDriver(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("spoof-flagged-driver", 0, 0, routeCorridor())
+	driver.IsSuspiciousLocation = true
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected spoof-flagged driver to be rejected before scoring")
+	}
+}
+
 func TestComputeDriverScore_RejectsMixedGenderPool(t *testing.T) {
 	req := corridorRequest()
 	req.RiderGender = "female"
