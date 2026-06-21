@@ -2075,13 +2075,13 @@ func explicitSingleHopWalkCapConfigured(req RideRequest) bool {
 }
 
 func driverCorridorBuffer(driver DriverProfile) GeoJSONGeometry {
-	if validCorridorBufferGeometry(driver.BufferPolygon) {
+	if validGeoJSONPolygonGeometry(driver.BufferPolygon) {
 		return driver.BufferPolygon
 	}
 	return driver.RouteBuffer
 }
 
-func validCorridorBufferGeometry(geometry GeoJSONGeometry) bool {
+func validGeoJSONPolygonGeometry(geometry GeoJSONGeometry) bool {
 	if geometry.isZero() {
 		return false
 	}
@@ -2089,12 +2089,23 @@ func validCorridorBufferGeometry(geometry GeoJSONGeometry) bool {
 	return ok
 }
 
-func (req RideRequest) originWalkGeometry() GeoJSONGeometry {
-	if !req.OriginWalkIso.isZero() {
-		return req.OriginWalkIso
+func resolveCanonicalGeometry(canonical, legacy GeoJSONGeometry) GeoJSONGeometry {
+	if canonical.isZero() {
+		return legacy
 	}
-	if !req.OriWalkIso.isZero() {
-		return req.OriWalkIso
+	if validGeoJSONPolygonGeometry(canonical) || legacy.isZero() {
+		return canonical
+	}
+	if validGeoJSONPolygonGeometry(legacy) {
+		return legacy
+	}
+	return canonical
+}
+
+func (req RideRequest) originWalkGeometry() GeoJSONGeometry {
+	geometry := resolveCanonicalGeometry(req.OriginWalkIso, req.OriWalkIso)
+	if !geometry.isZero() {
+		return geometry
 	}
 	if req.WalkRadiusM > 0 {
 		return circlePolygon(req.Origin, float64(req.WalkRadiusM), 32)
@@ -2103,11 +2114,9 @@ func (req RideRequest) originWalkGeometry() GeoJSONGeometry {
 }
 
 func (req RideRequest) destinationWalkGeometry() GeoJSONGeometry {
-	if !req.DestinationWalkIso.isZero() {
-		return req.DestinationWalkIso
-	}
-	if !req.DestWalkIso.isZero() {
-		return req.DestWalkIso
+	geometry := resolveCanonicalGeometry(req.DestinationWalkIso, req.DestWalkIso)
+	if !geometry.isZero() {
+		return geometry
 	}
 	if req.WalkRadiusM > 0 {
 		return circlePolygon(req.Destination, float64(req.WalkRadiusM), 32)
@@ -2116,13 +2125,7 @@ func (req RideRequest) destinationWalkGeometry() GeoJSONGeometry {
 }
 
 func (req RideRequest) originDriveGeometry() GeoJSONGeometry {
-	if !req.OriginDriveGeo.isZero() {
-		return req.OriginDriveGeo
-	}
-	if !req.OriDriveIso.isZero() {
-		return req.OriDriveIso
-	}
-	return GeoJSONGeometry{}
+	return resolveCanonicalGeometry(req.OriginDriveGeo, req.OriDriveIso)
 }
 
 func (req RideRequest) destinationDriveGeometry() GeoJSONGeometry {

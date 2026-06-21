@@ -1441,6 +1441,17 @@ func TestComputeDriverScore_PrefersCanonicalOriginWalkIsoOverStaleLegacy(t *test
 	}
 }
 
+func TestRideRequestFallsBackToLegacyOriginWalkIsoWhenCanonicalMalformed(t *testing.T) {
+	req := corridorRequest()
+	legacy := rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	req.OriWalkIso = legacy
+	req.OriginWalkIso = GeoJSONGeometry{Type: "Polygon", Coordinates: [][][]float64{}}
+
+	if got := req.originWalkGeometry(); !reflect.DeepEqual(got, legacy) {
+		t.Fatalf("expected valid legacy oriWalkIso when canonical originWalkIso is malformed, got %#v", got)
+	}
+}
+
 func TestComputeDriverScore_PrefersCanonicalDestinationWalkIsoOverStaleLegacy(t *testing.T) {
 	allowLongPickupETA(t)
 	req := corridorRequest()
