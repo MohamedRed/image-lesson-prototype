@@ -436,6 +436,30 @@ func TestComputeDriverScore_AllowsRoutePassingNearWalkZonesWithinWalkRadius(t *t
 	}
 }
 
+func TestComputeDriverScore_AllowsNearDestinationWalkPointInsideDestinationDriveGeo(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "100")
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "2000")
+	req := corridorRequest()
+	req.WalkRadiusM = 100
+	req.OriWalkIso = rectPolygon(-0.0002, -0.0002, 0.0002, 0.0002)
+	req.DestWalkIso = rectPolygon(-0.0002, 0.9998, 0.0002, 1.0002)
+	req.OriDriveIso = rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	req.DestinationDriveGeo = rectPolygon(-0.001, 0.9998, 0.001, 1.0002)
+	driver := corridorDriver("route-near-destination-walk-inside-drive", 0.0006, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0.0006, Longitude: -0.10},
+		{Latitude: 0.0006, Longitude: 0},
+		{Latitude: 0.0006, Longitude: 1},
+		{Latitude: 0.0006, Longitude: 1.10},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected destinationDriveGeo to allow a route point near the destination walk zone within walk radius")
+	}
+}
+
 func TestComputeDriverScore_RejectsCorridorMissingOriginWalkZone(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("miss-origin", 0, 0.1, rectPolygon(-0.005, 0.20, 0.005, 1.01))
