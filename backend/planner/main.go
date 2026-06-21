@@ -1979,11 +1979,11 @@ func driverCorridorBuffer(driver DriverProfile) GeoJSONGeometry {
 }
 
 func (req RideRequest) originWalkGeometry() GeoJSONGeometry {
-	if !req.OriWalkIso.isZero() {
-		return req.OriWalkIso
-	}
 	if !req.OriginWalkIso.isZero() {
 		return req.OriginWalkIso
+	}
+	if !req.OriWalkIso.isZero() {
+		return req.OriWalkIso
 	}
 	if req.WalkRadiusM > 0 {
 		return circlePolygon(req.Origin, float64(req.WalkRadiusM), 32)
@@ -1992,11 +1992,11 @@ func (req RideRequest) originWalkGeometry() GeoJSONGeometry {
 }
 
 func (req RideRequest) destinationWalkGeometry() GeoJSONGeometry {
-	if !req.DestWalkIso.isZero() {
-		return req.DestWalkIso
-	}
 	if !req.DestinationWalkIso.isZero() {
 		return req.DestinationWalkIso
+	}
+	if !req.DestWalkIso.isZero() {
+		return req.DestWalkIso
 	}
 	if req.WalkRadiusM > 0 {
 		return circlePolygon(req.Destination, float64(req.WalkRadiusM), 32)

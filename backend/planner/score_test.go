@@ -1160,6 +1160,63 @@ func TestComputeDriverScore_RejectsRouteThatNeverEntersOriginDriveGeo(t *testing
 	}
 }
 
+func TestRideRequestPrefersCanonicalWalkGeometriesOverStaleLegacy(t *testing.T) {
+	originCanonical := rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	destinationCanonical := rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	req := corridorRequest()
+	req.OriWalkIso = rectPolygon(10, 10, 11, 11)
+	req.OriginWalkIso = originCanonical
+	req.DestWalkIso = rectPolygon(20, 20, 21, 21)
+	req.DestinationWalkIso = destinationCanonical
+
+	if !reflect.DeepEqual(req.originWalkGeometry(), originCanonical) {
+		t.Fatalf("expected canonical originWalkIso to override stale legacy oriWalkIso, got %#v", req.originWalkGeometry())
+	}
+	if !reflect.DeepEqual(req.destinationWalkGeometry(), destinationCanonical) {
+		t.Fatalf("expected canonical destinationWalkIso to override stale legacy destWalkIso, got %#v", req.destinationWalkGeometry())
+	}
+}
+
+func TestComputeDriverScore_PrefersCanonicalOriginWalkIsoOverStaleLegacy(t *testing.T) {
+	allowLongPickupETA(t)
+	req := corridorRequest()
+	req.OriWalkIso = rectPolygon(10, 10, 11, 11) // stale legacy geometry
+	req.OriginWalkIso = rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	driver := corridorDriver("canonical-origin-walk", 0, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected canonical originWalkIso to override stale legacy oriWalkIso")
+	}
+}
+
+func TestComputeDriverScore_PrefersCanonicalDestinationWalkIsoOverStaleLegacy(t *testing.T) {
+	allowLongPickupETA(t)
+	req := corridorRequest()
+	req.DestWalkIso = rectPolygon(10, 10, 11, 11) // stale legacy geometry
+	req.DestinationWalkIso = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	driver := corridorDriver("canonical-destination-walk", 0, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected canonical destinationWalkIso to override stale legacy destWalkIso")
+	}
+}
+
 func TestComputeDriverScore_PrefersCanonicalOriginDriveGeoOverStaleLegacy(t *testing.T) {
 	allowLongPickupETA(t)
 	req := corridorRequest()
