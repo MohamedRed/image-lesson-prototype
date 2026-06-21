@@ -2712,6 +2712,7 @@ func segmentsIntersect(a1, a2, b1, b2 GeoPoint) bool {
 }
 
 const maxPlannerRequestBodyBytes int64 = 1 << 20
+const maxRideRequestPassengerCount = 6
 
 func healthHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -2784,6 +2785,9 @@ func planHandler(w http.ResponseWriter, r *http.Request) {
 func validatePlannerRequest(req RideRequest) error {
 	if req.PassengerCount <= 0 {
 		return fmt.Errorf("passengerCount must be positive")
+	}
+	if req.PassengerCount > maxRideRequestPassengerCount {
+		return fmt.Errorf("passengerCount must be at most %d", maxRideRequestPassengerCount)
 	}
 	if req.WalkRadiusM < 0 {
 		return fmt.Errorf("walkRadiusM must be non-negative")
