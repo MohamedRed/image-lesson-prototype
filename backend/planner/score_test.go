@@ -1127,6 +1127,20 @@ func TestComputeDriverScore_RejectsBufferSeparateOriginWalkAndDriveIntersections
 	}
 }
 
+func TestDriverBufferIntersectsCommonEndpoint_TreatsInvalidRoutePolylineAsMissing(t *testing.T) {
+	walk := rectPolygon(0, 0, 0.10, 0.10)
+	drive := rectPolygon(0.05, 0.05, 0.15, 0.15)
+	driver := corridorDriver("invalid-route-buffer-common-point", 0.12, 0.12, multiPolygon(
+		rectRing(0.01, 0.01, 0.03, 0.03), // walk only
+		rectRing(0.12, 0.12, 0.14, 0.14), // drive only
+	))
+	driver.RoutePolyline = "not-a-valid-polyline"
+
+	if driverBufferIntersectsCommonEndpoint(driver, walk, drive) {
+		t.Fatalf("expected common-endpoint helper to treat invalid routePolyline as missing and reject separate buffer walk/drive intersections")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteInsideDestinationDriveGeoHole(t *testing.T) {
 	req := corridorRequest()
 	req.Origin = GeoPoint{Latitude: 0, Longitude: 0.999}

@@ -1613,6 +1613,7 @@ func endpointGeometriesOverlap(walkGeometry, driveGeometry GeoJSONGeometry) bool
 }
 
 func driverBufferIntersectsCommonEndpoint(driver DriverProfile, walkGeometry, driveGeometry GeoJSONGeometry) bool {
+	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 	if driver.RoutePolyline != "" || walkGeometry.isZero() || driveGeometry.isZero() {
 		return true
 	}
