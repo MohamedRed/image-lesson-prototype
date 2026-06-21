@@ -1155,7 +1155,7 @@ func routePolylineEntersGeometryAfterOrigin(req RideRequest, encodedPolyline str
 		return false
 	}
 	lastPos := float64(len(points) - 1)
-	originCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originOrderGeometry(), 0, lastPos)
+	originCandidates := routeOriginProjectionCandidates(points, req, 0, lastPos)
 	for _, origin := range originCandidates {
 		if destinationDrivePos, ok := firstRoutePositionInGeometry(points, req.Destination, geometry, origin.position+1e-9); ok && destinationDrivePos > origin.position {
 			return true
@@ -1170,7 +1170,7 @@ func routePolylineTravelsOriginBeforeDestination(req RideRequest, encodedPolylin
 		return false
 	}
 	lastPos := float64(len(points) - 1)
-	originCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originOrderGeometry(), 0, lastPos)
+	originCandidates := routeOriginProjectionCandidates(points, req, 0, lastPos)
 	for _, origin := range originCandidates {
 		destinationPos, destinationOk := routePositionForOrder(points, req.Destination, req.destinationOrderGeometry(), origin.position)
 		if destinationOk && destinationPos > origin.position {

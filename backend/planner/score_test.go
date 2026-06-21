@@ -461,6 +461,25 @@ func TestComputeDriverScore_RejectsOriginDriveGeoOnlyAfterDropoff(t *testing.T) 
 	}
 }
 
+func TestRouteOrderUsesOriginDriveGeoWhenWalkZoneIsBroad(t *testing.T) {
+	req := corridorRequest()
+	req.Origin = GeoPoint{Latitude: 0, Longitude: 0.05}
+	req.Destination = GeoPoint{Latitude: 0, Longitude: 0.15}
+	req.OriWalkIso = rectPolygon(-0.01, -0.01, 0.01, 0.21)
+	req.OriDriveIso = rectPolygon(-0.01, 0.195, 0.01, 0.205)
+	req.DestWalkIso = rectPolygon(-0.01, 0.145, 0.01, 0.155)
+	polyline := encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 0.15},
+		{Latitude: 0, Longitude: 0.20},
+	})
+
+	if routePolylineTravelsOriginBeforeDestination(req, polyline) {
+		t.Fatalf("expected route order to use legal origin-drive pickup projection, not an earlier broad walk-zone point")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteInsideDestinationDriveGeoHole(t *testing.T) {
 	req := corridorRequest()
 	req.Origin = GeoPoint{Latitude: 0, Longitude: 0.999}
