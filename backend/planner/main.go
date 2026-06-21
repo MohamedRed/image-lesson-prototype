@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"net/http"
@@ -2690,7 +2691,7 @@ func planHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req RideRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := decodeSingleRideRequestJSON(r.Body, &req); err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
@@ -2715,6 +2716,21 @@ func planHandler(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(journey); err != nil {
 		http.Error(w, fmt.Sprintf("encode error: %v", err), http.StatusInternalServerError)
 	}
+}
+
+func decodeSingleRideRequestJSON(body io.Reader, req *RideRequest) error {
+	decoder := json.NewDecoder(body)
+	if err := decoder.Decode(req); err != nil {
+		return err
+	}
+	var extra any
+	if err := decoder.Decode(&extra); err != io.EOF {
+		if err == nil {
+			return fmt.Errorf("multiple JSON values in request body")
+		}
+		return err
+	}
+	return nil
 }
 
 // planMultiHop implements sophisticated multi-hop journey planning (2-3 legs)
