@@ -686,6 +686,38 @@ func TestComputeDriverScore_GlobalWalkLimitCapsBroadStaleDestinationWalkPolygon(
 	}
 }
 
+func TestRoutePolylineTravelsOriginBeforeDestinationSkipsDestinationOutsideExplicitWalkCap(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
+	req := corridorRequest()
+	req.OriWalkIso = rectPolygon(-0.0001, -0.0001, 0.0001, 0.0001)
+	req.DestWalkIso = rectPolygon(-0.10, 0.40, 0.10, 1.10)
+	route := encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0.05, Longitude: 0.50}, // inside stale destination walk polygon but outside explicit walk cap
+		{Latitude: 0.002, Longitude: 1},   // later destination projection inside explicit walk cap
+	})
+
+	if !routePolylineTravelsOriginBeforeDestination(req, route) {
+		t.Fatalf("expected route-order check to skip stale destination polygon points outside explicit walk cap and use the later walk-feasible dropoff")
+	}
+}
+
+func TestRoutePolylineTravelsOriginBeforeDestinationRejectsEarlyOriginOutsideExplicitWalkCap(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
+	req := corridorRequest()
+	req.OriWalkIso = rectPolygon(-0.10, -0.10, 0.10, 0.10)
+	req.DestWalkIso = rectPolygon(-0.0001, 0.9999, 0.0001, 1.0001)
+	route := encodePolyline([]GeoPoint{
+		{Latitude: 0.05, Longitude: 0}, // inside stale origin walk polygon but outside explicit walk cap
+		{Latitude: 0, Longitude: 1},    // destination before legal pickup
+		{Latitude: 0.002, Longitude: 0}, // later legal pickup, with no later destination
+	})
+
+	if routePolylineTravelsOriginBeforeDestination(req, route) {
+		t.Fatalf("expected route-order check to reject a destination-before-pickup route when the earlier origin hit exceeds explicit walk cap")
+	}
+}
+
 func TestComputeDriverScore_RiderWalkRadiusCapsBroadStaleDestinationWalkPolygon(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "1000")

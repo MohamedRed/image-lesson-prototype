@@ -1777,8 +1777,12 @@ func routePolylineTravelsOriginBeforeDestination(req RideRequest, encodedPolylin
 		return false
 	}
 	lastPos := float64(len(points) - 1)
+	originGeometry := req.originOrderGeometry()
 	originCandidates := routeOriginProjectionCandidates(points, req, 0, lastPos)
 	for _, origin := range originCandidates {
+		if !projectionSatisfiesEffectiveWalkGeometry(req, origin, originGeometry) {
+			continue
+		}
 		destinationPos, destinationOk := routePositionForOrder(req, points, req.Destination, req.destinationOrderGeometry(), origin.position)
 		if destinationOk && destinationPos > origin.position {
 			return true
