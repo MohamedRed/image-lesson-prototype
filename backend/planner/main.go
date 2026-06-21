@@ -1860,15 +1860,17 @@ func driverRouteIntersectsGeometry(driver DriverProfile, geometry GeoJSONGeometr
 }
 
 func driverRouteIntersectsOrPassesNearGeometry(req RideRequest, driver DriverProfile, geometry GeoJSONGeometry, target GeoPoint) bool {
-	if driverRouteIntersectsGeometry(driver, geometry) {
-		return true
-	}
 	points, ok := decodeNormalizedRoutePolyline(driver.RoutePolyline)
 	if !ok {
-		return false
+		return driverRouteIntersectsGeometry(driver, geometry)
 	}
-	projection, ok := nearestRouteProjectionInRange(points, target, 0, float64(len(points)-1))
-	return ok && projection.snapKm <= effectiveSingleHopWalkMeters(req)/1000.0
+	candidates := routeWalkProjectionCandidates(points, req, target, geometry, 0, float64(len(points)-1))
+	for _, projection := range candidates {
+		if projectionSatisfiesEffectiveWalkGeometry(req, projection, geometry) {
+			return true
+		}
+	}
+	return false
 }
 
 func driverCorridorBuffer(driver DriverProfile) GeoJSONGeometry {

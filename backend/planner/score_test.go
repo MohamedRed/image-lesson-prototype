@@ -571,6 +571,25 @@ func TestDriverRouteIntersectsOrPassesNearGeometry_NormalizesRoutePolyline(t *te
 	}
 }
 
+func TestDriverRouteIntersectsOrPassesNearGeometry_RejectsNearProjectionInsideWalkZoneHole(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "100")
+	req := corridorRequest()
+	req.WalkRadiusM = 100
+	geometry := polygonWithHole(
+		rectRing(-0.05, 0.95, 0.05, 1.05),
+		rectRing(-0.01, 0.99, 0.01, 1.01),
+	)
+	driver := corridorDriver("near-helper-hole-route", 0, 0, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	if driverRouteIntersectsOrPassesNearGeometry(req, driver, geometry, req.Destination) {
+		t.Fatalf("expected near-corridor helper to reject route snap inside destination walk-zone hole")
+	}
+}
+
 func TestComputeDriverScore_UsesLaterNearOriginProjectionWhenEarlierSegmentIsOutsideWalkRadius(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
