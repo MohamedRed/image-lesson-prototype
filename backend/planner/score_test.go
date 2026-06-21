@@ -1591,6 +1591,18 @@ func TestRideRequestFallsBackToLegacyGeometryAliasesWhenCanonicalMalformed(t *te
 	if got := req.originWalkGeometry(); !reflect.DeepEqual(got, legacyOriginWalk) {
 		t.Fatalf("expected valid legacy oriWalkIso when canonical originWalkIso has a zero-area ring, got %#v", got)
 	}
+
+	canonicalWithOutOfRangeCoordinate := GeoJSONGeometry{
+		Type: "Polygon",
+		Coordinates: [][][]float64{
+			{{-0.05, -0.05}, {0.05, -0.05}, {0.05, 91.0}, {-0.05, -0.05}},
+		},
+	}
+	req.OriWalkIso = legacyOriginWalk
+	req.OriginWalkIso = canonicalWithOutOfRangeCoordinate
+	if got := req.originWalkGeometry(); !reflect.DeepEqual(got, legacyOriginWalk) {
+		t.Fatalf("expected valid legacy oriWalkIso when canonical originWalkIso has out-of-range coordinates, got %#v", got)
+	}
 }
 
 func TestComputeDriverScore_PrefersCanonicalDestinationWalkIsoOverStaleLegacy(t *testing.T) {

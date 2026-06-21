@@ -2439,7 +2439,7 @@ func geoPointsFromRingCoordinates(coords [][]float64) ([]GeoPoint, bool) {
 	}
 	ring := make([]GeoPoint, 0, len(coords)+1)
 	for _, pair := range coords {
-		if len(pair) < 2 || nonFiniteFloat(pair[0]) || nonFiniteFloat(pair[1]) {
+		if len(pair) < 2 || !validLongitude(pair[0]) || !validLatitude(pair[1]) {
 			return nil, false
 		}
 		ring = append(ring, GeoPoint{Latitude: pair[1], Longitude: pair[0]})
@@ -2921,13 +2921,21 @@ func validatePlannerRequest(req RideRequest) error {
 }
 
 func validateGeoPoint(field string, point GeoPoint) error {
-	if math.IsNaN(point.Latitude) || math.IsInf(point.Latitude, 0) || point.Latitude < -90 || point.Latitude > 90 {
+	if !validLatitude(point.Latitude) {
 		return fmt.Errorf("%s latitude must be between -90 and 90", field)
 	}
-	if math.IsNaN(point.Longitude) || math.IsInf(point.Longitude, 0) || point.Longitude < -180 || point.Longitude > 180 {
+	if !validLongitude(point.Longitude) {
 		return fmt.Errorf("%s longitude must be between -180 and 180", field)
 	}
 	return nil
+}
+
+func validLatitude(value float64) bool {
+	return !nonFiniteFloat(value) && value >= -90 && value <= 90
+}
+
+func validLongitude(value float64) bool {
+	return !nonFiniteFloat(value) && value >= -180 && value <= 180
 }
 
 func validateNonNegativeCounts(field string, counts map[string]int) error {
