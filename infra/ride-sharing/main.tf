@@ -165,7 +165,7 @@ module "planner" {
   image_url    = "gcr.io/${var.project_id}/ride-planner:latest"
 
   allow_unauthenticated = false
-  invoker_members       = [
+  invoker_members = [
     "serviceAccount:${google_service_account.cloud_functions.email}",
   ]
 
