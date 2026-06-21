@@ -2259,6 +2259,17 @@ func TestPickBestDriverFromProfiles_RanksRoutePolylineCorridorAboveNearestWrongD
 	}
 }
 
+func TestSingleHopThresholdsIgnoreNonFiniteFloatEnv(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "+Inf")
+	if got := maxSingleHopRouteDetourKm(); got != 25.0 {
+		t.Fatalf("expected non-finite detour env to fall back to 25km, got %f", got)
+	}
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "+Inf")
+	if got := maxSingleHopWalkMeters(); got != 1000.0 {
+		t.Fatalf("expected non-finite walk env to fall back to 1000m, got %f", got)
+	}
+}
+
 func TestRouteInsertionDetourExcludesRiderWalkSnapDistance(t *testing.T) {
 	req := corridorRequest()
 	req.WalkRadiusM = 1000
