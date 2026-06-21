@@ -1355,6 +1355,23 @@ func TestRouteInsertionDetourExcludesRiderWalkSnapDistance(t *testing.T) {
 	}
 }
 
+func TestRouteInsertionDetourTrimsRoutePolylineBeforeScoring(t *testing.T) {
+	req := corridorRequest()
+	directRideKm := haversineKm(req.Origin.Latitude, req.Origin.Longitude, req.Destination.Latitude, req.Destination.Longitude)
+	polyline := "  \n" + encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	}) + "\t"
+
+	got, ok := routeInsertionDetourKm(req, polyline, directRideKm)
+	if !ok {
+		t.Fatalf("expected route insertion detour to trim and score a valid routePolyline")
+	}
+	if got != 0 {
+		t.Fatalf("expected direct trimmed route to have zero detour, got %.6f", got)
+	}
+}
+
 func TestDriverDetourUsesRouteInsertionDetourNotPickupDistance(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("direct-route-detour", 0, -0.10, routeCorridor())

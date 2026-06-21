@@ -1165,6 +1165,10 @@ func driverDetourKm(req RideRequest, driver DriverProfile, pickupKm, directRideK
 }
 
 func routeInsertionDetourKm(req RideRequest, encodedPolyline string, directRideKm float64) (float64, bool) {
+	encodedPolyline = normalizeRoutePolyline(encodedPolyline)
+	if encodedPolyline == "" {
+		return 0, false
+	}
 	points, ok := decodePolyline(encodedPolyline)
 	if !ok || len(points) < 2 {
 		return 0, false
