@@ -1328,6 +1328,20 @@ func TestPickBestDriverFromProfiles_RequiresPickupZoneIDForReservation(t *testin
 	}
 }
 
+func TestPickBestDriverFromProfiles_TrimsExcludedDriverIDsForReservationRetry(t *testing.T) {
+	req := corridorRequest()
+	failedReservation := corridorDriverWithPickupZone("failed-reservation-driver", 0.001, 0, routeCorridor(), "zone-failed")
+	nextCandidate := corridorDriverWithPickupZone("next-reservation-candidate", 0.02, 0, routeCorridor(), "zone-next")
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{failedReservation, nextCandidate}, []string{"  failed-reservation-driver\n"}, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected planner to choose next reservable corridor driver, got error: %v", err)
+	}
+	if driverID != "next-reservation-candidate" {
+		t.Fatalf("expected trimmed excludedDriverIds to skip failed reservation candidate, got %q", driverID)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RejectsBlankPickupZoneIDForReservation(t *testing.T) {
 	req := corridorRequest()
 	blankZone := corridorDriverWithPickupZone("nearest-blank-zone", 0.001, 0, routeCorridor(), "  \n	  ")
@@ -2257,13 +2271,13 @@ func TestBuildLegRequestRebindsWalkZonesToLegEndpoints(t *testing.T) {
 
 func TestLegExcludedDriverIDsMergesReservationRetryAndPriorLegDrivers(t *testing.T) {
 	req := corridorRequest()
-	req.ExcludedDriverIDs = []string{"failed-reservation", "already-filtered"}
+	req.ExcludedDriverIDs = []string{" failed-reservation ", "already-filtered", "  "}
 
-	excluded := legExcludedDriverIDs(req, "leg-1-driver", "failed-reservation")
+	excluded := legExcludedDriverIDs(req, "leg-1-driver", "failed-reservation", "\n")
 
 	want := []string{"failed-reservation", "already-filtered", "leg-1-driver"}
 	if !reflect.DeepEqual(excluded, want) {
-		t.Fatalf("expected merged exclusions %#v, got %#v", want, excluded)
+		t.Fatalf("expected merged normalized exclusions %#v, got %#v", want, excluded)
 	}
 }
 

@@ -2664,8 +2664,9 @@ func haversineKm(lat1, lon1, lat2, lon2 float64) float64 {
 }
 
 func contains(arr []string, v string) bool {
+	v = strings.TrimSpace(v)
 	for _, s := range arr {
-		if s == v {
+		if strings.TrimSpace(s) == v {
 			return true
 		}
 	}
@@ -2705,6 +2706,7 @@ func legExcludedDriverIDs(req RideRequest, additional ...string) []string {
 	excluded := make([]string, 0, len(req.ExcludedDriverIDs)+len(additional))
 	seen := map[string]bool{}
 	appendUnique := func(driverID string) {
+		driverID = strings.TrimSpace(driverID)
 		if driverID == "" || seen[driverID] {
 			return
 		}
