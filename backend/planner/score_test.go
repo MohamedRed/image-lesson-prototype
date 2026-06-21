@@ -38,6 +38,21 @@ func TestComputeDriverScore_RejectsMixedGenderPool(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsExclusiveRequestWithExistingReservedSeats(t *testing.T) {
+	req := corridorRequest()
+	req.RiderGender = "female"
+	req.PremiumRequested = map[string]any{"exclusive": true}
+	driver := corridorDriver("exclusive-capable-but-occupied", 0, 0, routeCorridor())
+	driver.PremiumCapabilities = map[string]any{"exclusive": true}
+	driver.ReservedSeats = 1
+	driver.CurrentPassengerGenders = []string{"female"}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected exclusive request to reject a driver with existing reserved passengers")
+	}
+}
+
 func TestComputeDriverScore_UsesLuggageLedgerForCapacity(t *testing.T) {
 	req := RideRequest{
 		Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1,

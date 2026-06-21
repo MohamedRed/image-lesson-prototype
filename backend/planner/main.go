@@ -550,6 +550,10 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 		}
 	}
 
+	if exclusiveRequested(req.PremiumRequested) && driverHasExistingPassengers(driver, seatsUsed) {
+		return 0, 0, false
+	}
+
 	// Premium trait filter
 	if req.PremiumRequested != nil {
 		for k, v := range req.PremiumRequested {
@@ -625,6 +629,18 @@ func genderPoolCompatible(riderGender string, currentPassengerGenders []string) 
 		}
 	}
 	return true
+}
+
+func exclusiveRequested(premiumRequested map[string]any) bool {
+	if premiumRequested == nil {
+		return false
+	}
+	exclusive, ok := premiumRequested["exclusive"].(bool)
+	return ok && exclusive
+}
+
+func driverHasExistingPassengers(driver DriverProfile, seatsUsed int) bool {
+	return seatsUsed > 0 || driver.ActivePickups > 0 || len(driver.CurrentPassengerGenders) > 0
 }
 
 func seatLoadScore(driver DriverProfile, seatsUsed int) float64 {
