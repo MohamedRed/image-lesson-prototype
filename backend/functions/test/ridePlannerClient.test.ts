@@ -2,6 +2,7 @@ import {
   buildMultiLegReservationRequirements,
   buildPlannerRequest,
   planJourneyWithSingleLegReservationRetry,
+  requestPlannerJourney,
 } from "../src/ride-sharing/plannerClient";
 
 describe("planner client", () => {
@@ -63,6 +64,56 @@ describe("planner client", () => {
       originDriveGeo,
       destinationDriveGeo,
     });
+  });
+
+  it("adds a metadata ID-token Authorization header for private Cloud Run planner calls", async () => {
+    const previousFunctionTarget = process.env.FUNCTION_TARGET;
+    const previousPlannerAuthDisabled = process.env.PLANNER_AUTH_DISABLED;
+    const previousPlannerAudience = process.env.PLANNER_ID_TOKEN_AUDIENCE;
+    const previousFetch = global.fetch;
+    process.env.FUNCTION_TARGET = "processRideRequest";
+    delete process.env.PLANNER_AUTH_DISABLED;
+    delete process.env.PLANNER_ID_TOKEN_AUDIENCE;
+    const metadataFetch = jest.fn(async () => ({
+      ok: true,
+      status: 200,
+      text: async () => "metadata-token",
+    }));
+    (global as any).fetch = metadataFetch;
+    const fetchImpl = jest.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        legs: [{ driverId: "driverA", pickupZoneId: "zone-1", dropoffZoneId: "zone-dropoff", pickup: origin, dropoff: destination, etaSeconds: 120 }],
+        totalEtaSeconds: 120,
+      }),
+    }));
+
+    try {
+      await requestPlannerJourney(
+        "https://planner.example",
+        { origin, destination, passengerCount: 1, riderGender: "female" },
+        {},
+        [],
+        fetchImpl
+      );
+    } finally {
+      if (previousFunctionTarget === undefined) delete process.env.FUNCTION_TARGET;
+      else process.env.FUNCTION_TARGET = previousFunctionTarget;
+      if (previousPlannerAuthDisabled === undefined) delete process.env.PLANNER_AUTH_DISABLED;
+      else process.env.PLANNER_AUTH_DISABLED = previousPlannerAuthDisabled;
+      if (previousPlannerAudience === undefined) delete process.env.PLANNER_ID_TOKEN_AUDIENCE;
+      else process.env.PLANNER_ID_TOKEN_AUDIENCE = previousPlannerAudience;
+      global.fetch = previousFetch;
+    }
+
+    expect(metadataFetch).toHaveBeenCalledWith(
+      "http://metadata/computeMetadata/v1/instance/service-accounts/default/identity?audience=https%3A%2F%2Fplanner.example&format=full",
+      { headers: { "Metadata-Flavor": "Google" } }
+    );
+    expect(fetchImpl).toHaveBeenCalledWith("https://planner.example/plan", expect.objectContaining({
+      headers: expect.objectContaining({ Authorization: "Bearer metadata-token" }),
+    }));
   });
 
   it("requires planner pickup/dropoff points before attempting reservation", async () => {

@@ -38,6 +38,8 @@ export type FetchLike = (url: string, init: { method: string; headers: Record<st
   json: () => Promise<any>;
 }>;
 
+export type AuthTokenProvider = (audience: string) => Promise<string | undefined>;
+
 export type ReserveSingleLeg = (
   driverId: string,
   pickupZoneId: string,
@@ -52,6 +54,7 @@ export interface PlannerReservationRetryParams {
   resourceRequirements: ResourceRequirements;
   reserveResources: ReserveSingleLeg;
   fetchImpl?: FetchLike;
+  authTokenProvider?: AuthTokenProvider;
   maxAttempts?: number;
 }
 
@@ -120,11 +123,22 @@ export async function requestPlannerJourney(
   rideRequest: any,
   geoUpdates: Record<string, any> = {},
   excludedDriverIds: string[] = [],
-  fetchImpl: FetchLike = fetch as unknown as FetchLike
+  fetchImpl: FetchLike = fetch as unknown as FetchLike,
+  authTokenProvider?: AuthTokenProvider
 ): Promise<PlannerJourney> {
-  const plannerResp = await fetchImpl(`${plannerUrl}/plan`, {
+  const plannerBaseUrl = normalizePlannerBaseUrl(plannerUrl);
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const tokenProvider = authTokenProvider ?? (shouldUseMetadataPlannerAuth(plannerBaseUrl) ? metadataIdentityTokenProvider : undefined);
+  if (tokenProvider) {
+    const token = await tokenProvider(plannerAudience(plannerBaseUrl));
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  }
+
+  const plannerResp = await fetchImpl(`${plannerBaseUrl}/plan`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(buildPlannerRequest(rideRequest, geoUpdates, excludedDriverIds)),
   });
 
@@ -140,6 +154,31 @@ export async function requestPlannerJourney(
   assertJourneyDisplayGeometry(journey);
 
   return journey;
+}
+
+function normalizePlannerBaseUrl(plannerUrl: string): string {
+  return plannerUrl.replace(/\/+$/, "");
+}
+
+function plannerAudience(plannerBaseUrl: string): string {
+  return process.env.PLANNER_ID_TOKEN_AUDIENCE || plannerBaseUrl;
+}
+
+function shouldUseMetadataPlannerAuth(plannerBaseUrl: string): boolean {
+  if (process.env.PLANNER_AUTH_DISABLED === "true") return false;
+  if (process.env.PLANNER_ID_TOKEN_AUDIENCE) return true;
+  if (!plannerBaseUrl.startsWith("https://")) return false;
+  return Boolean(process.env.K_SERVICE || process.env.FUNCTION_TARGET || process.env.FUNCTION_NAME);
+}
+
+async function metadataIdentityTokenProvider(audience: string): Promise<string | undefined> {
+  const url = `http://metadata/computeMetadata/v1/instance/service-accounts/default/identity?audience=${encodeURIComponent(audience)}&format=full`;
+  const response = await fetch(url, { headers: { "Metadata-Flavor": "Google" } });
+  if (!response.ok) {
+    throw new Error(`Metadata identity token HTTP ${response.status}`);
+  }
+  const token = (await response.text()).trim();
+  return token || undefined;
 }
 
 export function assertJourneyDisplayGeometry(journey: PlannerJourney): void {
@@ -206,6 +245,7 @@ export async function planJourneyWithSingleLegReservationRetry({
   resourceRequirements,
   reserveResources,
   fetchImpl = fetch as unknown as FetchLike,
+  authTokenProvider,
   maxAttempts = 3,
 }: PlannerReservationRetryParams): Promise<PlannerReservationRetryResult> {
   const excludedDriverIds: string[] = normalizeDriverIds(rideRequest.excludedDriverIds || []);
@@ -213,7 +253,7 @@ export async function planJourneyWithSingleLegReservationRetry({
   const reservationErrors: string[] = [];
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const journey = await requestPlannerJourney(plannerUrl, rideRequest, geoUpdates, excludedDriverIds, fetchImpl);
+    const journey = await requestPlannerJourney(plannerUrl, rideRequest, geoUpdates, excludedDriverIds, fetchImpl, authTokenProvider);
 
     if (journey.legs.length !== 1) {
       return { journey, attemptedDriverIds, excludedDriverIds };
