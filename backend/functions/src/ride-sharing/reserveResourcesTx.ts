@@ -349,7 +349,7 @@ function calculateChildSeatRequirements(children: Array<{ ageYears: number; weig
       requirements.infant = (requirements.infant || 0) + 1;
     } else if (child.ageYears <= 4) {
       requirements.forward = (requirements.forward || 0) + 1;
-    } else if (child.ageYears <= 8 || child.weightKg < 36) {
+    } else if (child.ageYears <= 8 || (child.weightKg > 0 && child.weightKg < 36)) {
       requirements.booster = (requirements.booster || 0) + 1;
     }
   }

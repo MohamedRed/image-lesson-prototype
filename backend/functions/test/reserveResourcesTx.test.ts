@@ -32,6 +32,31 @@ describe("reserve resource capacity helpers", () => {
 });
 
 describe("reserveResourcesTransaction", () => {
+  it("does not require booster for older child when weight is omitted", async () => {
+    const updates: Array<{ path: string; data: Record<string, unknown> }> = [];
+    const db = fakeReservationDb({
+      "drivers/driver-older-child": {
+        capacitySeats: 4,
+        activePickups: 0,
+        childSeatInventory: {},
+      },
+      "pickupZones/zone-1": {
+        capacityCars: 10,
+        activePickups: 0,
+      },
+    }, updates);
+
+    const result = await reserveResourcesTransaction(
+      "driver-older-child",
+      "zone-1",
+      { passengerCount: 1, childPassengers: [{ ageYears: 9, weightKg: 0 }] },
+      db as never
+    );
+
+    expect(result.success).toBe(true);
+    expect(updates.map((update) => update.path)).toEqual(["drivers/driver-older-child", "pickupZones/zone-1"]);
+  });
+
   it("ignores blank passenger gender placeholders during gender pool validation", async () => {
     const updates: Array<{ path: string; data: Record<string, unknown> }> = [];
     const db = fakeReservationDb({
