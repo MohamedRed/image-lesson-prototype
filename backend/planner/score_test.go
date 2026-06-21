@@ -130,6 +130,17 @@ func TestComputeDriverScore_NormalizesSerializedPendingReviewStatus(t *testing.T
 	}
 }
 
+func TestComputeDriverScore_NormalizesCamelCasePendingReviewStatus(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("pending-review-camel-verification-driver", 0, 0, routeCorridor())
+	driver.VerificationStatus = "pendingReview"
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected camelCase pendingReview verification status to be normalized and rejected")
+	}
+}
+
 func TestComputeDriverScore_RejectsFailedDriverBackgroundCheck(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("failed-background-check-driver", 0, 0, routeCorridor())

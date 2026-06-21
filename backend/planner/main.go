@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"cloud.google.com/go/firestore"
 )
@@ -706,9 +707,19 @@ func driverVerificationStatusAllowsRides(status string) bool {
 }
 
 func normalizedStatusToken(status string) string {
-	trimmed := strings.ToLower(strings.TrimSpace(status))
-	trimmed = strings.ReplaceAll(trimmed, "-", " ")
-	return strings.Join(strings.Fields(trimmed), "_")
+	trimmed := strings.TrimSpace(status)
+	var builder strings.Builder
+	var previous rune
+	for i, r := range trimmed {
+		if i > 0 && unicode.IsUpper(r) && (unicode.IsLower(previous) || unicode.IsDigit(previous)) {
+			builder.WriteRune(' ')
+		}
+		builder.WriteRune(r)
+		previous = r
+	}
+	normalized := strings.ToLower(builder.String())
+	normalized = strings.ReplaceAll(normalized, "-", " ")
+	return strings.Join(strings.Fields(normalized), "_")
 }
 
 func genderPoolCompatible(riderGender string, currentPassengerGenders []string) bool {
