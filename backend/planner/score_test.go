@@ -2592,6 +2592,31 @@ func TestComputeDriverScore_RejectsOriginDriveEntryTooLateForRiderWalk(t *testin
 	}
 }
 
+func TestComputeDriverScore_RejectsOriginDriveGeoOnlyBeforeWalkFeasiblePickup(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "1000")
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "0")
+	req := corridorRequest()
+	req.OriWalkIso = rectPolygon(0.0055, -0.0005, 0.0065, 0.0005)
+	req.DestWalkIso = rectPolygon(0.0055, 0.9995, 0.0065, 1.0005)
+	req.OriDriveIso = multiPolygon(
+		rectRing(0.0055, -0.1005, 0.0065, -0.0995), // early unrelated drive component
+		rectRing(0.0055, -0.0005, 0.0065, 0.0005),  // actual legal pickup component
+	)
+	driver := corridorDriver("origin-drive-before-walk-feasible-pickup", 0.006, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0.006, Longitude: -0.10},
+		{Latitude: 0.006, Longitude: -0.001},
+		{Latitude: 0.006, Longitude: 0},
+		{Latitude: 0.006, Longitude: 1},
+	})
+	driver.RouteETAProfileSeconds = []int{0, 590, 600, 1500}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected unrelated early originDriveGeo entry not to provide rider walk lead time for the later pickup component")
+	}
+}
+
 func TestComputeDriverScore_FallsBackWhenOriginDriveLeadProfileHasNoProgress(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "1000")
 	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "0")

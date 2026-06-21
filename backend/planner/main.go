@@ -1157,7 +1157,7 @@ func pickupLeadSecondsFromOriginDrive(req RideRequest, driver DriverProfile, fal
 	if !ok {
 		return fallbackPickupETASeconds
 	}
-	entryPos, ok := firstRouteEntryPositionInGeometry(points, originDrive, 0)
+	entryPos, ok := routeEntryPositionForProjectionInGeometry(points, originDrive, pickupProjection)
 	if !ok {
 		return fallbackPickupETASeconds
 	}
@@ -1172,6 +1172,60 @@ func pickupLeadSecondsFromOriginDrive(req RideRequest, driver DriverProfile, fal
 	}
 	leadKm := routeDistanceBetweenPositions(points, entryPos, pickupProjection.position)
 	return int(leadKm / 40.0 * 3600)
+}
+
+func routeEntryPositionForProjectionInGeometry(points []GeoPoint, geometry GeoJSONGeometry, projection routeProjection) (float64, bool) {
+	if geometry.isZero() || len(points) == 0 {
+		return 0, false
+	}
+	targetPos := projection.position
+	if targetPos < 0 || targetPos > float64(len(points)-1) {
+		return 0, false
+	}
+	targetPoint := routePointAtPosition(points, targetPos)
+	if !pointInGeoJSONPolygon(targetPoint, geometry) {
+		return 0, false
+	}
+
+	positions := []float64{0, targetPos}
+	for i := range points {
+		pos := float64(i)
+		if pos > 0 && pos < targetPos {
+			positions = append(positions, pos)
+		}
+	}
+	for _, candidate := range routeSegmentGeometryIntersectionCandidates(points, targetPoint, geometry, 0, targetPos) {
+		if candidate.position >= 0 && candidate.position <= targetPos {
+			positions = append(positions, candidate.position)
+		}
+	}
+	sort.Float64s(positions)
+
+	unique := positions[:0]
+	for _, pos := range positions {
+		if len(unique) == 0 || math.Abs(pos-unique[len(unique)-1]) > 1e-9 {
+			unique = append(unique, pos)
+		}
+	}
+	if len(unique) == 0 {
+		return 0, false
+	}
+
+	entryPos := targetPos
+	cursor := targetPos
+	for i := len(unique) - 1; i >= 0; i-- {
+		pos := unique[i]
+		if pos >= cursor-1e-9 {
+			continue
+		}
+		mid := (pos + cursor) / 2
+		if !pointInGeoJSONPolygon(routePointAtPosition(points, mid), geometry) {
+			return entryPos, true
+		}
+		entryPos = pos
+		cursor = pos
+	}
+	return entryPos, true
 }
 
 func firstRouteEntryPositionInGeometry(points []GeoPoint, geometry GeoJSONGeometry, minPos float64) (float64, bool) {
