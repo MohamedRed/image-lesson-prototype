@@ -26,7 +26,7 @@ resource "google_monitoring_alert_policy" "bigquery_aggregation_failure" {
   }
 
   notification_channels = [
-    google_monitoring_notification_channel.slack_alerts.name
+    google_monitoring_notification_channel.slack.id
   ]
 
   documentation {
@@ -106,7 +106,7 @@ resource "google_monitoring_alert_policy" "bigquery_aggregation_success_rate" {
   }
 
   notification_channels = [
-    google_monitoring_notification_channel.slack_alerts.name
+    google_monitoring_notification_channel.slack.id
   ]
 
   documentation {

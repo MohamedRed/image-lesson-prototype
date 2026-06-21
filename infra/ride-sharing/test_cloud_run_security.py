@@ -14,9 +14,31 @@ CLOUD_RUN_MODULE = ROOT / "modules" / "cloud_run" / "main.tf"
 ROOT_MAIN = ROOT / "main.tf"
 ROOT_BACKEND = ROOT / "backend.tf"
 BIGQUERY_MODULE = ROOT / "modules" / "bigquery" / "main.tf"
+MONITORING_BIGQUERY_ALERTS = ROOT / "modules" / "monitoring" / "bigquery_alerts.tf"
+MONITORING_MAIN = ROOT / "modules" / "monitoring" / "main.tf"
 
 
 class CloudRunSecurityTests(unittest.TestCase):
+    def test_bigquery_monitoring_alerts_use_declared_notification_channel(self) -> None:
+        alerts_text = MONITORING_BIGQUERY_ALERTS.read_text()
+        monitoring_text = MONITORING_MAIN.read_text()
+
+        self.assertIn(
+            'resource "google_monitoring_notification_channel" "slack"',
+            monitoring_text,
+            "monitoring module should declare the Slack notification channel used by alerts",
+        )
+        self.assertNotIn(
+            "google_monitoring_notification_channel.slack_alerts",
+            alerts_text,
+            "BigQuery alert policies must not reference an undeclared slack_alerts channel",
+        )
+        self.assertIn(
+            "google_monitoring_notification_channel.slack.id",
+            alerts_text,
+            "BigQuery alert policies should use the declared Slack notification channel id",
+        )
+
     def test_bigquery_procedure_path_resolves_inside_ride_sharing_config(self) -> None:
         module_text = BIGQUERY_MODULE.read_text()
 
