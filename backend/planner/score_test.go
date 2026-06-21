@@ -554,6 +554,23 @@ func TestComputeDriverScore_AllowsRoutePassingNearWalkZonesWithinWalkRadius(t *t
 	}
 }
 
+func TestDriverRouteIntersectsOrPassesNearGeometry_NormalizesRoutePolyline(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "100")
+	req := corridorRequest()
+	req.WalkRadiusM = 100
+	geometry := rectPolygon(-0.0002, -0.0002, 0.0002, 0.0002)
+	driver := corridorDriver("near-helper-whitespace-route", 0.0006, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = " \n" + encodePolyline([]GeoPoint{
+		{Latitude: 0.0006, Longitude: -0.10},
+		{Latitude: 0.0006, Longitude: 0},
+		{Latitude: 0.0006, Longitude: 1},
+	}) + "\t "
+
+	if !driverRouteIntersectsOrPassesNearGeometry(req, driver, geometry, req.Origin) {
+		t.Fatalf("expected near-corridor helper to normalize whitespace-padded routePolyline before near-walk fallback")
+	}
+}
+
 func TestComputeDriverScore_UsesLaterNearOriginProjectionWhenEarlierSegmentIsOutsideWalkRadius(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")

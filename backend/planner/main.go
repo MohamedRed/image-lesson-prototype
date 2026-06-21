@@ -164,12 +164,8 @@ func singleHopRouteRideETASeconds(req RideRequest, driver DriverProfile) (int, b
 }
 
 func selectedSingleHopPickupDropoff(req RideRequest, driver DriverProfile) (GeoPoint, GeoPoint) {
-	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
-	if driver.RoutePolyline == "" {
-		return req.Origin, req.Destination
-	}
-	points, ok := decodePolyline(driver.RoutePolyline)
-	if !ok || len(points) < 2 {
+	points, ok := decodeNormalizedRoutePolyline(driver.RoutePolyline)
+	if !ok {
 		return req.Origin, req.Destination
 	}
 
@@ -1851,11 +1847,8 @@ func driverRouteIntersectsOrPassesNearGeometry(req RideRequest, driver DriverPro
 	if driverRouteIntersectsGeometry(driver, geometry) {
 		return true
 	}
-	if driver.RoutePolyline == "" {
-		return false
-	}
-	points, ok := decodePolyline(driver.RoutePolyline)
-	if !ok || len(points) < 2 {
+	points, ok := decodeNormalizedRoutePolyline(driver.RoutePolyline)
+	if !ok {
 		return false
 	}
 	projection, ok := nearestRouteProjectionInRange(points, target, 0, float64(len(points)-1))
