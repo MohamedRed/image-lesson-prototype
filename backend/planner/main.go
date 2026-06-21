@@ -965,7 +965,7 @@ func driverVerificationStatusAllowsRides(status string) bool {
 	switch normalizedStatusToken(status) {
 	case "", "approved", "clear", "verified":
 		return true
-	case "expired", "failed", "pending", "pending_review", "rejected", "revoked", "suspended", "unverified":
+	case "blocked", "expired", "failed", "pending", "pending_review", "rejected", "revoked", "suspended", "unverified":
 		return false
 	default:
 		// Unknown future statuses are treated as non-authoritative for backwards
