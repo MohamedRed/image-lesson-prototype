@@ -924,6 +924,9 @@ func effectiveCapacitySeats(driver DriverProfile) int {
 }
 
 func driverIsOperationallyEligible(driver DriverProfile) bool {
+	if validateGeoPoint("driver.currentLocation", driver.CurrentLocation) != nil {
+		return false
+	}
 	if driver.IsBlocked || driver.IsStuck || driver.IsSuspiciousLocation {
 		return false
 	}

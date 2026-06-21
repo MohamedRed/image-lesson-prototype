@@ -550,6 +550,18 @@ func TestComputeDriverScore_RejectsOutOfRangeCoordinates(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsOutOfRangeDriverCurrentLocation(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_PICKUP_ETA_SECONDS", "999999999")
+	req := corridorRequest()
+	driver := corridorDriver("invalid-driver-location", 0, 0, routeCorridor())
+	driver.CurrentLocation = GeoPoint{Latitude: 0, Longitude: 181}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected scorer to reject out-of-range driver currentLocation before pickup ETA math")
+	}
+}
+
 func TestComputeDriverScore_RejectsNegativeLuggageRequest(t *testing.T) {
 	req := RideRequest{
 		Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1,
