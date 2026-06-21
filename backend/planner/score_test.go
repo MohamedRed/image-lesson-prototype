@@ -179,6 +179,15 @@ func TestComputeDriverScore_TrimsRiderGenderBeforePoolCompatibility(t *testing.T
 	}
 }
 
+func TestRiderGenderFilterTrimsWhitespaceForFirestoreQuery(t *testing.T) {
+	if got := riderGenderFilter(" female "); got != "female" {
+		t.Fatalf("expected rider gender Firestore filter to be trimmed, got %q", got)
+	}
+	if got := riderGenderFilter("   "); got != "" {
+		t.Fatalf("expected blank rider gender filter to be omitted, got %q", got)
+	}
+}
+
 func TestComputeDriverScore_RejectsExclusiveRequestWithExistingReservedSeats(t *testing.T) {
 	req := corridorRequest()
 	req.RiderGender = "female"

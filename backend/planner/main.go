@@ -704,7 +704,7 @@ func driverVerificationStatusAllowsRides(status string) bool {
 }
 
 func genderPoolCompatible(riderGender string, currentPassengerGenders []string) bool {
-	riderGender = strings.TrimSpace(riderGender)
+	riderGender = riderGenderFilter(riderGender)
 	if riderGender == "" || len(currentPassengerGenders) == 0 {
 		return true
 	}
@@ -715,6 +715,10 @@ func genderPoolCompatible(riderGender string, currentPassengerGenders []string) 
 		}
 	}
 	return true
+}
+
+func riderGenderFilter(riderGender string) string {
+	return strings.TrimSpace(riderGender)
 }
 
 func exclusiveRequested(premiumRequested map[string]any) bool {
@@ -2480,8 +2484,9 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 	defer client.Close()
 
 	q := client.Collection("drivers").Limit(50)
-	if req.RiderGender != "" {
-		q = q.Where("gender", "==", req.RiderGender)
+	riderGender := riderGenderFilter(req.RiderGender)
+	if riderGender != "" {
+		q = q.Where("gender", "==", riderGender)
 	}
 
 	docs, err := q.Documents(ctx).GetAll()
