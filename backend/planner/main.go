@@ -1730,6 +1730,9 @@ func zoneCapacityFromLookup(zoneData map[string]any, exists bool) (int, int) {
 		return defaultCapacity, defaultCapacity
 	}
 	activePickups := intValue(zoneData["activePickups"], 0)
+	if activePickups < 0 {
+		activePickups = 0
+	}
 	capacityCars := intValue(zoneData["capacityCars"], defaultCapacity)
 	if capacityCars <= 0 {
 		capacityCars = defaultCapacity

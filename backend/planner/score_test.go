@@ -2735,6 +2735,13 @@ func TestZoneCapacityFromLookupDefaultsExistingZoneCapacity(t *testing.T) {
 	}
 }
 
+func TestZoneCapacityFromLookupClampsNegativeActivePickups(t *testing.T) {
+	active, capacity := zoneCapacityFromLookup(map[string]any{"activePickups": int64(-3), "capacityCars": int64(2)}, true)
+	if active != 0 || capacity != 2 {
+		t.Fatalf("expected negative zone activePickups to be normalized to zero, got active=%d capacity=%d", active, capacity)
+	}
+}
+
 func TestPickBestDriverFromProfiles_DefaultsMissingPickupZoneCapacityBeforeReservation(t *testing.T) {
 	req := corridorRequest()
 	fullDefaultZone := corridorDriverWithPickupZone("nearest-full-default-zone", 0.001, 0, routeCorridor(), "zone-full-default")
