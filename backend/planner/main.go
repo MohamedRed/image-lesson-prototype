@@ -1067,14 +1067,28 @@ func routePolylineTravelsOriginBeforeDestination(req RideRequest, encodedPolylin
 		return false
 	}
 	lastPos := float64(len(points) - 1)
-	originCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originWalkGeometry(), 0, lastPos)
+	originCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originOrderGeometry(), 0, lastPos)
 	for _, origin := range originCandidates {
-		destinationPos, destinationOk := routePositionForOrder(points, req.Destination, req.destinationWalkGeometry(), origin.position)
+		destinationPos, destinationOk := routePositionForOrder(points, req.Destination, req.destinationOrderGeometry(), origin.position)
 		if destinationOk && destinationPos > origin.position {
 			return true
 		}
 	}
 	return false
+}
+
+func (req RideRequest) originOrderGeometry() GeoJSONGeometry {
+	if originWalk := req.originWalkGeometry(); !originWalk.isZero() {
+		return originWalk
+	}
+	return req.originDriveGeometry()
+}
+
+func (req RideRequest) destinationOrderGeometry() GeoJSONGeometry {
+	if destinationWalk := req.destinationWalkGeometry(); !destinationWalk.isZero() {
+		return destinationWalk
+	}
+	return req.destinationDriveGeometry()
 }
 
 func routePositionForOrder(points []GeoPoint, target GeoPoint, geometry GeoJSONGeometry, minPos float64) (float64, bool) {
