@@ -480,6 +480,30 @@ func TestRouteOrderUsesOriginDriveGeoWhenWalkZoneIsBroad(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsSeparateOriginWalkAndDriveRoutePasses(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "200000")
+	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "200000")
+	req := corridorRequest()
+	req.Origin = GeoPoint{Latitude: 0.02, Longitude: 0.02}
+	req.OriWalkIso = rectPolygon(0, 0, 0.10, 0.10)
+	req.OriDriveIso = rectPolygon(0.05, 0.05, 0.15, 0.15)
+	req.Destination = GeoPoint{Latitude: 0, Longitude: 1}
+	req.DestWalkIso = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	driver := corridorDriver("separate-origin-walk-drive-passes", 0.12, 0.12, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0.12, Longitude: 0.12}, // inside origin drive geo only
+		{Latitude: 0.12, Longitude: -0.05},
+		{Latitude: 0.02, Longitude: 0.02}, // inside origin walk zone only
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected route that separately visits origin drive and walk zones without a common pickup point to be rejected")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteInsideDestinationDriveGeoHole(t *testing.T) {
 	req := corridorRequest()
 	req.Origin = GeoPoint{Latitude: 0, Longitude: 0.999}

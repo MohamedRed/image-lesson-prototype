@@ -807,13 +807,7 @@ func routeOriginProjectionCandidates(points []GeoPoint, req RideRequest, minPos,
 			filtered = append(filtered, candidate)
 		}
 	}
-	if len(filtered) > 0 {
-		return filtered
-	}
-	if pos, ok := firstRoutePositionInGeometry(points, req.Origin, originDrive, minPos); ok && pos <= maxPos {
-		return []routeProjection{routeProjectionAtPosition(points, pos, req.Origin)}
-	}
-	return nil
+	return filtered
 }
 
 func routeDestinationProjectionAfter(points []GeoPoint, req RideRequest, minPos, maxPos float64) (routeProjection, bool) {
