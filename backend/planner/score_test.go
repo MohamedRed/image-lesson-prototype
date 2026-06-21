@@ -212,9 +212,21 @@ func TestComputeDriverScore_TrimsRiderGenderBeforePoolCompatibility(t *testing.T
 	}
 }
 
+func TestComputeDriverScore_NormalizesGenderCaseBeforePoolCompatibility(t *testing.T) {
+	req := corridorRequest()
+	req.RiderGender = " Female "
+	driver := corridorDriver("female-passenger-pool-case", 0, 0, routeCorridor())
+	driver.CurrentPassengerGenders = []string{"female"}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected riderGender case to be normalized before gender-pool compatibility")
+	}
+}
+
 func TestRiderGenderFilterTrimsWhitespaceForFirestoreQuery(t *testing.T) {
-	if got := riderGenderFilter(" female "); got != "female" {
-		t.Fatalf("expected rider gender Firestore filter to be trimmed, got %q", got)
+	if got := riderGenderFilter(" Female "); got != "female" {
+		t.Fatalf("expected rider gender Firestore filter to be trimmed and lowercased, got %q", got)
 	}
 	if got := riderGenderFilter("   "); got != "" {
 		t.Fatalf("expected blank rider gender filter to be omitted, got %q", got)

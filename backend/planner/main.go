@@ -839,7 +839,7 @@ func genderPoolCompatible(riderGender string, currentPassengerGenders []string) 
 		return true
 	}
 	for _, gender := range currentPassengerGenders {
-		gender = strings.TrimSpace(gender)
+		gender = riderGenderFilter(gender)
 		if gender != "" && gender != riderGender {
 			return false
 		}
@@ -848,7 +848,7 @@ func genderPoolCompatible(riderGender string, currentPassengerGenders []string) 
 }
 
 func riderGenderFilter(riderGender string) string {
-	return strings.TrimSpace(riderGender)
+	return strings.ToLower(strings.TrimSpace(riderGender))
 }
 
 func exclusiveRequested(premiumRequested map[string]any) bool {
