@@ -260,6 +260,41 @@ function passengerGenderUpdate(currentPassengerGenders: unknown[], riderGender?:
   return [...currentPassengerGenderPool(currentPassengerGenders), normalizedRiderGender];
 }
 
+function premiumCapabilityRequired(value: any): boolean {
+  return typeof value !== "boolean" || value === true;
+}
+
+function exclusiveRequested(premiumRequested?: Record<string, any>): boolean {
+  return premiumRequested?.exclusive === true;
+}
+
+function driverHasExistingPassengers(driverData: any): boolean {
+  return calculateAvailableSeats(driverData) < (driverData.capacitySeats || 4) ||
+    currentPassengerGenderPool(driverData.currentPassengerGenders || []).length > 0;
+}
+
+function validatePremiumRequirements(driverData: any, premiumRequested?: Record<string, any>): { valid: boolean; error?: string } {
+  if (!premiumRequested) {
+    return { valid: true };
+  }
+
+  if (exclusiveRequested(premiumRequested) && driverHasExistingPassengers(driverData)) {
+    return { valid: false, error: "exclusive ride requires empty vehicle" };
+  }
+
+  const capabilities = driverData.premiumCapabilities || {};
+  for (const [key, value] of Object.entries(premiumRequested)) {
+    if (!premiumCapabilityRequired(value)) {
+      continue;
+    }
+    if (capabilities[key] !== value) {
+      return { valid: false, error: `Missing premium capability: ${key}` };
+    }
+  }
+
+  return { valid: true };
+}
+
 function validateDriverResources(
   driverData: any,
   requirements: ResourceRequirements
@@ -280,6 +315,11 @@ function validateDriverResources(
       valid: false,
       error: `Gender pool mismatch: driver has ${currentPassengerGenderPool(driverData.currentPassengerGenders || [])}, requested ${requirements.riderGender}`,
     };
+  }
+
+  const premiumValidation = validatePremiumRequirements(driverData, requirements.premiumRequested);
+  if (!premiumValidation.valid) {
+    return premiumValidation;
   }
 
   // Check luggage capacity

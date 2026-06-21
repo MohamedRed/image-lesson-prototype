@@ -57,6 +57,31 @@ describe("reserveResourcesTransaction", () => {
     expect(updates.map((update) => update.path)).toEqual(["drivers/driver-older-child", "pickupZones/zone-1"]);
   });
 
+  it("rejects exclusive ride when driver has existing reserved passengers", async () => {
+    const db = fakeReservationDb({
+      "drivers/exclusive-occupied": {
+        capacitySeats: 4,
+        activePickups: 0,
+        legs: [{ seats: 1 }],
+        premiumCapabilities: { exclusive: true },
+      },
+      "pickupZones/zone-1": {
+        capacityCars: 10,
+        activePickups: 0,
+      },
+    }, []);
+
+    const result = await reserveResourcesTransaction(
+      "exclusive-occupied",
+      "zone-1",
+      { passengerCount: 1, premiumRequested: { exclusive: true } },
+      db as never
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("exclusive ride requires empty vehicle");
+  });
+
   it("normalizes rider gender before reservation pool comparison and persistence", async () => {
     const updates: Array<{ path: string; data: Record<string, unknown> }> = [];
     const db = fakeReservationDb({
