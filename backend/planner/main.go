@@ -1909,9 +1909,6 @@ func driverEntersDestinationDriveGeo(req RideRequest, driver DriverProfile) bool
 	if driver.RoutePolyline != "" {
 		return routePolylineEntersGeometryAfterOrigin(req, driver.RoutePolyline, destinationDrive)
 	}
-	if pointInGeoJSONPolygon(driver.CurrentLocation, destinationDrive) {
-		return true
-	}
 	if buffer := driverCorridorBuffer(driver); !buffer.isZero() {
 		return geoJSONPolygonsIntersect(buffer, destinationDrive)
 	}

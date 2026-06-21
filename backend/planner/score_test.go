@@ -1796,6 +1796,23 @@ func TestComputeDriverScore_EnforcesOriginDriveGeoWithoutWalkZones(t *testing.T)
 	}
 }
 
+func TestComputeDriverScore_RejectsBufferMissingDestinationDriveGeoWhenWalkZoneMissing(t *testing.T) {
+	allowLongPickupETA(t)
+	req := RideRequest{
+		Origin:              GeoPoint{Latitude: 0, Longitude: 0},
+		Destination:         GeoPoint{Latitude: 0, Longitude: 1},
+		PassengerCount:      1,
+		OriDriveIso:         rectPolygon(-0.05, -0.05, 0.05, 0.05),
+		DestinationDriveGeo: rectPolygon(-0.01, 0.99, 0.01, 1.01),
+	}
+	driver := corridorDriver("buffer-misses-destination-drive", 0, 1, rectPolygon(-0.01, -0.01, 0.01, 0.01))
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected buffer-only driver to be rejected when its corridor misses destinationDriveGeo, even if current location is inside the destination drive geofence")
+	}
+}
+
 func TestComputeDriverScore_RejectsDriverInsideOriginDriveGeoHole(t *testing.T) {
 	req := RideRequest{
 		Origin:         GeoPoint{Latitude: 0, Longitude: 0},
