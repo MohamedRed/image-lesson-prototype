@@ -2788,6 +2788,9 @@ func validatePlannerRequest(req RideRequest) error {
 	if req.PassengerCount <= 0 {
 		return fmt.Errorf("passengerCount must be positive")
 	}
+	if req.WalkRadiusM < 0 {
+		return fmt.Errorf("walkRadiusM must be non-negative")
+	}
 	if err := validateGeoPoint("origin", req.Origin); err != nil {
 		return err
 	}
