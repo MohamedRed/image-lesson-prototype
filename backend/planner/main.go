@@ -1153,10 +1153,15 @@ func pickupZoneHasCapacity(driver DriverProfile) bool {
 	if driver.PickupZoneID == "" {
 		return false
 	}
-	if driver.PickupZoneCapacityCars <= 0 {
-		return true
+	capacityCars := driver.PickupZoneCapacityCars
+	if capacityCars <= 0 {
+		capacityCars = defaultPickupZoneCapacityCars()
 	}
-	return driver.PickupZoneActivePickups < driver.PickupZoneCapacityCars
+	return driver.PickupZoneActivePickups < capacityCars
+}
+
+func defaultPickupZoneCapacityCars() int {
+	return 10
 }
 
 func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) bool {
@@ -2353,7 +2358,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			if err == nil && zSnap.Exists() {
 				zoneData := zSnap.Data()
 				pickupZoneActivePickups = intValue(zoneData["activePickups"], 0)
-				pickupZoneCapacityCars = intValue(zoneData["capacityCars"], 10)
+				pickupZoneCapacityCars = intValue(zoneData["capacityCars"], defaultPickupZoneCapacityCars())
 				if v, ok := zoneData["curbLoadFactor"].(float64); ok && v > 0 {
 					curbFactor = v
 				}

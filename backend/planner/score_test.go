@@ -1006,6 +1006,24 @@ func TestPickBestDriverFromProfiles_RequiresPickupZoneIDForReservation(t *testin
 	}
 }
 
+func TestPickBestDriverFromProfiles_DefaultsMissingPickupZoneCapacityBeforeReservation(t *testing.T) {
+	req := corridorRequest()
+	fullDefaultZone := corridorDriverWithPickupZone("nearest-full-default-zone", 0.001, 0, routeCorridor(), "zone-full-default")
+	fullDefaultZone.PickupZoneActivePickups = 10
+	fullDefaultZone.PickupZoneCapacityCars = 0
+	availableZone := corridorDriverWithPickupZone("farther-available-zone", 0.02, 0, routeCorridor(), "zone-available")
+	availableZone.PickupZoneActivePickups = 9
+	availableZone.PickupZoneCapacityCars = 0
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{fullDefaultZone, availableZone}, nil, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected planner to choose a corridor driver with default pickup-zone capacity available, got error: %v", err)
+	}
+	if driverID != "farther-available-zone" {
+		t.Fatalf("expected missing pickup-zone capacity to default to reservation limit and reject full zone, got %q", driverID)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RejectsFullPickupZoneBeforeReservation(t *testing.T) {
 	req := corridorRequest()
 	fullZone := corridorDriverWithPickupZone("nearest-full-zone", 0.001, 0, routeCorridor(), "zone-full")
