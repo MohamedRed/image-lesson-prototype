@@ -1859,6 +1859,28 @@ func TestPickBestDriverFromProfiles_RanksCorridorMatchAboveNearestWrongDirection
 	}
 }
 
+func TestPickBestDriverFromProfiles_RanksRoutePolylineCorridorAboveNearestWrongDirection(t *testing.T) {
+	req := corridorRequest()
+	wrongDirection := corridorDriverWithPickupZone("nearest-route-wrong-direction", 0, 0.001, routeCorridor(), "zone-route-wrong")
+	wrongDirection.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 1},
+		{Latitude: 0, Longitude: 0},
+	})
+	valid := corridorDriverWithPickupZone("farther-route-valid-corridor", 0.10, 0, routeCorridor(), "zone-route-valid")
+	valid.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{wrongDirection, valid}, nil, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected valid routePolyline corridor driver, got error: %v", err)
+	}
+	if driverID != "farther-route-valid-corridor" {
+		t.Fatalf("expected farther valid routePolyline corridor driver, got %q", driverID)
+	}
+}
+
 func TestRouteInsertionDetourExcludesRiderWalkSnapDistance(t *testing.T) {
 	req := corridorRequest()
 	req.WalkRadiusM = 1000
