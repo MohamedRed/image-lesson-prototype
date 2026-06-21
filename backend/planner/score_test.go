@@ -1128,6 +1128,30 @@ func TestBuildSingleHopJourneyUsesRouteEtaProfileForTotalLegEta(t *testing.T) {
 	}
 }
 
+func TestDriverPickupEtaUsesOriginDriveGeoWhenWalkZoneMissing(t *testing.T) {
+	req := corridorRequest()
+	req.OriWalkIso = GeoJSONGeometry{}
+	req.OriginWalkIso = GeoJSONGeometry{}
+	req.OriDriveIso = rectPolygon(-0.01, 0.19, 0.01, 0.21)
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	req.DestWalkIso = GeoJSONGeometry{}
+	req.DestinationWalkIso = GeoJSONGeometry{}
+	req.DestinationDriveGeo = rectPolygon(-0.01, 0.79, 0.01, 0.81)
+	driver := corridorDriver("driver-drive-geo-pickup-eta", 0, 0, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 0.2},
+		{Latitude: 0, Longitude: 0.8},
+		{Latitude: 0, Longitude: 1},
+	})
+	driver.RouteETAProfileSeconds = []int{0, 200, 800, 1000}
+
+	got := driverPickupETASeconds(req, driver, 0)
+	if got != 200 {
+		t.Fatalf("expected pickup ETA to use origin drive geofence fallback when walk zone is missing, got %d", got)
+	}
+}
+
 func TestBuildSingleHopJourneyIncludesPickupZoneID(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("driver-with-zone", 0.01, 0, routeCorridor())
@@ -1171,6 +1195,32 @@ func TestBuildSingleHopJourneyUsesBackendSelectedRoutePickupAndDropoff(t *testin
 	if math.Abs(leg.Pickup.Longitude-0.02) > 0.000001 || math.Abs(leg.Dropoff.Longitude-0.98) > 0.000001 {
 		t.Fatalf("expected pickup/dropoff snapped to route points, got pickup=%#v dropoff=%#v", leg.Pickup, leg.Dropoff)
 	}
+}
+
+func TestBuildSingleHopJourneyUsesDriveGeosForSelectedPointsWhenWalkZonesMissing(t *testing.T) {
+	req := corridorRequest()
+	req.OriWalkIso = GeoJSONGeometry{}
+	req.OriginWalkIso = GeoJSONGeometry{}
+	req.OriDriveIso = rectPolygon(-0.01, 0.19, 0.01, 0.21)
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	req.DestWalkIso = GeoJSONGeometry{}
+	req.DestinationWalkIso = GeoJSONGeometry{}
+	req.DestinationDriveGeo = rectPolygon(-0.01, 0.79, 0.01, 0.81)
+	driver := corridorDriver("driver-drive-geo-points", 0, 0, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 0.2},
+		{Latitude: 0, Longitude: 0.8},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	journey := buildSingleHopJourney(req, driver, 90)
+	if len(journey.Legs) != 1 {
+		t.Fatalf("expected one leg, got %d", len(journey.Legs))
+	}
+	leg := journey.Legs[0]
+	assertGeoPointNear(t, leg.Pickup, GeoPoint{Latitude: 0, Longitude: 0.2})
+	assertGeoPointNear(t, leg.Dropoff, GeoPoint{Latitude: 0, Longitude: 0.8})
 }
 
 func TestBuildSingleHopJourneyPrefersRoutePointsInsideWalkZones(t *testing.T) {

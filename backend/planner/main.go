@@ -154,9 +154,9 @@ func selectedSingleHopPickupDropoff(req RideRequest, driver DriverProfile) (GeoP
 }
 
 func selectedOrderedPickupDropoff(points []GeoPoint, req RideRequest, minPos, maxPos float64) (GeoPoint, float64, GeoPoint, float64, bool) {
-	pickupCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originWalkGeometry(), minPos, maxPos)
+	pickupCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originOrderGeometry(), minPos, maxPos)
 	for _, pickup := range pickupCandidates {
-		dropoffProjection, ok := routeProjectionInGeometryOrRangeAfter(points, req.Destination, req.destinationWalkGeometry(), pickup.position, maxPos)
+		dropoffProjection, ok := routeProjectionInGeometryOrRangeAfter(points, req.Destination, req.destinationOrderGeometry(), pickup.position, maxPos)
 		if ok && dropoffProjection.position > pickup.position {
 			return pickup.point, pickup.position, dropoffProjection.point, dropoffProjection.position, true
 		}
@@ -753,9 +753,9 @@ func riderWalkScore(req RideRequest, driver DriverProfile) float64 {
 
 func routeInsertionProjections(req RideRequest, points []GeoPoint) (routeProjection, routeProjection, bool) {
 	lastPos := float64(len(points) - 1)
-	originCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originWalkGeometry(), 0, lastPos)
+	originCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originOrderGeometry(), 0, lastPos)
 	for _, originProjection := range originCandidates {
-		destinationProjection, ok := routeProjectionInGeometryOrRangeAfter(points, req.Destination, req.destinationWalkGeometry(), originProjection.position, lastPos)
+		destinationProjection, ok := routeProjectionInGeometryOrRangeAfter(points, req.Destination, req.destinationOrderGeometry(), originProjection.position, lastPos)
 		if ok && destinationProjection.position > originProjection.position {
 			return originProjection, destinationProjection, true
 		}
