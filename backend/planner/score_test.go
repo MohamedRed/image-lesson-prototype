@@ -824,6 +824,18 @@ func TestComputeDriverScore_RejectsRouteThatHitsDestinationBeforeOrigin(t *testi
 	}
 }
 
+func TestRoutePolylineTravelsOriginBeforeDestination_TrimsRoutePolyline(t *testing.T) {
+	req := corridorRequest()
+	encoded := encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	if !routePolylineTravelsOriginBeforeDestination(req, "  \n"+encoded+"	  ") {
+		t.Fatalf("expected route-order helper to trim a valid routePolyline before decoding")
+	}
+}
+
 func TestComputeDriverScore_RejectsReverseRouteWhenOnlyDriveGeoAvailable(t *testing.T) {
 	allowLongPickupETA(t)
 	req := RideRequest{

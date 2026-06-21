@@ -1761,6 +1761,10 @@ func routePolylineEntersGeometryAfterOrigin(req RideRequest, encodedPolyline str
 }
 
 func routePolylineTravelsOriginBeforeDestination(req RideRequest, encodedPolyline string) bool {
+	encodedPolyline = normalizeRoutePolyline(encodedPolyline)
+	if encodedPolyline == "" {
+		return false
+	}
 	points, ok := decodePolyline(encodedPolyline)
 	if !ok || len(points) < 2 {
 		return false
