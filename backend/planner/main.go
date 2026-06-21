@@ -2791,6 +2791,12 @@ func validatePlannerRequest(req RideRequest) error {
 	if req.WalkRadiusM < 0 {
 		return fmt.Errorf("walkRadiusM must be non-negative")
 	}
+	if err := validateNonNegativeCounts("luggageManifest", req.LuggageManifest); err != nil {
+		return err
+	}
+	if err := validateNonNegativeCounts("pet", req.Pet); err != nil {
+		return err
+	}
 	if err := validateGeoPoint("origin", req.Origin); err != nil {
 		return err
 	}
@@ -2812,6 +2818,15 @@ func validateGeoPoint(field string, point GeoPoint) error {
 	}
 	if math.IsNaN(point.Longitude) || math.IsInf(point.Longitude, 0) || point.Longitude < -180 || point.Longitude > 180 {
 		return fmt.Errorf("%s longitude must be between -180 and 180", field)
+	}
+	return nil
+}
+
+func validateNonNegativeCounts(field string, counts map[string]int) error {
+	for key, count := range counts {
+		if count < 0 {
+			return fmt.Errorf("%s.%s must be non-negative", field, key)
+		}
 	}
 	return nil
 }
