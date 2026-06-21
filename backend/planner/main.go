@@ -1675,6 +1675,58 @@ func geoJSONPolygonsHaveCommonPoint(polygons ...GeoJSONGeometry) bool {
 	return false
 }
 
+func geoJSONPolygonsHaveCommonPointWithinDistance(target GeoPoint, maxKm float64, polygons ...GeoJSONGeometry) bool {
+	if len(polygons) == 0 || maxKm < 0 {
+		return false
+	}
+	pointInAll := func(point GeoPoint) bool {
+		for _, polygon := range polygons {
+			if !pointInGeoJSONPolygon(point, polygon) {
+				return false
+			}
+		}
+		return true
+	}
+	withinRange := func(point GeoPoint) bool {
+		return haversineKm(point.Latitude, point.Longitude, target.Latitude, target.Longitude) <= maxKm
+	}
+	if pointInAll(target) {
+		return true
+	}
+	ringsByPolygon := make([][][]GeoPoint, 0, len(polygons))
+	for _, polygon := range polygons {
+		rings, ok := polygonOuterRings(polygon)
+		if !ok {
+			return false
+		}
+		ringsByPolygon = append(ringsByPolygon, rings)
+		for _, ring := range rings {
+			for _, point := range ring {
+				if pointInAll(point) && withinRange(point) {
+					return true
+				}
+			}
+		}
+	}
+	for i := 0; i < len(ringsByPolygon); i++ {
+		for j := i + 1; j < len(ringsByPolygon); j++ {
+			for _, aRing := range ringsByPolygon[i] {
+				for a := 0; a < len(aRing)-1; a++ {
+					for _, bRing := range ringsByPolygon[j] {
+						for b := 0; b < len(bRing)-1; b++ {
+							point, ok := segmentIntersectionRepresentative(aRing[a], aRing[a+1], bRing[b], bRing[b+1])
+							if ok && pointInAll(point) && withinRange(point) {
+								return true
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return false
+}
+
 func segmentIntersectionRepresentative(a1, a2, b1, b2 GeoPoint) (GeoPoint, bool) {
 	if !segmentsIntersect(a1, a2, b1, b2) {
 		return GeoPoint{}, false
@@ -1866,6 +1918,13 @@ func driverRouteIntersectsGeometry(driver DriverProfile, geometry GeoJSONGeometr
 func driverRouteIntersectsOrPassesNearGeometry(req RideRequest, driver DriverProfile, geometry GeoJSONGeometry, target GeoPoint) bool {
 	points, ok := decodeNormalizedRoutePolyline(driver.RoutePolyline)
 	if !ok {
+		if explicitSingleHopWalkCapConfigured(req) {
+			buffer := driverCorridorBuffer(driver)
+			if buffer.isZero() {
+				return false
+			}
+			return geoJSONPolygonsHaveCommonPointWithinDistance(target, effectiveSingleHopWalkMeters(req)/1000.0, buffer, geometry)
+		}
 		return driverRouteIntersectsGeometry(driver, geometry)
 	}
 	candidates := routeWalkProjectionCandidates(points, req, target, geometry, 0, float64(len(points)-1))
@@ -1875,6 +1934,10 @@ func driverRouteIntersectsOrPassesNearGeometry(req RideRequest, driver DriverPro
 		}
 	}
 	return false
+}
+
+func explicitSingleHopWalkCapConfigured(req RideRequest) bool {
+	return req.WalkRadiusM > 0 || os.Getenv("MAX_SINGLE_HOP_WALK_METERS") != ""
 }
 
 func driverCorridorBuffer(driver DriverProfile) GeoJSONGeometry {
