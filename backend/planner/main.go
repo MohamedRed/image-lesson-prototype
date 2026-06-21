@@ -1049,14 +1049,29 @@ func driverEntersDestinationDriveGeo(req RideRequest, driver DriverProfile) bool
 	if destinationDrive.isZero() {
 		return true
 	}
+	if driver.RoutePolyline != "" {
+		return routePolylineEntersGeometryAfterOrigin(req, driver.RoutePolyline, destinationDrive)
+	}
 	if pointInGeoJSONPolygon(driver.CurrentLocation, destinationDrive) {
 		return true
 	}
-	if driver.RoutePolyline != "" {
-		return polylineIntersectsPolygon(driver.RoutePolyline, destinationDrive)
-	}
 	if buffer := driverCorridorBuffer(driver); !buffer.isZero() {
 		return geoJSONPolygonsIntersect(buffer, destinationDrive)
+	}
+	return false
+}
+
+func routePolylineEntersGeometryAfterOrigin(req RideRequest, encodedPolyline string, geometry GeoJSONGeometry) bool {
+	points, ok := decodePolyline(encodedPolyline)
+	if !ok || len(points) < 2 || geometry.isZero() {
+		return false
+	}
+	lastPos := float64(len(points) - 1)
+	originCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Origin, req.originOrderGeometry(), 0, lastPos)
+	for _, origin := range originCandidates {
+		if destinationDrivePos, ok := firstRoutePositionInGeometry(points, req.Destination, geometry, origin.position+1e-9); ok && destinationDrivePos > origin.position {
+			return true
+		}
 	}
 	return false
 }

@@ -422,6 +422,26 @@ func TestComputeDriverScore_RejectsRouteThatNeverEntersOriginDriveGeo(t *testing
 	}
 }
 
+func TestComputeDriverScore_RejectsDestinationDriveGeoOnlyBeforePickup(t *testing.T) {
+	allowLongPickupETA(t)
+	req := corridorRequest()
+	req.Destination = GeoPoint{Latitude: 0.02, Longitude: 1}
+	req.DestWalkIso = rectPolygon(0.01, 0.99, 0.03, 1.01)
+	req.DestinationWalkIso = GeoJSONGeometry{}
+	req.DestinationDriveGeo = rectPolygon(-0.005, 0.895, 0.005, 0.905)
+	driver := corridorDriver("destination-drive-before-pickup", 0, 0.90, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0.90},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0.02, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected route that enters destinationDriveGeo only before pickup to be rejected")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteInsideDestinationDriveGeoHole(t *testing.T) {
 	req := corridorRequest()
 	req.Origin = GeoPoint{Latitude: 0, Longitude: 0.999}
