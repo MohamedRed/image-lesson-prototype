@@ -1048,6 +1048,17 @@ func TestComputeDriverScore_AcceptsCanonicalRouteBufferAlias(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_TreatsBlankRoutePolylineAsMissingAndUsesBuffer(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("blank-route-polyline-buffer-fallback", 0.05, 0, routeCorridor())
+	driver.RoutePolyline = "   \n	  "
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected blank routePolyline to be treated as missing so buffer corridor can be used")
+	}
+}
+
 func TestPickBestDriverFromProfiles_RanksCorridorMatchAboveNearestWrongDirection(t *testing.T) {
 	req := corridorRequest()
 	drivers := []DriverProfile{

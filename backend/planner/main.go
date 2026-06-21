@@ -96,6 +96,7 @@ func buildJourneyLeg(driver DriverProfile, pickup, dropoff GeoPoint, etaSec int)
 }
 
 func buildSingleHopJourney(req RideRequest, driver DriverProfile, etaSec int) Journey {
+	driver.RoutePolyline = strings.TrimSpace(driver.RoutePolyline)
 	pickup, dropoff := selectedSingleHopPickupDropoff(req, driver)
 	legEtaSec := singleHopTotalETASeconds(req, driver, etaSec)
 	return Journey{
@@ -519,6 +520,7 @@ type TransferPoint struct {
 // computeDriverScore applies hard filters and returns (score, etaSec, ok).
 // If ok=false the driver does not satisfy constraints.
 func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float64, wDetour, wEta, wCurb float64) (float64, int, bool) {
+	driver.RoutePolyline = strings.TrimSpace(driver.RoutePolyline)
 	passCnt := req.PassengerCount
 	if passCnt <= 0 {
 		passCnt = 1
@@ -1322,6 +1324,7 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 
 	ranked := make([]scoredDriver, 0, len(drivers))
 	for _, driver := range drivers {
+		driver.RoutePolyline = strings.TrimSpace(driver.RoutePolyline)
 		if contains(exclude, driver.ID) {
 			continue
 		}
@@ -1784,6 +1787,7 @@ func pointInGeoJSONPolygon(point GeoPoint, polygon GeoJSONGeometry) bool {
 }
 
 func decodePolyline(encoded string) ([]GeoPoint, bool) {
+	encoded = strings.TrimSpace(encoded)
 	points := []GeoPoint{}
 	index := 0
 	lat := 0
@@ -2612,7 +2616,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			PickupZoneID:             data.PickupZoneID,
 			PickupZoneActivePickups:  pickupZoneActivePickups,
 			PickupZoneCapacityCars:   pickupZoneCapacityCars,
-			RoutePolyline:            data.RoutePolyline,
+			RoutePolyline:            strings.TrimSpace(data.RoutePolyline),
 			RouteETAProfileSeconds:   data.RouteETAProfileSeconds,
 			BufferPolygon:            data.BufferPolygon,
 			RouteBuffer:              data.RouteBuffer,
