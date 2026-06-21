@@ -1657,6 +1657,24 @@ func defaultScoreWeights() scoreWeights {
 	return scoreWeights{Detour: 0.7, ETA: 0.3, Walk: 0.1, Curb: 1.0}
 }
 
+func scoreWeightsFromEnv() scoreWeights {
+	weights := defaultScoreWeights()
+	weights.Detour = finiteEnvFloat("WEIGHT_DETOUR", weights.Detour)
+	weights.ETA = finiteEnvFloat("WEIGHT_ETA", weights.ETA)
+	weights.Walk = finiteEnvFloat("WEIGHT_WALK", weights.Walk)
+	weights.Curb = finiteEnvFloat("WEIGHT_CURB", weights.Curb)
+	return sanitizeScoreWeights(weights)
+}
+
+func finiteEnvFloat(name string, fallback float64) float64 {
+	if value := os.Getenv(name); value != "" {
+		if parsed, err := strconv.ParseFloat(value, 64); err == nil && !nonFiniteFloat(parsed) {
+			return parsed
+		}
+	}
+	return fallback
+}
+
 func nonFiniteFloat(value float64) bool {
 	return math.IsNaN(value) || math.IsInf(value, 0)
 }
@@ -3181,31 +3199,8 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 
 	// (removed precomputed rideDistKm; now computed inside score helper)
 
-	// Weights via env or default
-	wDetour := 0.7
-	wEta := 0.3
-	wWalk := 0.1
-	wCurb := 1.0 // multiplicative weight, 1 means neutral
-	if v := os.Getenv("WEIGHT_DETOUR"); v != "" {
-		if f, err := strconv.ParseFloat(v, 64); err == nil {
-			wDetour = f
-		}
-	}
-	if v := os.Getenv("WEIGHT_ETA"); v != "" {
-		if f, err := strconv.ParseFloat(v, 64); err == nil {
-			wEta = f
-		}
-	}
-	if v := os.Getenv("WEIGHT_WALK"); v != "" {
-		if f, err := strconv.ParseFloat(v, 64); err == nil {
-			wWalk = f
-		}
-	}
-	if v := os.Getenv("WEIGHT_CURB"); v != "" {
-		if f, err := strconv.ParseFloat(v, 64); err == nil {
-			wCurb = f
-		}
-	}
+	// Weights via env or default.
+	weights := scoreWeightsFromEnv()
 
 	profiles := make([]DriverProfile, 0, len(docs))
 
@@ -3338,7 +3333,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		profiles = append(profiles, prof)
 	}
 
-	return pickBestDriverProfileFromProfiles(req, profiles, nil, scoreWeights{Detour: wDetour, ETA: wEta, Walk: wWalk, Curb: wCurb})
+	return pickBestDriverProfileFromProfiles(req, profiles, nil, weights)
 }
 
 // haversineKm returns great-circle distance between two lat/lon in km.

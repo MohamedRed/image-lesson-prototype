@@ -2541,6 +2541,19 @@ func TestPickBestDriverFromProfiles_RanksLowerRouteDetourAboveLoopingCorridor(t 
 	}
 }
 
+func TestScoreWeightsFromEnvDefaultsNonFiniteValues(t *testing.T) {
+	t.Setenv("WEIGHT_DETOUR", "+Inf")
+	t.Setenv("WEIGHT_ETA", "NaN")
+	t.Setenv("WEIGHT_WALK", "-Inf")
+	t.Setenv("WEIGHT_CURB", "+Inf")
+
+	weights := scoreWeightsFromEnv()
+	defaults := defaultScoreWeights()
+	if weights != defaults {
+		t.Fatalf("expected non-finite env score weights to fall back to defaults, got %+v want %+v", weights, defaults)
+	}
+}
+
 func TestPickBestDriverFromProfiles_DefaultsNonFiniteScoreWeights(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "200000")
 	req := corridorRequest()
