@@ -31,6 +31,11 @@ class CloudRunSecurityTests(unittest.TestCase):
         )
         self.assertRegex(
             workflow_text,
+            r"TF_VERSION: '1\.13\.",
+            "Terraform CI should use Terraform 1.13.x so provider signature verification works with current HashiCorp provider keys",
+        )
+        self.assertRegex(
+            workflow_text,
             r'(?s)- name: Run ride-sharing Terraform source contracts\s+run: \|\s+cd \$\{\{ env\.TF_WORKING_DIR \}\}\s+python3 test_cloud_run_security\.py',
             "Terraform CI should run the ride-sharing source-level security/validation contracts before validate",
         )
