@@ -316,6 +316,16 @@ func TestComputeDriverScore_RejectsExplicitUnavailableDriver(t *testing.T) {
 	}
 }
 
+func TestBoolHelpersRecognizeStringBackedAvailabilityFlags(t *testing.T) {
+	raw := map[string]any{"isActive": " false "}
+	if !rawBoolExists(raw, "isActive") {
+		t.Fatalf("expected string-backed isActive flag to count as explicit availability state")
+	}
+	if boolValue(raw["isActive"], true) {
+		t.Fatalf("expected string-backed false availability flag to parse as false, not fallback true")
+	}
+}
+
 func TestComputeDriverScore_RejectsUnverifiedDriverLicense(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("unverified-license-driver", 0, 0, routeCorridor())

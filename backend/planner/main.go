@@ -3387,15 +3387,28 @@ func intValue(value any, fallback int) int {
 }
 
 func rawBoolExists(raw map[string]any, field string) bool {
-	_, ok := raw[field].(bool)
+	_, ok := boolFromValue(raw[field])
 	return ok
 }
 
 func boolValue(value any, fallback bool) bool {
-	if v, ok := value.(bool); ok {
+	if v, ok := boolFromValue(value); ok {
 		return v
 	}
 	return fallback
+}
+
+func boolFromValue(value any) (bool, bool) {
+	switch v := value.(type) {
+	case bool:
+		return v, true
+	case string:
+		parsed, err := strconv.ParseBool(strings.TrimSpace(v))
+		if err == nil {
+			return parsed, true
+		}
+	}
+	return false, false
 }
 
 func legExcludedDriverIDs(req RideRequest, additional ...string) []string {
