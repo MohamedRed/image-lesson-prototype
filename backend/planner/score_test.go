@@ -53,6 +53,17 @@ func TestComputeDriverScore_RejectsExclusiveRequestWithExistingReservedSeats(t *
 	}
 }
 
+func TestComputeDriverScore_IgnoresFalsePremiumRequirement(t *testing.T) {
+	req := corridorRequest()
+	req.PremiumRequested = map[string]any{"exclusive": false}
+	driver := corridorDriver("standard-driver", 0, 0, routeCorridor())
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected false premium flag to be ignored instead of requiring an explicit false capability")
+	}
+}
+
 func TestComputeDriverScore_UsesLuggageLedgerForCapacity(t *testing.T) {
 	req := RideRequest{
 		Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1,

@@ -557,6 +557,9 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	// Premium trait filter
 	if req.PremiumRequested != nil {
 		for k, v := range req.PremiumRequested {
+			if !premiumCapabilityRequired(v) {
+				continue
+			}
 			if capV, ok := driver.PremiumCapabilities[k]; !ok || capV != v {
 				return 0, 0, false
 			}
@@ -637,6 +640,11 @@ func exclusiveRequested(premiumRequested map[string]any) bool {
 	}
 	exclusive, ok := premiumRequested["exclusive"].(bool)
 	return ok && exclusive
+}
+
+func premiumCapabilityRequired(value any) bool {
+	requested, isBool := value.(bool)
+	return !isBool || requested
 }
 
 func driverHasExistingPassengers(driver DriverProfile, seatsUsed int) bool {
