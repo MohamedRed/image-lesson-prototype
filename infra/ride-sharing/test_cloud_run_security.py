@@ -19,6 +19,20 @@ MONITORING_MAIN = ROOT / "modules" / "monitoring" / "main.tf"
 
 
 class CloudRunSecurityTests(unittest.TestCase):
+    def test_bigquery_monitoring_does_not_use_basic_auth_uptime_check(self) -> None:
+        alerts_text = MONITORING_BIGQUERY_ALERTS.read_text()
+
+        self.assertNotIn(
+            'resource "google_monitoring_uptime_check_config" "bigquery_dataset_check"',
+            alerts_text,
+            "BigQuery API availability should not be modeled as a public/basic-auth uptime check",
+        )
+        self.assertNotIn(
+            "auth_info {",
+            alerts_text,
+            "Monitoring uptime auth_info is Basic Auth and should not be used with a service account email only",
+        )
+
     def test_bigquery_monitoring_uses_provider_supported_comparison_enums(self) -> None:
         alerts_text = MONITORING_BIGQUERY_ALERTS.read_text()
         allowed_comparisons = {

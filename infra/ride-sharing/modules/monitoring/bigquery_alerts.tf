@@ -209,35 +209,3 @@ resource "google_monitoring_dashboard" "bigquery_aggregation" {
     }
   })
 }
-
-# Uptime check for BigQuery dataset availability
-resource "google_monitoring_uptime_check_config" "bigquery_dataset_check" {
-  display_name = "BigQuery Dataset Availability"
-  timeout      = "10s"
-  period       = "300s" # Check every 5 minutes
-
-  http_check {
-    path           = "/bigquery/v2/projects/${var.project_id}/datasets/ride_analytics"
-    port           = "443"
-    use_ssl        = true
-    validate_ssl   = true
-    request_method = "GET"
-
-    auth_info {
-      username = "bigquery-monitoring@${var.project_id}.iam.gserviceaccount.com"
-    }
-  }
-
-  monitored_resource {
-    type = "uptime_url"
-    labels = {
-      project_id = var.project_id
-      host       = "bigquery.googleapis.com"
-    }
-  }
-
-  content_matchers {
-    content = "ride_analytics"
-    matcher = "CONTAINS_STRING"
-  }
-} 
