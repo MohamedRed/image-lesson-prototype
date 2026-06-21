@@ -3,10 +3,28 @@ package main
 import (
 	"encoding/json"
 	"math"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
 )
+
+func TestRegisterPlannerRoutes_HealthEndpointReturnsOK(t *testing.T) {
+	mux := http.NewServeMux()
+	registerPlannerRoutes(mux)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/health", nil)
+	mux.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected /health to return 200 OK, got %d with body %q", recorder.Code, recorder.Body.String())
+	}
+	if strings.TrimSpace(recorder.Body.String()) != "ok" {
+		t.Fatalf("expected /health body to be ok, got %q", recorder.Body.String())
+	}
+}
 
 func TestComputeDriverScore_LuggageReject(t *testing.T) {
 	req := RideRequest{
@@ -763,8 +781,8 @@ func TestRoutePolylineTravelsOriginBeforeDestinationRejectsEarlyOriginOutsideExp
 	req.OriWalkIso = rectPolygon(-0.10, -0.10, 0.10, 0.10)
 	req.DestWalkIso = rectPolygon(-0.0001, 0.9999, 0.0001, 1.0001)
 	route := encodePolyline([]GeoPoint{
-		{Latitude: 0.05, Longitude: 0}, // inside stale origin walk polygon but outside explicit walk cap
-		{Latitude: 0, Longitude: 1},    // destination before legal pickup
+		{Latitude: 0.05, Longitude: 0},  // inside stale origin walk polygon but outside explicit walk cap
+		{Latitude: 0, Longitude: 1},     // destination before legal pickup
 		{Latitude: 0.002, Longitude: 0}, // later legal pickup, with no later destination
 	})
 
@@ -807,7 +825,7 @@ func TestComputeDriverScore_RiderWalkRadiusCapsBroadStaleDestinationWalkPolygonW
 	req.OriWalkIso = rectPolygon(-0.0001, -0.0001, 0.0001, 0.0001)
 	req.DestWalkIso = rectPolygon(-0.10, 0.40, 0.10, 1.10)
 	req.DestinationDriveGeo = multiPolygon(
-		rectRing(0.04, 0.49, 0.06, 0.51), // early legal drive area, but outside rider walk radius
+		rectRing(0.04, 0.49, 0.06, 0.51),  // early legal drive area, but outside rider walk radius
 		rectRing(-0.01, 0.99, 0.01, 1.01), // later legal drive area inside rider walk radius
 	)
 	req.OriDriveIso = GeoJSONGeometry{}
@@ -1385,10 +1403,10 @@ func TestComputeDriverScore_RejectsDestinationDriveGeoOnlyBeforeWalkFeasiblePick
 	req.DestinationDriveGeo = rectPolygon(-0.003, 0.397, 0.003, 0.403)
 	driver := corridorDriver("destination-drive-before-walk-feasible-pickup", 0.05, 0, GeoJSONGeometry{})
 	driver.RoutePolyline = encodePolyline([]GeoPoint{
-		{Latitude: 0.05, Longitude: 0},    // near origin longitude, but outside explicit rider walk cap
-		{Latitude: 0, Longitude: 0.40},    // only destination-drive pass, before legal pickup
-		{Latitude: 0.002, Longitude: 0},   // later walk-feasible pickup
-		{Latitude: 0, Longitude: 1},       // destination walk zone, outside destinationDriveGeo
+		{Latitude: 0.05, Longitude: 0},  // near origin longitude, but outside explicit rider walk cap
+		{Latitude: 0, Longitude: 0.40},  // only destination-drive pass, before legal pickup
+		{Latitude: 0.002, Longitude: 0}, // later walk-feasible pickup
+		{Latitude: 0, Longitude: 1},     // destination walk zone, outside destinationDriveGeo
 	})
 
 	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
@@ -2823,7 +2841,7 @@ func TestBuildSingleHopJourneySkipsUnwalkableEarlyDropoffProjection(t *testing.T
 		{Latitude: 0, Longitude: -0.10},
 		{Latitude: 0, Longitude: 0},
 		{Latitude: 0.01, Longitude: 0.40}, // inside stale broad destination polygon, but outside explicit walk cap
-		{Latitude: 0.002, Longitude: 1},  // first walk-feasible dropoff
+		{Latitude: 0.002, Longitude: 1},   // first walk-feasible dropoff
 	})
 
 	journey := buildSingleHopJourney(req, driver, 90)

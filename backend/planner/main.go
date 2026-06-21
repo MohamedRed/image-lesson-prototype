@@ -2659,14 +2659,26 @@ func segmentsIntersect(a1, a2, b1, b2 GeoPoint) bool {
 	return (o1 > 0) != (o2 > 0) && (o3 > 0) != (o4 > 0)
 }
 
+func healthHandler(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("ok\n"))
+}
+
+func registerPlannerRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("/health", healthHandler)
+	mux.HandleFunc("/plan", planHandler)
+}
+
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	http.HandleFunc("/plan", planHandler)
+	mux := http.NewServeMux()
+	registerPlannerRoutes(mux)
 	log.Printf("planner listening on :%s", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	if err := http.ListenAndServe(":"+port, mux); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
 }
