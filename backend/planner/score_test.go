@@ -2297,6 +2297,18 @@ func TestComputeDriverScore_RejectsPolylineMissingWalkZoneDespiteBroadBuffer(t *
 	}
 }
 
+func TestComputeDriverScore_RejectsMalformedCanonicalRouteBuffer(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("malformed-canonical-route-buffer", 0.05, 0, GeoJSONGeometry{})
+	driver.RoutePolyline = ""
+	driver.RouteBuffer = GeoJSONGeometry{Type: "Polygon", Coordinates: [][][]float64{}}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected malformed canonical routeBuffer to be treated as absent and rejected")
+	}
+}
+
 func TestComputeDriverScore_AcceptsCanonicalRouteBufferAlias(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("canonical-route-buffer", 0.05, 0, GeoJSONGeometry{})
