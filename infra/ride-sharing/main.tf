@@ -151,8 +151,9 @@ module "planner" {
   environment = var.environment
   labels      = local.common_labels
 
-  service_name = "ride-planner"
-  image_url    = "gcr.io/${var.project_id}/ride-planner:latest"
+  service_name          = "ride-planner"
+  image_url             = "gcr.io/${var.project_id}/ride-planner:latest"
+  service_account_email = google_service_account.cloud_run.email
 
   allow_unauthenticated = false
   invoker_members = [

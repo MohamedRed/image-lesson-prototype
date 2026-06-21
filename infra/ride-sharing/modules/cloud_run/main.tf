@@ -29,6 +29,11 @@ variable "image_url" {
   type        = string
 }
 
+variable "service_account_email" {
+  description = "Service account email for the Cloud Run revision"
+  type        = string
+}
+
 variable "env_vars" {
   description = "Environment variables for the service"
   type        = map(string)
@@ -133,7 +138,7 @@ resource "google_cloud_run_v2_service" "service" {
       }
     }
 
-    service_account = data.google_service_account.cloud_run.email
+    service_account = var.service_account_email
 
     timeout = "300s"
   }
@@ -142,12 +147,6 @@ resource "google_cloud_run_v2_service" "service" {
     percent = 100
     type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
   }
-}
-
-# Get the Cloud Run service account
-data "google_service_account" "cloud_run" {
-  account_id = "cloud-run-${var.environment}"
-  project    = var.project_id
 }
 
 # Optional unauthenticated access. Production planner deployments should stay

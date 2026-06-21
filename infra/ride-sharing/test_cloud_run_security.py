@@ -133,6 +133,31 @@ class CloudRunSecurityTests(unittest.TestCase):
             "ride planner module call must keep unauthenticated access disabled unless explicitly approved",
         )
 
+    def test_cloud_run_service_account_is_passed_from_root_resource(self) -> None:
+        module_text = CLOUD_RUN_MODULE.read_text()
+        root_text = ROOT_MAIN.read_text()
+
+        self.assertNotIn(
+            'data "google_service_account" "cloud_run"',
+            module_text,
+            "Cloud Run module must not data-source lookup a service account created by the same root plan",
+        )
+        self.assertRegex(
+            module_text,
+            r'variable\s+"service_account_email"\s*{[^}]*type\s*=\s*string',
+            "Cloud Run module should accept the service account email from its caller",
+        )
+        self.assertIn(
+            "service_account = var.service_account_email",
+            module_text,
+            "Cloud Run revision should run as the explicitly passed service account",
+        )
+        self.assertRegex(
+            root_text,
+            r'(?s)module\s+"planner"\s*{.*?service_account_email\s*=\s*google_service_account\.cloud_run\.email',
+            "root planner module call should pass the service account resource email to create a Terraform dependency",
+        )
+
     def test_private_planner_grants_invoker_to_cloud_functions_only(self) -> None:
         module_text = CLOUD_RUN_MODULE.read_text()
         root_text = ROOT_MAIN.read_text()
