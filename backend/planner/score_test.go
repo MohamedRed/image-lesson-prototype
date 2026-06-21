@@ -3452,6 +3452,37 @@ func TestBuild2HopJourneyIncludesPickupZoneIDs(t *testing.T) {
 	}
 }
 
+func TestBuildMultiHopJourneyIncludesDropoffZoneIDs(t *testing.T) {
+	req := corridorRequest()
+	transfer1 := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.33}, TransferTimeSeconds: 7}
+	transfer2 := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.66}, TransferTimeSeconds: 8}
+	driver1 := corridorDriver("driver-leg-1-dropoff-zone", 0.01, 0, routeCorridor())
+	driver1.PickupZoneID = "pickup-zone-leg-1"
+	driver1.DropoffZoneID = "dropoff-zone-leg-1"
+	driver2 := corridorDriver("driver-leg-2-dropoff-zone", 0.01, 0.33, routeCorridor())
+	driver2.PickupZoneID = "pickup-zone-leg-2"
+	driver2.DropoffZoneID = "dropoff-zone-leg-2"
+	driver3 := corridorDriver("driver-leg-3-dropoff-zone", 0.01, 0.66, routeCorridor())
+	driver3.PickupZoneID = "pickup-zone-leg-3"
+	driver3.DropoffZoneID = "dropoff-zone-leg-3"
+
+	journey2 := build2HopJourney(req, transfer1, driver1, 30, driver2, 40)
+	if len(journey2.Legs) != 2 {
+		t.Fatalf("expected two legs, got %d", len(journey2.Legs))
+	}
+	if journey2.Legs[0].DropoffZoneID != "dropoff-zone-leg-1" || journey2.Legs[1].DropoffZoneID != "dropoff-zone-leg-2" {
+		t.Fatalf("expected 2-hop dropoffZoneIds to be preserved for reservation, got %#v", journey2.Legs)
+	}
+
+	journey3 := build3HopJourney(req, transfer1, transfer2, driver1, 30, driver2, 40, driver3, 50)
+	if len(journey3.Legs) != 3 {
+		t.Fatalf("expected three legs, got %d", len(journey3.Legs))
+	}
+	if journey3.Legs[0].DropoffZoneID != "dropoff-zone-leg-1" || journey3.Legs[1].DropoffZoneID != "dropoff-zone-leg-2" || journey3.Legs[2].DropoffZoneID != "dropoff-zone-leg-3" {
+		t.Fatalf("expected 3-hop dropoffZoneIds to be preserved for reservation, got %#v", journey3.Legs)
+	}
+}
+
 func TestBuild2HopJourneyUsesRouteRideEtaPerLeg(t *testing.T) {
 	req := corridorRequest()
 	transfer := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.5}, TransferTimeSeconds: 7}
