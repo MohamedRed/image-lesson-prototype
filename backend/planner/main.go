@@ -1817,7 +1817,7 @@ func driverEntersDestinationDriveGeo(req RideRequest, driver DriverProfile) bool
 }
 
 func routePolylineEntersGeometryBeforeOrigin(req RideRequest, encodedPolyline string, geometry GeoJSONGeometry) bool {
-	points, ok := decodePolyline(encodedPolyline)
+	points, ok := decodeNormalizedRoutePolyline(encodedPolyline)
 	if !ok || len(points) < 2 || geometry.isZero() {
 		return false
 	}
@@ -1836,7 +1836,7 @@ func routePolylineEntersGeometryBeforeOrigin(req RideRequest, encodedPolyline st
 }
 
 func routePolylineEntersGeometryAfterOrigin(req RideRequest, encodedPolyline string, geometry GeoJSONGeometry) bool {
-	points, ok := decodePolyline(encodedPolyline)
+	points, ok := decodeNormalizedRoutePolyline(encodedPolyline)
 	if !ok || len(points) < 2 || geometry.isZero() {
 		return false
 	}
