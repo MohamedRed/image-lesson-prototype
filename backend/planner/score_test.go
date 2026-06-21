@@ -2080,6 +2080,20 @@ func TestComputeDriverScore_AcceptsCanonicalRouteBufferAlias(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_FallsBackToRouteBufferWhenLegacyBufferMalformed(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("malformed-legacy-buffer-valid-route-buffer", 0.05, 0, GeoJSONGeometry{
+		Type:        "Polygon",
+		Coordinates: [][][]float64{},
+	})
+	driver.RouteBuffer = routeCorridor()
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected valid canonical routeBuffer to be used when legacy bufferPolygon is malformed")
+	}
+}
+
 func TestComputeDriverScore_TreatsBlankRoutePolylineAsMissingAndUsesBuffer(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("blank-route-polyline-buffer-fallback", 0.05, 0, routeCorridor())

@@ -2075,10 +2075,18 @@ func explicitSingleHopWalkCapConfigured(req RideRequest) bool {
 }
 
 func driverCorridorBuffer(driver DriverProfile) GeoJSONGeometry {
-	if !driver.BufferPolygon.isZero() {
+	if validCorridorBufferGeometry(driver.BufferPolygon) {
 		return driver.BufferPolygon
 	}
 	return driver.RouteBuffer
+}
+
+func validCorridorBufferGeometry(geometry GeoJSONGeometry) bool {
+	if geometry.isZero() {
+		return false
+	}
+	_, ok := polygonOuterRings(geometry)
+	return ok
 }
 
 func (req RideRequest) originWalkGeometry() GeoJSONGeometry {
