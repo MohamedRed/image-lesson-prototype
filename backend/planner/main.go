@@ -2196,7 +2196,7 @@ func (req RideRequest) originDriveGeometry() GeoJSONGeometry {
 }
 
 func (req RideRequest) destinationDriveGeometry() GeoJSONGeometry {
-	if !req.DestinationDriveGeo.isZero() {
+	if validGeoJSONPolygonGeometry(req.DestinationDriveGeo) {
 		return req.DestinationDriveGeo
 	}
 	return GeoJSONGeometry{}
