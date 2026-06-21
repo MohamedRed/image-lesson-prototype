@@ -2450,7 +2450,21 @@ func geoPointsFromRingCoordinates(coords [][]float64) ([]GeoPoint, bool) {
 	if len(ring) < 4 {
 		return nil, false
 	}
+	if math.Abs(ringSignedArea(ring)) < 1e-18 {
+		return nil, false
+	}
 	return ring, true
+}
+
+func ringSignedArea(ring []GeoPoint) float64 {
+	if len(ring) < 4 {
+		return 0
+	}
+	area := 0.0
+	for i := 0; i < len(ring)-1; i++ {
+		area += ring[i].Longitude*ring[i+1].Latitude - ring[i+1].Longitude*ring[i].Latitude
+	}
+	return area / 2
 }
 
 type geoPolygonPart struct {
