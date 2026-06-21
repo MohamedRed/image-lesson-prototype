@@ -889,10 +889,13 @@ func routeDestinationProjectionAfter(points []GeoPoint, req RideRequest, minPos,
 			return candidate, true
 		}
 	}
-	if pos, ok := firstRoutePositionInGeometry(points, req.Destination, destinationDrive, minPos); ok && pos <= maxPos {
-		projection := routeProjectionAtPosition(points, pos, req.Destination)
-		if destinationGeometry.isZero() || pointInGeoJSONPolygon(projection.point, destinationGeometry) {
-			return projection, true
+	driveCandidates := routeProjectionCandidatesInGeometryOrRange(points, req.Destination, destinationDrive, minPos, maxPos)
+	for _, candidate := range driveCandidates {
+		if candidate.position <= minPos || candidate.position > maxPos {
+			continue
+		}
+		if destinationGeometry.isZero() || pointInGeoJSONPolygon(candidate.point, destinationGeometry) {
+			return candidate, true
 		}
 	}
 	return routeProjection{}, false
