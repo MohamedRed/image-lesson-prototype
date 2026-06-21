@@ -24,6 +24,7 @@ export interface PlannerJourney {
   legs: Array<{
     driverId: string;
     pickupZoneId?: string;
+    dropoffZoneId?: string;
     etaSeconds?: number;
     [key: string]: any;
   }>;
@@ -40,6 +41,7 @@ export type FetchLike = (url: string, init: { method: string; headers: Record<st
 export type ReserveSingleLeg = (
   driverId: string,
   pickupZoneId: string,
+  dropoffZoneId: string,
   requirements: ResourceRequirements
 ) => Promise<ReservationResult>;
 
@@ -57,6 +59,7 @@ export interface PlannerReservationRetryResult {
   journey: PlannerJourney;
   reservation?: ReservationResult;
   pickupZoneId?: string;
+  dropoffZoneId?: string;
   attemptedDriverIds: string[];
   excludedDriverIds: string[];
 }
@@ -221,12 +224,16 @@ export async function planJourneyWithSingleLegReservationRetry({
     if (!firstLeg.pickupZoneId) {
       throw new Error(`Planner leg missing pickupZoneId for driver ${driverId}`);
     }
+    if (!firstLeg.dropoffZoneId) {
+      throw new Error(`Planner leg missing dropoffZoneId for driver ${driverId}`);
+    }
     const pickupZoneId = firstLeg.pickupZoneId;
+    const dropoffZoneId = firstLeg.dropoffZoneId;
     attemptedDriverIds.push(driverId);
 
     let reservation: ReservationResult;
     try {
-      reservation = await reserveResources(driverId, pickupZoneId, resourceRequirements);
+      reservation = await reserveResources(driverId, pickupZoneId, dropoffZoneId, resourceRequirements);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       reservationErrors.push(`${driverId}: ${message || "reservation threw"}`);
@@ -234,7 +241,7 @@ export async function planJourneyWithSingleLegReservationRetry({
       continue;
     }
     if (reservation.success) {
-      return { journey, reservation, pickupZoneId, attemptedDriverIds, excludedDriverIds };
+      return { journey, reservation, pickupZoneId, dropoffZoneId, attemptedDriverIds, excludedDriverIds };
     }
 
     reservationErrors.push(`${driverId}: ${reservation.error || "reservation failed"}`);

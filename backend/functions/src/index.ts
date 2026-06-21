@@ -176,8 +176,8 @@ export const singleHopMatcher = withMetrics("singleHopMatcher", onDocumentCreate
       rideRequest: req,
       geoUpdates: updates,
       resourceRequirements,
-      reserveResources: (driverId, pickupZoneId, requirements) =>
-        reserveResourcesTransaction(driverId, pickupZoneId, requirements),
+      reserveResources: (driverId, pickupZoneId, dropoffZoneId, requirements) =>
+        reserveResourcesTransaction(driverId, pickupZoneId, requirements, undefined, dropoffZoneId),
       fetchImpl: fetch as any,
       maxAttempts: Number(process.env.PLANNER_RESERVATION_MAX_ATTEMPTS || 3),
     });

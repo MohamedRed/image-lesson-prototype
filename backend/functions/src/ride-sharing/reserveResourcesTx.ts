@@ -20,6 +20,7 @@ export interface ReservationResult {
   success: boolean;
   driverId?: string;
   pickupZoneId?: string;
+  dropoffZoneId?: string;
   error?: string;
   reservedResources?: {
     seats: number;
@@ -65,7 +66,8 @@ export async function reserveResourcesTransaction(
   driverId: string,
   pickupZoneId: string,
   requirements: ResourceRequirements,
-  db: admin.firestore.Firestore = admin.firestore()
+  db: admin.firestore.Firestore = admin.firestore(),
+  dropoffZoneId?: string
 ): Promise<ReservationResult> {
   const startTime = Date.now();
   
@@ -74,10 +76,14 @@ export async function reserveResourcesTransaction(
       // Read current state
       const driverRef = db.doc(`drivers/${driverId}`);
       const zoneRef = db.doc(`pickupZones/${pickupZoneId}`);
+      const dropoffZoneRef = dropoffZoneId && dropoffZoneId !== pickupZoneId
+        ? db.doc(`pickupZones/${dropoffZoneId}`)
+        : undefined;
       
-      const [driverSnap, zoneSnap] = await Promise.all([
+      const [driverSnap, zoneSnap, dropoffZoneSnap] = await Promise.all([
         transaction.get(driverRef),
-        transaction.get(zoneRef)
+        transaction.get(zoneRef),
+        dropoffZoneRef ? transaction.get(dropoffZoneRef) : Promise.resolve(undefined)
       ]);
 
       if (!driverSnap.exists) {
@@ -88,8 +94,13 @@ export async function reserveResourcesTransaction(
         throw new Error(`Pickup zone ${pickupZoneId} not found`);
       }
 
+      if (dropoffZoneRef && (!dropoffZoneSnap || !dropoffZoneSnap.exists)) {
+        throw new Error(`Dropoff zone ${dropoffZoneId} not found`);
+      }
+
       const driverData = driverSnap.data()!;
       const zoneData = zoneSnap.data()!;
+      const dropoffZoneData = dropoffZoneSnap?.data();
 
       // Validate driver constraints
       const validation = validateDriverResources(driverData, requirements);
@@ -97,10 +108,16 @@ export async function reserveResourcesTransaction(
         throw new Error(`Driver validation failed: ${validation.error}`);
       }
 
-      // Validate pickup zone capacity
+      // Validate pickup/dropoff zone capacity
       const zoneValidation = validateZoneCapacity(zoneData);
       if (!zoneValidation.valid) {
-        throw new Error(`Zone validation failed: ${zoneValidation.error}`);
+        throw new Error(`Pickup zone validation failed: ${zoneValidation.error}`);
+      }
+      if (dropoffZoneData) {
+        const dropoffZoneValidation = validateZoneCapacity(dropoffZoneData);
+        if (!dropoffZoneValidation.valid) {
+          throw new Error(`Dropoff zone validation failed: ${dropoffZoneValidation.error}`);
+        }
       }
 
       // Calculate resource deltas
@@ -175,11 +192,15 @@ export async function reserveResourcesTransaction(
       // Apply updates
       transaction.update(driverRef, driverUpdates);
       transaction.update(zoneRef, zoneUpdates);
+      if (dropoffZoneRef) {
+        transaction.update(dropoffZoneRef, zoneUpdates);
+      }
 
       return {
         success: true,
         driverId,
         pickupZoneId,
+        dropoffZoneId,
         reservedResources: {
           seats: seatDelta,
           cargo: cargoDeltas,
@@ -195,6 +216,7 @@ export async function reserveResourcesTransaction(
     logger.info("Resources reserved successfully", {
       driverId,
       pickupZoneId,
+      dropoffZoneId,
       requirements,
       reservedResources: result.reservedResources,
     });
@@ -208,6 +230,7 @@ export async function reserveResourcesTransaction(
     logger.error("Resource reservation failed", {
       driverId,
       pickupZoneId,
+      dropoffZoneId,
       requirements,
       error: error.message,
     });

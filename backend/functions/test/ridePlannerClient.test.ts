@@ -126,6 +126,40 @@ describe("planner client", () => {
     expect(reserve).not.toHaveBeenCalled();
   });
 
+  it("requires planner dropoffZoneId before attempting reservation", async () => {
+    const fetchImpl = jest.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        legs: [{
+          driverId: "driverA",
+          pickupZoneId: "zone-pickup",
+          etaSeconds: 120,
+          pickup: origin,
+          dropoff: destination,
+        }],
+        totalEtaSeconds: 120,
+      }),
+    }));
+
+    const reserve = jest.fn(async () => ({
+      success: true,
+      driverId: "driverA",
+      pickupZoneId: "zone-pickup",
+      reservedResources: { seats: 1, cargo: {}, pets: {}, childSeats: {} },
+    }));
+
+    await expect(planJourneyWithSingleLegReservationRetry({
+      plannerUrl: "https://planner.example",
+      rideRequest: { origin, destination, passengerCount: 1, riderGender: "female" },
+      resourceRequirements: { passengerCount: 1, riderGender: "female" },
+      reserveResources: reserve,
+      fetchImpl,
+    })).rejects.toThrow("Planner leg missing dropoffZoneId for driver driverA");
+
+    expect(reserve).not.toHaveBeenCalled();
+  });
+
   it("retries the planner with excluded driver when single-leg reservation fails", async () => {
     const fetchBodies: any[] = [];
     const fetchImpl = jest.fn(async (_url: string, init: any) => {
@@ -137,7 +171,7 @@ describe("planner client", () => {
         ok: true,
         status: 200,
         json: async () => ({
-          legs: [{ driverId, pickupZoneId: "zone-1", pickup: origin, dropoff: destination, etaSeconds: 120 }],
+          legs: [{ driverId, pickupZoneId: "zone-1", dropoffZoneId: "zone-dropoff", pickup: origin, dropoff: destination, etaSeconds: 120 }],
           totalEtaSeconds: 120,
         }),
       };
@@ -163,6 +197,9 @@ describe("planner client", () => {
 
     expect(result.journey.legs[0].driverId).toBe("driverB");
     expect(result.reservation?.success).toBe(true);
+    expect(result.pickupZoneId).toBe("zone-1");
+    expect(result.dropoffZoneId).toBe("zone-dropoff");
+    expect(reserve).toHaveBeenLastCalledWith("driverB", "zone-1", "zone-dropoff", { passengerCount: 1, riderGender: "female" });
     expect(result.attemptedDriverIds).toEqual(["driverA", "driverB"]);
     expect(fetchBodies.map((body) => body.excludedDriverIds)).toEqual([[], ["driverA"]]);
     expect(fetchBodies[0].oriWalkIso).toEqual(oriWalkIso);
@@ -181,7 +218,7 @@ describe("planner client", () => {
         ok: true,
         status: 200,
         json: async () => ({
-          legs: [{ driverId, pickupZoneId: "zone-1", pickup: origin, dropoff: destination, etaSeconds: 120 }],
+          legs: [{ driverId, pickupZoneId: "zone-1", dropoffZoneId: "zone-dropoff", pickup: origin, dropoff: destination, etaSeconds: 120 }],
           totalEtaSeconds: 120,
         }),
       };
@@ -224,7 +261,7 @@ describe("planner client", () => {
         ok: true,
         status: 200,
         json: async () => ({
-          legs: [{ driverId, pickupZoneId: "zone-1", pickup: origin, dropoff: destination, etaSeconds: 120 }],
+          legs: [{ driverId, pickupZoneId: "zone-1", dropoffZoneId: "zone-dropoff", pickup: origin, dropoff: destination, etaSeconds: 120 }],
           totalEtaSeconds: 120,
         }),
       };
@@ -266,7 +303,7 @@ describe("planner client", () => {
         ok: true,
         status: 200,
         json: async () => ({
-          legs: [{ driverId, pickupZoneId: "zone-1", pickup: origin, dropoff: destination, etaSeconds: 120 }],
+          legs: [{ driverId, pickupZoneId: "zone-1", dropoffZoneId: "zone-dropoff", pickup: origin, dropoff: destination, etaSeconds: 120 }],
           totalEtaSeconds: 120,
         }),
       };

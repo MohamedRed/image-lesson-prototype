@@ -57,6 +57,71 @@ describe("reserveResourcesTransaction", () => {
     expect(updates.map((update) => update.path)).toEqual(["drivers/driver-older-child", "pickupZones/zone-1"]);
   });
 
+  it("reserves planner-selected pickup and dropoff zones", async () => {
+    const updates: Array<{ path: string; data: Record<string, unknown> }> = [];
+    const db = fakeReservationDb({
+      "drivers/driver-dropoff-zone": {
+        capacitySeats: 4,
+        activePickups: 0,
+      },
+      "pickupZones/zone-pickup": {
+        capacityCars: 10,
+        activePickups: 0,
+      },
+      "pickupZones/zone-dropoff": {
+        capacityCars: 10,
+        activePickups: 0,
+      },
+    }, updates);
+
+    const result = await reserveResourcesTransaction(
+      "driver-dropoff-zone",
+      "zone-pickup",
+      { passengerCount: 1, riderGender: "female" },
+      db as never,
+      "zone-dropoff"
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.pickupZoneId).toBe("zone-pickup");
+    expect(result.dropoffZoneId).toBe("zone-dropoff");
+    expect(updates.map((update) => update.path)).toEqual([
+      "drivers/driver-dropoff-zone",
+      "pickupZones/zone-pickup",
+      "pickupZones/zone-dropoff",
+    ]);
+  });
+
+  it("rejects planner-selected dropoff zone when curb capacity is full", async () => {
+    const updates: Array<{ path: string; data: Record<string, unknown> }> = [];
+    const db = fakeReservationDb({
+      "drivers/driver-full-dropoff-zone": {
+        capacitySeats: 4,
+        activePickups: 0,
+      },
+      "pickupZones/zone-pickup": {
+        capacityCars: 10,
+        activePickups: 0,
+      },
+      "pickupZones/full-dropoff": {
+        capacityCars: 1,
+        activePickups: 1,
+      },
+    }, updates);
+
+    const result = await reserveResourcesTransaction(
+      "driver-full-dropoff-zone",
+      "zone-pickup",
+      { passengerCount: 1, riderGender: "female" },
+      db as never,
+      "full-dropoff"
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Dropoff zone validation failed");
+    expect(updates).toEqual([]);
+  });
+
   it("rejects exclusive ride when driver has existing reserved passengers", async () => {
     const db = fakeReservationDb({
       "drivers/exclusive-occupied": {
