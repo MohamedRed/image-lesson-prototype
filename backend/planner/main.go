@@ -2788,6 +2788,22 @@ func validatePlannerRequest(req RideRequest) error {
 	if req.PassengerCount <= 0 {
 		return fmt.Errorf("passengerCount must be positive")
 	}
+	if err := validateGeoPoint("origin", req.Origin); err != nil {
+		return err
+	}
+	if err := validateGeoPoint("destination", req.Destination); err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateGeoPoint(field string, point GeoPoint) error {
+	if math.IsNaN(point.Latitude) || math.IsInf(point.Latitude, 0) || point.Latitude < -90 || point.Latitude > 90 {
+		return fmt.Errorf("%s latitude must be between -90 and 90", field)
+	}
+	if math.IsNaN(point.Longitude) || math.IsInf(point.Longitude, 0) || point.Longitude < -180 || point.Longitude > 180 {
+		return fmt.Errorf("%s longitude must be between -180 and 180", field)
+	}
 	return nil
 }
 
