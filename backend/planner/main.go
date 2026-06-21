@@ -504,12 +504,27 @@ func buildLegRequest(req RideRequest, origin, destination GeoPoint) RideRequest 
 	legReq.DestinationWalkIso = destinationWalk
 
 	originDrive := circlePolygon(origin, 5000, 32)
+	if sameGeoPoint(origin, req.Origin) {
+		if originalOriginDrive := req.originDriveGeometry(); !originalOriginDrive.isZero() {
+			originDrive = originalOriginDrive
+		}
+	}
 	destinationDrive := circlePolygon(destination, 5000, 32)
+	if sameGeoPoint(destination, req.Destination) {
+		if originalDestinationDrive := req.destinationDriveGeometry(); !originalDestinationDrive.isZero() {
+			destinationDrive = originalDestinationDrive
+		}
+	}
 	legReq.OriDriveIso = originDrive
 	legReq.OriginDriveGeo = originDrive
 	legReq.DestinationDriveGeo = destinationDrive
 
 	return legReq
+}
+
+func sameGeoPoint(a, b GeoPoint) bool {
+	const eps = 1e-9
+	return math.Abs(a.Latitude-b.Latitude) <= eps && math.Abs(a.Longitude-b.Longitude) <= eps
 }
 
 func calculateChildSeatRequirements(children []struct {

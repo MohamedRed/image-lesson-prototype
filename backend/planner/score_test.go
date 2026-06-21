@@ -2555,6 +2555,28 @@ func TestBuildLegRequestRebindsDestinationDriveGeoToLegDestination(t *testing.T)
 	}
 }
 
+func TestBuildLegRequestPreservesOriginalOriginDriveGeoForFirstLeg(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "2000")
+	req := corridorRequest()
+	req.WalkRadiusM = 1500
+	req.OriDriveIso = rectPolygon(-0.001, -0.001, 0.001, 0.001)
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	transfer := GeoPoint{Latitude: 0, Longitude: 0.5}
+
+	legReq := buildLegRequest(req, req.Origin, transfer)
+	outsideOriginalDrive := corridorDriver("outside-original-origin-drive", 0.008, 0, GeoJSONGeometry{})
+	outsideOriginalDrive.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0.008, Longitude: 0},
+		{Latitude: 0.008, Longitude: 0.5},
+	})
+
+	_, _, ok := computeDriverScore(legReq, outsideOriginalDrive, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected first-leg request to preserve original originDriveGeo instead of broadening it to a synthetic transfer geofence")
+	}
+}
+
 func TestLegExcludedDriverIDsMergesReservationRetryAndPriorLegDrivers(t *testing.T) {
 	req := corridorRequest()
 	req.ExcludedDriverIDs = []string{" failed-reservation ", "already-filtered", "  "}
