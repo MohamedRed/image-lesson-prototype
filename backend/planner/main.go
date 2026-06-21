@@ -756,11 +756,11 @@ type TransferPoint struct {
 func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float64, wDetour, wEta, wCurb float64) (float64, int, bool) {
 	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 	passCnt := req.PassengerCount
-	if passCnt <= 0 {
-		passCnt = 1
-	}
 	if !requestLevelHardFiltersAllowScoring(req) {
 		return 0, 0, false
+	}
+	if passCnt <= 0 {
+		passCnt = 1
 	}
 
 	seatsUsed := reservedSeatCount(driver)
@@ -864,6 +864,9 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 }
 
 func requestLevelHardFiltersAllowScoring(req RideRequest) bool {
+	if req.PassengerCount <= 0 || req.PassengerCount > maxRideRequestPassengerCount {
+		return false
+	}
 	if req.RequiresRiderIdentity && !req.RiderIdentityVerified {
 		return false
 	}

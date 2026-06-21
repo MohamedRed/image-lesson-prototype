@@ -520,6 +520,16 @@ func TestComputeDriverScore_IgnoresFalsePremiumRequirement(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsNonPositivePassengerCount(t *testing.T) {
+	req := RideRequest{Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 0}
+	driver := DriverProfile{CapacitySeats: 4, CurrentLocation: GeoPoint{0, 0}}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected scorer to reject non-positive passengerCount instead of normalizing it to one passenger")
+	}
+}
+
 func TestComputeDriverScore_RejectsNegativeLuggageRequest(t *testing.T) {
 	req := RideRequest{
 		Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1,
