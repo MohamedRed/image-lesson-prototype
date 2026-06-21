@@ -3636,6 +3636,19 @@ func TestBuild2HopJourneyUsesBackendSelectedRoutePickupAndDropoffPerLeg(t *testi
 	assertGeoPointNear(t, journey.Legs[1].Dropoff, GeoPoint{Latitude: 0, Longitude: 0.998})
 }
 
+func TestUsableTransferPointsFiltersFullTransferCapacity(t *testing.T) {
+	transfers := []TransferPoint{
+		{ID: "full-transfer", Location: GeoPoint{Latitude: 0, Longitude: 0.25}, AvailableCapacity: 0},
+		{ID: "available-transfer", Location: GeoPoint{Latitude: 0, Longitude: 0.50}, AvailableCapacity: 1},
+		{ID: "overbooked-transfer", Location: GeoPoint{Latitude: 0, Longitude: 0.75}, AvailableCapacity: -1},
+	}
+
+	got := usableTransferPoints(transfers)
+	if len(got) != 1 || got[0].ID != "available-transfer" {
+		t.Fatalf("expected only positive-capacity transfer points to remain, got %#v", got)
+	}
+}
+
 func TestScore3HopJourneyDefaultsEachMissingTransferCongestionToNeutral(t *testing.T) {
 	req := corridorRequest()
 	transfer1Missing := TransferPoint{Location: GeoPoint{Latitude: 0, Longitude: 0.33}, TransferTimeSeconds: 7, CongestionFactor: 0}

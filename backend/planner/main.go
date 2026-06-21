@@ -2915,11 +2915,22 @@ func planNHop(ctx context.Context, req RideRequest, maxLegs int) (Journey, error
 }
 
 // plan2HopWithTransfers tries each transfer point for 2-leg journey
+func usableTransferPoints(transferPoints []TransferPoint) []TransferPoint {
+	usable := make([]TransferPoint, 0, len(transferPoints))
+	for _, transfer := range transferPoints {
+		if transfer.AvailableCapacity <= 0 {
+			continue
+		}
+		usable = append(usable, transfer)
+	}
+	return usable
+}
+
 func plan2HopWithTransfers(ctx context.Context, req RideRequest, transferPoints []TransferPoint) (Journey, error) {
 	bestJourney := Journey{}
 	bestScore := math.MaxFloat64
 
-	for _, transfer := range transferPoints {
+	for _, transfer := range usableTransferPoints(transferPoints) {
 		// Create leg 1: origin → transfer
 		leg1Req := buildLegRequest(req, req.Origin, transfer.Location)
 
@@ -2960,6 +2971,7 @@ func plan2HopWithTransfers(ctx context.Context, req RideRequest, transferPoints 
 func plan3HopWithTransfers(ctx context.Context, req RideRequest, transferPoints []TransferPoint) (Journey, error) {
 	bestJourney := Journey{}
 	bestScore := math.MaxFloat64
+	transferPoints = usableTransferPoints(transferPoints)
 
 	for i, transfer1 := range transferPoints {
 		for j, transfer2 := range transferPoints {
