@@ -643,6 +643,9 @@ func sumReservedSeats(legs []struct {
 }) int {
 	total := 0
 	for _, leg := range legs {
+		if leg.Seats <= 0 {
+			continue
+		}
 		total += leg.Seats
 	}
 	return total

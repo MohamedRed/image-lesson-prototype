@@ -624,6 +624,18 @@ func TestComputeDriverScore_UsesReservedSeatLedgerForCapacity(t *testing.T) {
 	}
 }
 
+func TestReservedSeatLedgerSumIgnoresNegativeEntries(t *testing.T) {
+	reserved := sumReservedSeats([]struct {
+		Seats int `firestore:"seats"`
+	}{
+		{Seats: 4},
+		{Seats: -3},
+	})
+	if reserved != 4 {
+		t.Fatalf("expected negative seat ledger entries to be ignored before summing, got %d", reserved)
+	}
+}
+
 func TestComputeDriverScore_ClampsNegativeReservedSeatLedgerLoad(t *testing.T) {
 	req := corridorRequest()
 	req.PassengerCount = 5
