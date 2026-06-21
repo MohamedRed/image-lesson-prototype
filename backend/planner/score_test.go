@@ -425,6 +425,7 @@ func TestComputeDriverScore_RejectsRouteThatNeverEntersOriginDriveGeo(t *testing
 func TestComputeDriverScore_AllowsRouteCrossingOriginDriveGeoWhenNearestProjectionOutside(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "20000")
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "20000")
 	req := corridorRequest()
 	req.Origin = GeoPoint{Latitude: 0.05, Longitude: 0.05}
 	req.OriWalkIso = rectPolygon(-0.10, -0.10, 0.10, 0.10)
@@ -1145,6 +1146,23 @@ func TestComputeDriverScore_RejectsRoutePickupEtaAboveDefaultThreshold(t *testin
 	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
 	if ok {
 		t.Fatalf("expected default pickup ETA threshold to reject a route reaching pickup after more than 30 minutes")
+	}
+}
+
+func TestComputeDriverScore_RejectsPickupBeforeRiderCanWalkToRoutePickup(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "1000")
+	req := corridorRequest()
+	req.OriWalkIso = rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	req.DestWalkIso = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	driver := corridorDriver("pickup-too-soon-for-rider-walk", 0.006, 0, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0.006, Longitude: 0},
+		{Latitude: 0.006, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected route pickup to be rejected when driver reaches pickup before rider can walk to the snapped route point")
 	}
 }
 

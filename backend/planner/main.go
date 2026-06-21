@@ -572,6 +572,9 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	if etaSec > maxSingleHopPickupETASeconds() {
 		return 0, 0, false
 	}
+	if etaSec+pickupWalkTimingGraceSeconds() < riderPickupWalkSeconds(req, driver) {
+		return 0, 0, false
+	}
 
 	rideDistKm := haversineKm(req.Origin.Latitude, req.Origin.Longitude, req.Destination.Latitude, req.Destination.Longitude)
 	if driver.RoutePolyline != "" {
@@ -769,6 +772,30 @@ func driverRouteWalkSnapsWithinThreshold(req RideRequest, driver DriverProfile) 
 	}
 	maxWalkKm := effectiveSingleHopWalkMeters(req) / 1000.0
 	return pickupProjection.snapKm <= maxWalkKm && dropoffProjection.snapKm <= maxWalkKm
+}
+
+func riderPickupWalkSeconds(req RideRequest, driver DriverProfile) int {
+	if driver.RoutePolyline == "" {
+		return 0
+	}
+	points, ok := decodePolyline(driver.RoutePolyline)
+	if !ok || len(points) < 2 {
+		return 0
+	}
+	pickupProjection, _, ok := routeInsertionProjections(req, points)
+	if !ok {
+		return 0
+	}
+	return int(math.Ceil(pickupProjection.snapKm * 12.0 * 60.0))
+}
+
+func pickupWalkTimingGraceSeconds() int {
+	if value := os.Getenv("PICKUP_WALK_TIMING_GRACE_SECONDS"); value != "" {
+		if parsed, err := strconv.Atoi(value); err == nil && parsed >= 0 {
+			return parsed
+		}
+	}
+	return 60
 }
 
 func driverDetourKm(req RideRequest, driver DriverProfile, pickupKm, directRideKm float64) float64 {
