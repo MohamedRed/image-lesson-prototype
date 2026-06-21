@@ -767,6 +767,16 @@ func TestComputeDriverScore_TreatsInvalidRoutePolylineAsMissingAndUsesBuffer(t *
 	}
 }
 
+func TestDriverRouteIntersectsGeometry_TreatsInvalidRoutePolylineAsMissing(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("invalid-route-polyline-helper-fallback", 0.05, 0, routeCorridor())
+	driver.RoutePolyline = "not-a-valid-polyline"
+
+	if !driverRouteIntersectsGeometry(driver, req.originWalkGeometry()) {
+		t.Fatalf("expected route-intersection helper to ignore unusable routePolyline and use bufferPolygon fallback")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteThatHitsDestinationBeforeOrigin(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("reverse-route", 0, 1, routeCorridor())

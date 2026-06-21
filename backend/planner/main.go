@@ -1836,6 +1836,7 @@ func firstRoutePositionInGeometry(points []GeoPoint, target GeoPoint, geometry G
 }
 
 func driverRouteIntersectsGeometry(driver DriverProfile, geometry GeoJSONGeometry) bool {
+	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 	if driver.RoutePolyline != "" {
 		return polylineIntersectsPolygon(driver.RoutePolyline, geometry)
 	}
