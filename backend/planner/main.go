@@ -1467,6 +1467,7 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 	if weights.Curb == 0 {
 		weights.Curb = 1
 	}
+	exclude = legExcludedDriverIDs(req, exclude...)
 
 	ranked := make([]scoredDriver, 0, len(drivers))
 	for _, driver := range drivers {
