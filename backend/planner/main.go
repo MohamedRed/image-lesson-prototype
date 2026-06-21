@@ -10,6 +10,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -493,6 +494,7 @@ type DriverProfile struct {
 	IsAvailable             bool
 	HasLicenseVerification  bool
 	LicenseVerified         bool
+	ComplianceStatus        string
 	IsBlocked               bool
 	IsStuck                 bool
 	IsSuspiciousLocation    bool
@@ -643,7 +645,23 @@ func driverIsOperationallyEligible(driver DriverProfile) bool {
 	if driver.HasLicenseVerification && !driver.LicenseVerified {
 		return false
 	}
+	if !driverComplianceStatusAllowsRides(driver.ComplianceStatus) {
+		return false
+	}
 	return true
+}
+
+func driverComplianceStatusAllowsRides(status string) bool {
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case "", "active", "approved", "clear", "compliant", "verified":
+		return true
+	case "blocked", "expired", "rejected", "revoked", "suspended":
+		return false
+	default:
+		// Unknown future statuses are treated as non-authoritative for backwards
+		// compatibility until the driver document schema is migrated.
+		return true
+	}
 }
 
 func genderPoolCompatible(riderGender string, currentPassengerGenders []string) bool {
@@ -2447,6 +2465,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			PremiumCapabilities     map[string]any         `firestore:"premiumCapabilities"`
 			CurrentPassengerGenders []string               `firestore:"currentPassengerGenders"`
 			LicenseVerified         bool                   `firestore:"licenseVerified"`
+			ComplianceStatus        string                 `firestore:"complianceStatus"`
 			IsBlocked               bool                   `firestore:"isBlocked"`
 			IsStuck                 bool                   `firestore:"isStuck"`
 			IsSuspiciousLocation    bool                   `firestore:"isSuspiciousLocation"`
@@ -2516,6 +2535,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			IsAvailable:             isAvailable,
 			HasLicenseVerification:  hasLicenseVerification,
 			LicenseVerified:         data.LicenseVerified,
+			ComplianceStatus:        data.ComplianceStatus,
 			IsBlocked:               data.IsBlocked,
 			IsStuck:                 data.IsStuck,
 			IsSuspiciousLocation:    data.IsSuspiciousLocation,
