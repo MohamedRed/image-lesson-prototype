@@ -30,7 +30,7 @@ on:
 
 env:
   TF_VERSION: '1.6.0'
-  TF_WORKING_DIR: './infra'
+  TF_WORKING_DIR: './infra/ride-sharing'
 
 jobs:
   terraform-check:
@@ -46,6 +46,11 @@ jobs:
       with:
         terraform_version: ${{ env.TF_VERSION }}
         
+    - name: Run ride-sharing Terraform source contracts
+      run: |
+        cd ${{ env.TF_WORKING_DIR }}
+        python3 test_cloud_run_security.py
+
     - name: Terraform Format Check
       run: |
         cd ${{ env.TF_WORKING_DIR }}

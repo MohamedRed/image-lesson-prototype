@@ -17,9 +17,24 @@ BIGQUERY_MODULE = ROOT / "modules" / "bigquery" / "main.tf"
 MONITORING_BIGQUERY_ALERTS = ROOT / "modules" / "monitoring" / "bigquery_alerts.tf"
 MONITORING_MAIN = ROOT / "modules" / "monitoring" / "main.tf"
 PUBSUB_MODULE = ROOT / "modules" / "pubsub" / "main.tf"
+TERRAFORM_WORKFLOW = ROOT.parents[1] / ".github" / "workflows" / "terraform.yml"
 
 
 class CloudRunSecurityTests(unittest.TestCase):
+    def test_github_actions_validates_ride_sharing_terraform_root(self) -> None:
+        workflow_text = TERRAFORM_WORKFLOW.read_text()
+
+        self.assertIn(
+            "TF_WORKING_DIR: './infra/ride-sharing'",
+            workflow_text,
+            "Terraform CI must validate the ride-sharing Terraform root, not the parent infra directory",
+        )
+        self.assertRegex(
+            workflow_text,
+            r'(?s)- name: Run ride-sharing Terraform source contracts\s+run: \|\s+cd \$\{\{ env\.TF_WORKING_DIR \}\}\s+python3 test_cloud_run_security\.py',
+            "Terraform CI should run the ride-sharing source-level security/validation contracts before validate",
+        )
+
     def test_pubsub_subscription_filter_is_argument_not_dynamic_block(self) -> None:
         pubsub_text = PUBSUB_MODULE.read_text()
 
