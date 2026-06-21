@@ -669,6 +669,32 @@ func TestComputeDriverScore_EmptySeatLedgerDoesNotFallBackToActivePickupCount(t 
 	}
 }
 
+func TestResourceLedgerSumsIgnoreNegativeEntries(t *testing.T) {
+	cargo := sumCargoLedger([]cargoLedgerEntry{
+		{Items: map[string]int{"suitcase": 4}},
+		{Items: map[string]int{"suitcase": -3}},
+	})
+	if got := cargo["suitcase"]; got != 4 {
+		t.Fatalf("expected negative cargo ledger entries to be ignored before summing, got %d", got)
+	}
+
+	pets := sumPetLedger([]petLedgerEntry{
+		{Pets: map[string]int{"small": 2}},
+		{Pets: map[string]int{"small": -1}},
+	})
+	if got := pets["small"]; got != 2 {
+		t.Fatalf("expected negative pet ledger entries to be ignored before summing, got %d", got)
+	}
+
+	childSeats := sumChildSeatLedger([]childSeatLedgerEntry{
+		{Seats: map[string]int{"forward": 3}},
+		{Seats: map[string]int{"forward": -2}},
+	})
+	if got := childSeats["forward"]; got != 3 {
+		t.Fatalf("expected negative child-seat ledger entries to be ignored before summing, got %d", got)
+	}
+}
+
 func TestComputeDriverScore_ClampsNegativeReservedResourceLedgerLoad(t *testing.T) {
 	req := RideRequest{
 		Origin:          GeoPoint{0, 0},

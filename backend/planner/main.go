@@ -686,6 +686,9 @@ func sumChildSeatLedger(entries []childSeatLedgerEntry) map[string]int {
 
 func addResourceTotals(total map[string]int, values map[string]int) {
 	for key, value := range values {
+		if value <= 0 {
+			continue
+		}
 		total[key] += value
 	}
 }
