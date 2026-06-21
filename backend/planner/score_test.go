@@ -2536,6 +2536,32 @@ func TestBuildLegRequestRebindsWalkZonesToLegEndpoints(t *testing.T) {
 	}
 }
 
+func TestBuildLegRequestPreservesOriginalOriginWalkIsoForFirstLeg(t *testing.T) {
+	req := corridorRequest()
+	req.WalkRadiusM = 1500
+	req.OriWalkIso = rectPolygon(-0.001, -0.001, 0.001, 0.001)
+	transfer := GeoPoint{Latitude: 0, Longitude: 0.5}
+
+	legReq := buildLegRequest(req, req.Origin, transfer)
+
+	if !reflect.DeepEqual(legReq.OriWalkIso, req.OriWalkIso) || !reflect.DeepEqual(legReq.OriginWalkIso, req.OriWalkIso) {
+		t.Fatalf("expected first leg to preserve original origin walk isochrone; got ori=%#v origin=%#v", legReq.OriWalkIso, legReq.OriginWalkIso)
+	}
+}
+
+func TestBuildLegRequestPreservesOriginalDestinationWalkIsoForFinalLeg(t *testing.T) {
+	req := corridorRequest()
+	req.WalkRadiusM = 1500
+	req.DestWalkIso = rectPolygon(-0.001, 0.999, 0.001, 1.001)
+	transfer := GeoPoint{Latitude: 0, Longitude: 0.5}
+
+	legReq := buildLegRequest(req, transfer, req.Destination)
+
+	if !reflect.DeepEqual(legReq.DestWalkIso, req.DestWalkIso) || !reflect.DeepEqual(legReq.DestinationWalkIso, req.DestWalkIso) {
+		t.Fatalf("expected final leg to preserve original destination walk isochrone; got dest=%#v destination=%#v", legReq.DestWalkIso, legReq.DestinationWalkIso)
+	}
+}
+
 func TestBuildLegRequestRebindsDestinationDriveGeoToLegDestination(t *testing.T) {
 	req := corridorRequest()
 	req.WalkRadiusM = 1000

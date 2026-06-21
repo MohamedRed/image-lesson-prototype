@@ -497,7 +497,17 @@ func buildLegRequest(req RideRequest, origin, destination GeoPoint) RideRequest 
 	}
 
 	originWalk := circlePolygon(origin, float64(walkRadiusM), 32)
+	if sameGeoPoint(origin, req.Origin) {
+		if originalOriginWalk := req.originWalkGeometry(); !originalOriginWalk.isZero() {
+			originWalk = originalOriginWalk
+		}
+	}
 	destinationWalk := circlePolygon(destination, float64(walkRadiusM), 32)
+	if sameGeoPoint(destination, req.Destination) {
+		if originalDestinationWalk := req.destinationWalkGeometry(); !originalDestinationWalk.isZero() {
+			destinationWalk = originalDestinationWalk
+		}
+	}
 	legReq.OriWalkIso = originWalk
 	legReq.OriginWalkIso = originWalk
 	legReq.DestWalkIso = destinationWalk
