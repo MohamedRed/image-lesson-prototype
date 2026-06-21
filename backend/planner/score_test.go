@@ -700,6 +700,20 @@ func TestComputeDriverScore_GlobalWalkLimitRejectsBufferOnlyStaleBroadWalkPolygo
 	}
 }
 
+func TestComputeDriverScore_GlobalWalkLimitAllowsBufferOnlyEdgeWithinWalkCap(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
+	req := corridorRequest()
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriWalkIso = rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	req.DestWalkIso = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	driver := corridorDriver("buffer-only-edge-within-walk-cap", 0.002, 0, rectPolygon(0.002, -0.01, 0.003, 1.01))
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected buffer-only corridor to match when an overlapping edge point is within explicit walk cap even though no common vertex is")
+	}
+}
+
 func TestRoutePolylineTravelsOriginBeforeDestinationSkipsDestinationOutsideExplicitWalkCap(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
 	req := corridorRequest()

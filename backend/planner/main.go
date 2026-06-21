@@ -1706,6 +1706,12 @@ func geoJSONPolygonsHaveCommonPointWithinDistance(target GeoPoint, maxKm float64
 					return true
 				}
 			}
+			for i := 0; i < len(ring)-1; i++ {
+				point, _ := nearestPointOnSegment(ring[i], ring[i+1], target)
+				if pointInAll(point) && withinRange(point) {
+					return true
+				}
+			}
 		}
 	}
 	for i := 0; i < len(ringsByPolygon); i++ {
