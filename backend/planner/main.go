@@ -1117,7 +1117,7 @@ func pickupLeadSecondsFromOriginDrive(req RideRequest, driver DriverProfile, fal
 	}
 	if len(driver.RouteETAProfileSeconds) == len(points) {
 		lead := routeETASecondsAtPosition(driver.RouteETAProfileSeconds, pickupProjection.position) - routeETASecondsAtPosition(driver.RouteETAProfileSeconds, entryPos)
-		if lead >= 0 {
+		if pickupProjection.position > entryPos && lead > 0 {
 			return lead
 		}
 	}

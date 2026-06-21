@@ -2199,6 +2199,27 @@ func TestComputeDriverScore_RejectsOriginDriveEntryTooLateForRiderWalk(t *testin
 	}
 }
 
+func TestComputeDriverScore_FallsBackWhenOriginDriveLeadProfileHasNoProgress(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "1000")
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "0")
+	req := corridorRequest()
+	req.OriWalkIso = rectPolygon(0.0055, -0.0005, 0.0065, 0.0005)
+	req.DestWalkIso = rectPolygon(0.0055, 0.9995, 0.0065, 1.0005)
+	req.OriDriveIso = rectPolygon(0.0055, -0.1005, 0.0065, 0.0005)
+	driver := corridorDriver("flat-origin-drive-lead-profile", 0.006, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0.006, Longitude: -0.10},
+		{Latitude: 0.006, Longitude: 0},
+		{Latitude: 0.006, Longitude: 1},
+	})
+	driver.RouteETAProfileSeconds = []int{300, 300, 300}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected flat origin-drive lead profile to fall back to route-distance lead time instead of rejecting a rider-walk-feasible corridor")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteSnapOutsideWalkThreshold(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "500")
 	req := corridorRequest()
