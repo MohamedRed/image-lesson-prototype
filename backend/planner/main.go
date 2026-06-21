@@ -2757,6 +2757,11 @@ func planHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := validatePlannerRequest(req); err != nil {
+		http.Error(w, fmt.Sprintf("invalid request: %v", err), http.StatusBadRequest)
+		return
+	}
+
 	driver, etaSec, err := pickBestDriver(r.Context(), req, req.ExcludedDriverIDs)
 
 	var journey Journey
@@ -2777,6 +2782,13 @@ func planHandler(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(journey); err != nil {
 		http.Error(w, fmt.Sprintf("encode error: %v", err), http.StatusInternalServerError)
 	}
+}
+
+func validatePlannerRequest(req RideRequest) error {
+	if req.PassengerCount <= 0 {
+		return fmt.Errorf("passengerCount must be positive")
+	}
+	return nil
 }
 
 func decodeSingleRideRequestJSON(body io.Reader, req *RideRequest) error {
