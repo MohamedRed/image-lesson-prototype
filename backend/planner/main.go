@@ -504,8 +504,10 @@ func buildLegRequest(req RideRequest, origin, destination GeoPoint) RideRequest 
 	legReq.DestinationWalkIso = destinationWalk
 
 	originDrive := circlePolygon(origin, 5000, 32)
+	destinationDrive := circlePolygon(destination, 5000, 32)
 	legReq.OriDriveIso = originDrive
 	legReq.OriginDriveGeo = originDrive
+	legReq.DestinationDriveGeo = destinationDrive
 
 	return legReq
 }

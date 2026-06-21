@@ -2536,6 +2536,25 @@ func TestBuildLegRequestRebindsWalkZonesToLegEndpoints(t *testing.T) {
 	}
 }
 
+func TestBuildLegRequestRebindsDestinationDriveGeoToLegDestination(t *testing.T) {
+	req := corridorRequest()
+	req.WalkRadiusM = 1000
+	req.DestinationDriveGeo = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	transfer := GeoPoint{Latitude: 0, Longitude: 0.5}
+
+	legReq := buildLegRequest(req, req.Origin, transfer)
+	validLegDriver := corridorDriver("origin-to-transfer-destination-drive", 0, 0, GeoJSONGeometry{})
+	validLegDriver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 0.5},
+	})
+
+	_, _, ok := computeDriverScore(legReq, validLegDriver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected leg request to rebind destinationDriveGeo to the transfer endpoint instead of inheriting the original trip destination")
+	}
+}
+
 func TestLegExcludedDriverIDsMergesReservationRetryAndPriorLegDrivers(t *testing.T) {
 	req := corridorRequest()
 	req.ExcludedDriverIDs = []string{" failed-reservation ", "already-filtered", "  "}
