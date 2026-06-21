@@ -152,7 +152,7 @@ func singleHopRouteRideETASeconds(req RideRequest, driver DriverProfile) (int, b
 	if !ok || dropoffProjection.position <= pickupProjection.position {
 		return 0, false
 	}
-	if len(driver.RouteETAProfileSeconds) == len(points) {
+	if len(driver.RouteETAProfileSeconds) == len(points) && routeETAProfileProgressesBetween(driver.RouteETAProfileSeconds, pickupProjection.position, dropoffProjection.position) {
 		pickupRouteEtaSec := routeETASecondsAtPosition(driver.RouteETAProfileSeconds, pickupProjection.position)
 		dropoffRouteEtaSec := routeETASecondsAtPosition(driver.RouteETAProfileSeconds, dropoffProjection.position)
 		rideEtaSec := dropoffRouteEtaSec - pickupRouteEtaSec
@@ -162,6 +162,26 @@ func singleHopRouteRideETASeconds(req RideRequest, driver DriverProfile) (int, b
 	}
 	rideKm := routeDistanceBetweenPositions(points, pickupProjection.position, dropoffProjection.position)
 	return int(rideKm / 40.0 * 3600), true
+}
+
+func routeETAProfileProgressesBetween(profile []int, startPosition, endPosition float64) bool {
+	if len(profile) == 0 || endPosition <= startPosition {
+		return false
+	}
+	lowerIndex := int(math.Floor(startPosition))
+	if lowerIndex < 0 {
+		lowerIndex = 0
+	}
+	upperIndex := int(math.Ceil(endPosition))
+	if upperIndex >= len(profile) {
+		upperIndex = len(profile) - 1
+	}
+	for index := lowerIndex + 1; index <= upperIndex; index++ {
+		if profile[index] < profile[index-1] {
+			return false
+		}
+	}
+	return routeETASecondsAtPosition(profile, endPosition) > routeETASecondsAtPosition(profile, startPosition)
 }
 
 func selectedSingleHopPickupDropoff(req RideRequest, driver DriverProfile) (GeoPoint, GeoPoint) {
