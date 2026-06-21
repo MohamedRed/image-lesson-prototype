@@ -1262,6 +1262,26 @@ func TestBuildSingleHopJourneyUsesDriveGeosForSelectedPointsWhenWalkZonesMissing
 	assertGeoPointNear(t, leg.Dropoff, GeoPoint{Latitude: 0, Longitude: 0.8})
 }
 
+func TestBuildSingleHopJourneyUsesOriginDriveGeoForPickupWhenWalkZoneIsBroad(t *testing.T) {
+	req := corridorRequest()
+	req.Origin = GeoPoint{Latitude: 0, Longitude: 0.05}
+	req.OriWalkIso = rectPolygon(-0.01, -0.01, 0.01, 0.11)
+	req.OriDriveIso = rectPolygon(-0.01, 0.095, 0.01, 0.105)
+	driver := corridorDriver("driver-origin-drive-pickup", 0, -0.10, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 0.10},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	journey := buildSingleHopJourney(req, driver, 90)
+	if len(journey.Legs) != 1 {
+		t.Fatalf("expected one leg, got %d", len(journey.Legs))
+	}
+	assertGeoPointNear(t, journey.Legs[0].Pickup, GeoPoint{Latitude: 0, Longitude: 0.10})
+}
+
 func TestBuildSingleHopJourneyUsesDestinationDriveGeoForDropoffWhenWalkZoneIsBroad(t *testing.T) {
 	req := corridorRequest()
 	req.Destination = GeoPoint{Latitude: 0, Longitude: 0.95}
