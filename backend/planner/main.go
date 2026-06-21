@@ -99,7 +99,7 @@ func buildJourneyLeg(driver DriverProfile, pickup, dropoff GeoPoint, etaSec int)
 }
 
 func buildSingleHopJourney(req RideRequest, driver DriverProfile, etaSec int) Journey {
-	driver.RoutePolyline = strings.TrimSpace(driver.RoutePolyline)
+	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 	pickup, dropoff := selectedSingleHopPickupDropoff(req, driver)
 	legEtaSec := singleHopTotalETASeconds(req, driver, etaSec)
 	return Journey{
@@ -121,8 +121,20 @@ func singleHopDirectRideETASeconds(req RideRequest) int {
 	return int(rideKm / 40.0 * 3600)
 }
 
+func normalizeRoutePolyline(encoded string) string {
+	trimmed := strings.TrimSpace(encoded)
+	if trimmed == "" {
+		return ""
+	}
+	points, ok := decodePolyline(trimmed)
+	if !ok || len(points) < 2 {
+		return ""
+	}
+	return trimmed
+}
+
 func singleHopRouteRideETASeconds(req RideRequest, driver DriverProfile) (int, bool) {
-	driver.RoutePolyline = strings.TrimSpace(driver.RoutePolyline)
+	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 	if driver.RoutePolyline == "" {
 		return 0, false
 	}
@@ -147,7 +159,7 @@ func singleHopRouteRideETASeconds(req RideRequest, driver DriverProfile) (int, b
 }
 
 func selectedSingleHopPickupDropoff(req RideRequest, driver DriverProfile) (GeoPoint, GeoPoint) {
-	driver.RoutePolyline = strings.TrimSpace(driver.RoutePolyline)
+	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 	if driver.RoutePolyline == "" {
 		return req.Origin, req.Destination
 	}
@@ -661,7 +673,7 @@ type TransferPoint struct {
 // computeDriverScore applies hard filters and returns (score, etaSec, ok).
 // If ok=false the driver does not satisfy constraints.
 func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float64, wDetour, wEta, wCurb float64) (float64, int, bool) {
-	driver.RoutePolyline = strings.TrimSpace(driver.RoutePolyline)
+	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 	passCnt := req.PassengerCount
 	if passCnt <= 0 {
 		passCnt = 1
@@ -1500,7 +1512,7 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 
 	ranked := make([]scoredDriver, 0, len(drivers))
 	for _, driver := range drivers {
-		driver.RoutePolyline = strings.TrimSpace(driver.RoutePolyline)
+		driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 		driver.PickupZoneID = strings.TrimSpace(driver.PickupZoneID)
 		driver.DropoffZoneID = strings.TrimSpace(driver.DropoffZoneID)
 		if contains(exclude, driver.ID) {
@@ -1559,7 +1571,7 @@ func defaultPickupZoneCapacityCars() int {
 }
 
 func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) bool {
-	driver.RoutePolyline = strings.TrimSpace(driver.RoutePolyline)
+	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 	originIso := req.originWalkGeometry()
 	destinationIso := req.destinationWalkGeometry()
 	hasRoutePolyline := driver.RoutePolyline != ""
@@ -2822,7 +2834,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			DropoffZoneID:            dropoffZoneID,
 			DropoffZoneActivePickups: dropoffZoneActivePickups,
 			DropoffZoneCapacityCars:  dropoffZoneCapacityCars,
-			RoutePolyline:            strings.TrimSpace(data.RoutePolyline),
+			RoutePolyline:            normalizeRoutePolyline(data.RoutePolyline),
 			RouteETAProfileSeconds:   data.RouteETAProfileSeconds,
 			BufferPolygon:            data.BufferPolygon,
 			RouteBuffer:              data.RouteBuffer,

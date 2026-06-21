@@ -756,6 +756,17 @@ func TestDriverSatisfiesSingleHopCorridor_TreatsWhitespaceRoutePolylineAsMissing
 	}
 }
 
+func TestComputeDriverScore_TreatsInvalidRoutePolylineAsMissingAndUsesBuffer(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("invalid-route-polyline-buffer-fallback", 0.05, 0, routeCorridor())
+	driver.RoutePolyline = "not-a-valid-polyline"
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected invalid routePolyline to be treated as unusable so valid bufferPolygon corridor can match")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteThatHitsDestinationBeforeOrigin(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("reverse-route", 0, 1, routeCorridor())
