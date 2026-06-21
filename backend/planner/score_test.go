@@ -131,6 +131,30 @@ func TestComputeDriverScore_RejectsSuspendedComplianceStatus(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsUnverifiedRiderIdentityWhenRequired(t *testing.T) {
+	req := corridorRequest()
+	req.RequiresRiderIdentity = true
+	req.RiderIdentityVerified = false
+	driver := corridorDriver("identity-required-driver", 0, 0, routeCorridor())
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected missing required rider identity verification to reject before scoring")
+	}
+}
+
+func TestComputeDriverScore_RejectsUnauthorizedPaymentWhenRequired(t *testing.T) {
+	req := corridorRequest()
+	req.RequiresPaymentAuthorization = true
+	req.PaymentAuthorized = false
+	driver := corridorDriver("payment-required-driver", 0, 0, routeCorridor())
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected missing required payment authorization to reject before scoring")
+	}
+}
+
 func TestComputeDriverScore_RejectsMixedGenderPool(t *testing.T) {
 	req := corridorRequest()
 	req.RiderGender = "female"

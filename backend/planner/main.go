@@ -21,12 +21,16 @@ import (
 // in docs/ride_sharing_full_plan.md.
 
 type RideRequest struct {
-	Origin            GeoPoint `json:"origin"`
-	Destination       GeoPoint `json:"destination"`
-	PassengerCount    int      `json:"passengerCount"`
-	RiderGender       string   `json:"riderGender"`
-	WalkRadiusM       int      `json:"walkRadiusM"`
-	ExcludedDriverIDs []string `json:"excludedDriverIds"`
+	Origin                       GeoPoint `json:"origin"`
+	Destination                  GeoPoint `json:"destination"`
+	PassengerCount               int      `json:"passengerCount"`
+	RiderGender                  string   `json:"riderGender"`
+	WalkRadiusM                  int      `json:"walkRadiusM"`
+	RequiresRiderIdentity        bool     `json:"requiresRiderIdentity"`
+	RiderIdentityVerified        bool     `json:"riderIdentityVerified"`
+	RequiresPaymentAuthorization bool     `json:"requiresPaymentAuthorization"`
+	PaymentAuthorized            bool     `json:"paymentAuthorized"`
+	ExcludedDriverIDs            []string `json:"excludedDriverIds"`
 	// Canonical single-hop corridor geometry. The legacy ori*/dest* names are
 	// persisted by Firebase Functions today; origin*/destination* aliases let
 	// newer clients use the canonical spec names without planner changes.
@@ -519,6 +523,9 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	if passCnt <= 0 {
 		passCnt = 1
 	}
+	if !requestLevelHardFiltersAllowScoring(req) {
+		return 0, 0, false
+	}
 
 	seatsUsed := reservedSeatCount(driver)
 	capacitySeats := effectiveCapacitySeats(driver)
@@ -618,6 +625,16 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	score := baseScore * math.Pow(curbFactor, wCurb)
 
 	return score, etaSec, true
+}
+
+func requestLevelHardFiltersAllowScoring(req RideRequest) bool {
+	if req.RequiresRiderIdentity && !req.RiderIdentityVerified {
+		return false
+	}
+	if req.RequiresPaymentAuthorization && !req.PaymentAuthorized {
+		return false
+	}
+	return true
 }
 
 func reservedSeatCount(driver DriverProfile) int {
