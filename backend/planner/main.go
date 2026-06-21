@@ -1250,12 +1250,12 @@ func routeDestinationProjectionAfter(points []GeoPoint, req RideRequest, minPos,
 		return routeProjection{}, false
 	}
 
-	candidates := routeProjectionCandidatesInGeometryOrRange(points, req.Destination, destinationGeometry, minPos, maxPos)
+	candidates := routeWalkProjectionCandidates(points, req, req.Destination, destinationGeometry, minPos, maxPos)
 	for _, candidate := range candidates {
 		if candidate.position <= minPos || candidate.position > maxPos {
 			continue
 		}
-		if !projectionSatisfiesWalkGeometry(req, candidate, destinationGeometry) {
+		if !projectionSatisfiesEffectiveWalkGeometry(req, candidate, destinationGeometry) {
 			continue
 		}
 		if pointInGeoJSONPolygon(candidate.point, destinationDrive) {
@@ -1267,7 +1267,7 @@ func routeDestinationProjectionAfter(points []GeoPoint, req RideRequest, minPos,
 		if candidate.position <= minPos || candidate.position > maxPos {
 			continue
 		}
-		if projectionSatisfiesWalkGeometry(req, candidate, destinationGeometry) {
+		if projectionSatisfiesEffectiveWalkGeometry(req, candidate, destinationGeometry) {
 			return candidate, true
 		}
 	}

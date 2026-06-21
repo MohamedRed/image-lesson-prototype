@@ -593,6 +593,34 @@ func TestComputeDriverScore_RiderWalkRadiusCapsBroadStaleDestinationWalkPolygon(
 	}
 }
 
+func TestComputeDriverScore_RiderWalkRadiusCapsBroadStaleDestinationWalkPolygonWithDestinationDriveGeo(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "1000")
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "2000")
+	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "200")
+	req := corridorRequest()
+	req.WalkRadiusM = 300
+	req.OriWalkIso = rectPolygon(-0.0001, -0.0001, 0.0001, 0.0001)
+	req.DestWalkIso = rectPolygon(-0.10, 0.40, 0.10, 1.10)
+	req.DestinationDriveGeo = multiPolygon(
+		rectRing(0.04, 0.49, 0.06, 0.51), // early legal drive area, but outside rider walk radius
+		rectRing(-0.01, 0.99, 0.01, 1.01), // later legal drive area inside rider walk radius
+	)
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	driver := corridorDriver("broad-destination-walk-radius-cap-with-drive-route", 0, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0.05, Longitude: 0.50},
+		{Latitude: 0.002, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected rider walkRadiusM to skip early destinationDriveGeo dropoff outside walk radius and allow the later legal dropoff")
+	}
+}
+
 func TestComputeDriverScore_AllowsNearDestinationWalkPointInsideDestinationDriveGeo(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "100")
