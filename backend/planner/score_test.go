@@ -3799,6 +3799,18 @@ func TestBuild2HopJourneyUsesBackendSelectedRoutePickupAndDropoffPerLeg(t *testi
 	assertGeoPointNear(t, journey.Legs[1].Dropoff, GeoPoint{Latitude: 0, Longitude: 0.998})
 }
 
+func TestTransferAvailableCapacitySubtractsActivePickups(t *testing.T) {
+	full := map[string]interface{}{"maxStopSeconds": int64(120), "activePickups": int64(2)}
+	if got := transferAvailableCapacity(full); got != 0 {
+		t.Fatalf("expected full transfer curb to have zero remaining capacity, got %d", got)
+	}
+
+	partiallyAvailable := map[string]interface{}{"maxStopSeconds": int64(120), "activePickups": int64(1)}
+	if got := transferAvailableCapacity(partiallyAvailable); got != 1 {
+		t.Fatalf("expected transfer capacity to subtract active pickups, got %d", got)
+	}
+}
+
 func TestUsableTransferPointsFiltersFullTransferCapacity(t *testing.T) {
 	transfers := []TransferPoint{
 		{ID: "full-transfer", Location: GeoPoint{Latitude: 0, Longitude: 0.25}, AvailableCapacity: 0},

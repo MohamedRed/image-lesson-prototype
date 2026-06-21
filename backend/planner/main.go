@@ -3394,7 +3394,7 @@ func getAvailableTransferPoints(ctx context.Context, origin, destination GeoPoin
 			Location:            location,
 			TransferTimeSeconds: 180, // 3 minutes default transfer time
 			CongestionFactor:    congestionFactor,
-			AvailableCapacity:   getMaxStopCapacity(data),
+			AvailableCapacity:   transferAvailableCapacity(data),
 		})
 	}
 
@@ -3408,6 +3408,19 @@ func getMaxStopCapacity(data map[string]interface{}) int {
 		return int(maxStop / 60)
 	}
 	return 2 // Default capacity
+}
+
+func transferAvailableCapacity(data map[string]interface{}) int {
+	capacity := getMaxStopCapacity(data)
+	activePickups := intValue(data["activePickups"], 0)
+	if activePickups < 0 {
+		activePickups = 0
+	}
+	available := capacity - activePickups
+	if available < 0 {
+		return 0
+	}
+	return available
 }
 
 // pickBestDriverForLeg finds the best driver for a specific leg with resource validation
