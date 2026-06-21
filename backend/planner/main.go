@@ -1576,6 +1576,19 @@ func defaultPickupZoneCapacityCars() int {
 	return 10
 }
 
+func zoneCapacityFromLookup(zoneData map[string]any, exists bool) (int, int) {
+	defaultCapacity := defaultPickupZoneCapacityCars()
+	if !exists {
+		return defaultCapacity, defaultCapacity
+	}
+	activePickups := intValue(zoneData["activePickups"], 0)
+	capacityCars := intValue(zoneData["capacityCars"], defaultCapacity)
+	if capacityCars <= 0 {
+		capacityCars = defaultCapacity
+	}
+	return activePickups, capacityCars
+}
+
 func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) bool {
 	driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 	originIso := req.originWalkGeometry()
@@ -2884,10 +2897,13 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		pickupZoneCapacityCars := 0
 		if pickupZoneID != "" {
 			zSnap, err := client.Collection("pickupZones").Doc(pickupZoneID).Get(ctx)
-			if err == nil && zSnap.Exists() {
-				zoneData := zSnap.Data()
-				pickupZoneActivePickups = intValue(zoneData["activePickups"], 0)
-				pickupZoneCapacityCars = intValue(zoneData["capacityCars"], defaultPickupZoneCapacityCars())
+			zoneData := map[string]any(nil)
+			exists := err == nil && zSnap.Exists()
+			if exists {
+				zoneData = zSnap.Data()
+			}
+			pickupZoneActivePickups, pickupZoneCapacityCars = zoneCapacityFromLookup(zoneData, exists)
+			if exists {
 				if v, ok := zoneData["curbLoadFactor"].(float64); ok && v > 0 {
 					curbFactor = v
 				}
@@ -2897,11 +2913,12 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		dropoffZoneCapacityCars := 0
 		if dropoffZoneID != "" {
 			zSnap, err := client.Collection("pickupZones").Doc(dropoffZoneID).Get(ctx)
-			if err == nil && zSnap.Exists() {
-				zoneData := zSnap.Data()
-				dropoffZoneActivePickups = intValue(zoneData["activePickups"], 0)
-				dropoffZoneCapacityCars = intValue(zoneData["capacityCars"], defaultPickupZoneCapacityCars())
+			zoneData := map[string]any(nil)
+			exists := err == nil && zSnap.Exists()
+			if exists {
+				zoneData = zSnap.Data()
 			}
+			dropoffZoneActivePickups, dropoffZoneCapacityCars = zoneCapacityFromLookup(zoneData, exists)
 		}
 
 		hasAvailabilityState := rawBoolExists(raw, "isOnline") || rawBoolExists(raw, "isAvailable") || rawBoolExists(raw, "isActive")
