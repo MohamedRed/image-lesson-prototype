@@ -1559,6 +1559,7 @@ func defaultPickupZoneCapacityCars() int {
 }
 
 func driverSatisfiesSingleHopCorridor(req RideRequest, driver DriverProfile) bool {
+	driver.RoutePolyline = strings.TrimSpace(driver.RoutePolyline)
 	originIso := req.originWalkGeometry()
 	destinationIso := req.destinationWalkGeometry()
 	hasRoutePolyline := driver.RoutePolyline != ""

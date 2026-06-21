@@ -746,6 +746,16 @@ func TestComputeDriverScore_RejectsCorridorMissingDestinationWalkZone(t *testing
 	}
 }
 
+func TestDriverSatisfiesSingleHopCorridor_TreatsWhitespaceRoutePolylineAsMissing(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("whitespace-route-falls-back-to-buffer", 0, 0, routeCorridor())
+	driver.RoutePolyline = "  \n	  "
+
+	if !driverSatisfiesSingleHopCorridor(req, driver) {
+		t.Fatalf("expected whitespace routePolyline to be treated as missing so valid bufferPolygon corridor can match")
+	}
+}
+
 func TestComputeDriverScore_RejectsRouteThatHitsDestinationBeforeOrigin(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("reverse-route", 0, 1, routeCorridor())
