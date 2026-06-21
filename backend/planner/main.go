@@ -2797,6 +2797,9 @@ func validatePlannerRequest(req RideRequest) error {
 	if err := validateNonNegativeCounts("pet", req.Pet); err != nil {
 		return err
 	}
+	if err := validateChildPassengers(req.ChildPassengers); err != nil {
+		return err
+	}
 	if err := validateGeoPoint("origin", req.Origin); err != nil {
 		return err
 	}
@@ -2826,6 +2829,21 @@ func validateNonNegativeCounts(field string, counts map[string]int) error {
 	for key, count := range counts {
 		if count < 0 {
 			return fmt.Errorf("%s.%s must be non-negative", field, key)
+		}
+	}
+	return nil
+}
+
+func validateChildPassengers(children []struct {
+	AgeYears int `json:"ageYears"`
+	WeightKg int `json:"weightKg"`
+}) error {
+	for index, child := range children {
+		if child.AgeYears < 0 {
+			return fmt.Errorf("childPassengers[%d].ageYears must be non-negative", index)
+		}
+		if child.WeightKg < 0 {
+			return fmt.Errorf("childPassengers[%d].weightKg must be non-negative", index)
 		}
 	}
 	return nil

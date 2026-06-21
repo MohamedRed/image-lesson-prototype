@@ -170,6 +170,38 @@ func TestPlanHandlerRejectsNegativePetCountBeforePlanning(t *testing.T) {
 	}
 }
 
+func TestPlanHandlerRejectsNegativeChildAgeBeforePlanning(t *testing.T) {
+	t.Setenv("GOOGLE_CLOUD_PROJECT", "")
+	body := `{"origin":{"latitude":1,"longitude":2},"destination":{"latitude":3,"longitude":4},"passengerCount":1,"childPassengers":[{"ageYears":-1,"weightKg":12}]}`
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/plan", strings.NewReader(body))
+	planHandler(recorder, request)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected negative child age to return 400 before planner execution, got %d with body %q", recorder.Code, recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), "invalid request") {
+		t.Fatalf("expected invalid request error, got %q", recorder.Body.String())
+	}
+}
+
+func TestPlanHandlerRejectsNegativeChildWeightBeforePlanning(t *testing.T) {
+	t.Setenv("GOOGLE_CLOUD_PROJECT", "")
+	body := `{"origin":{"latitude":1,"longitude":2},"destination":{"latitude":3,"longitude":4},"passengerCount":1,"childPassengers":[{"ageYears":3,"weightKg":-1}]}`
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/plan", strings.NewReader(body))
+	planHandler(recorder, request)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected negative child weight to return 400 before planner execution, got %d with body %q", recorder.Code, recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), "invalid request") {
+		t.Fatalf("expected invalid request error, got %q", recorder.Body.String())
+	}
+}
+
 func TestComputeDriverScore_LuggageReject(t *testing.T) {
 	req := RideRequest{
 		Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 1,
