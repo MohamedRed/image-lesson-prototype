@@ -520,7 +520,7 @@ func calculateChildSeatRequirements(children []struct {
 			requirements["infant"]++
 		} else if child.AgeYears <= 4 {
 			requirements["forward"]++
-		} else if child.AgeYears <= 8 || child.WeightKg < 36 {
+		} else if child.AgeYears <= 8 || (child.WeightKg > 0 && child.WeightKg < 36) {
 			requirements["booster"]++
 		}
 	}

@@ -470,6 +470,28 @@ func TestComputeDriverScore_RejectsToddlerWhenOnlyBoosterAvailable(t *testing.T)
 	}
 }
 
+func TestComputeDriverScore_DoesNotInferLowWeightWhenChildWeightMissing(t *testing.T) {
+	req := RideRequest{
+		Origin:         GeoPoint{0, 0},
+		Destination:    GeoPoint{1, 1},
+		PassengerCount: 1,
+		ChildPassengers: []struct {
+			AgeYears int `json:"ageYears"`
+			WeightKg int `json:"weightKg"`
+		}{{AgeYears: 9, WeightKg: 0}},
+	}
+
+	driver := DriverProfile{
+		CapacitySeats:   4,
+		CurrentLocation: GeoPoint{0, 0},
+	}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected missing child weight to be treated as unknown, not as low-weight booster requirement")
+	}
+}
+
 func TestComputeDriverScore_CorridorIntersectsOriginWalkZone(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("route-match", 0.05, 0, routeCorridor())
