@@ -1441,14 +1441,29 @@ func TestComputeDriverScore_PrefersCanonicalOriginWalkIsoOverStaleLegacy(t *test
 	}
 }
 
-func TestRideRequestFallsBackToLegacyOriginWalkIsoWhenCanonicalMalformed(t *testing.T) {
-	req := corridorRequest()
-	legacy := rectPolygon(-0.01, -0.01, 0.01, 0.01)
-	req.OriWalkIso = legacy
-	req.OriginWalkIso = GeoJSONGeometry{Type: "Polygon", Coordinates: [][][]float64{}}
+func TestRideRequestFallsBackToLegacyGeometryAliasesWhenCanonicalMalformed(t *testing.T) {
+	malformed := GeoJSONGeometry{Type: "Polygon", Coordinates: [][][]float64{}}
 
-	if got := req.originWalkGeometry(); !reflect.DeepEqual(got, legacy) {
+	req := corridorRequest()
+	legacyOriginWalk := rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	req.OriWalkIso = legacyOriginWalk
+	req.OriginWalkIso = malformed
+	if got := req.originWalkGeometry(); !reflect.DeepEqual(got, legacyOriginWalk) {
 		t.Fatalf("expected valid legacy oriWalkIso when canonical originWalkIso is malformed, got %#v", got)
+	}
+
+	legacyDestinationWalk := rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	req.DestWalkIso = legacyDestinationWalk
+	req.DestinationWalkIso = malformed
+	if got := req.destinationWalkGeometry(); !reflect.DeepEqual(got, legacyDestinationWalk) {
+		t.Fatalf("expected valid legacy destWalkIso when canonical destinationWalkIso is malformed, got %#v", got)
+	}
+
+	legacyOriginDrive := rectPolygon(-0.05, -0.05, 0.05, 0.05)
+	req.OriDriveIso = legacyOriginDrive
+	req.OriginDriveGeo = malformed
+	if got := req.originDriveGeometry(); !reflect.DeepEqual(got, legacyOriginDrive) {
+		t.Fatalf("expected valid legacy oriDriveIso when canonical originDriveGeo is malformed, got %#v", got)
 	}
 }
 
