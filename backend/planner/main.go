@@ -2237,6 +2237,22 @@ func validGeoJSONPolygonGeometry(geometry GeoJSONGeometry) bool {
 	return ok
 }
 
+func geoJSONGeometryFromRaw(value any) (GeoJSONGeometry, bool) {
+	switch raw := value.(type) {
+	case GeoJSONGeometry:
+		return raw, validGeoJSONPolygonGeometry(raw)
+	case map[string]any:
+		geometry := GeoJSONGeometry{}
+		if rawType, ok := raw["type"].(string); ok {
+			geometry.Type = rawType
+		}
+		geometry.Coordinates = raw["coordinates"]
+		return geometry, validGeoJSONPolygonGeometry(geometry)
+	default:
+		return GeoJSONGeometry{}, false
+	}
+}
+
 func resolveCanonicalGeometry(canonical, legacy GeoJSONGeometry) GeoJSONGeometry {
 	if canonical.isZero() {
 		return legacy
@@ -3325,6 +3341,14 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		isAvailable := boolValue(raw["isAvailable"], boolValue(raw["isActive"], true))
 		hasLicenseVerification := rawBoolExists(raw, "licenseVerified")
 		hasBackgroundCheckPassed := rawBoolExists(raw, "backgroundCheckPassed")
+		bufferPolygon := data.BufferPolygon
+		if geometry, ok := geoJSONGeometryFromRaw(raw["bufferPolygon"]); ok {
+			bufferPolygon = geometry
+		}
+		routeBuffer := data.RouteBuffer
+		if geometry, ok := geoJSONGeometryFromRaw(raw["routeBuffer"]); ok {
+			routeBuffer = geometry
+		}
 
 		prof := DriverProfile{
 			ID:                       d.Ref.ID,
@@ -3341,8 +3365,8 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			DropoffZoneCapacityCars:  dropoffZoneCapacityCars,
 			RoutePolyline:            normalizeRoutePolyline(data.RoutePolyline),
 			RouteETAProfileSeconds:   routeETAProfileSecondsFromRaw(raw["routeEtaProfile"]),
-			BufferPolygon:            data.BufferPolygon,
-			RouteBuffer:              data.RouteBuffer,
+			BufferPolygon:            bufferPolygon,
+			RouteBuffer:              routeBuffer,
 			CurbFactor:               curbFactor,
 			LuggageCapacity:          data.LuggageCapacity,
 			ReservedLuggage:          sumCargoLedger(data.CargoLedger),

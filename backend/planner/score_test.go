@@ -962,6 +962,24 @@ func TestComputeDriverScore_CorridorIntersectsDestinationWalkZone(t *testing.T) 
 	}
 }
 
+func TestGeoJSONGeometryFromRawParsesFirestoreMapRouteBuffer(t *testing.T) {
+	raw := map[string]any{
+		"type": "Polygon",
+		"coordinates": []any{[]any{
+			[]any{-0.01, -0.005},
+			[]any{1.01, -0.005},
+			[]any{1.01, 0.005},
+			[]any{-0.01, 0.005},
+			[]any{-0.01, -0.005},
+		}},
+	}
+
+	geometry, ok := geoJSONGeometryFromRaw(raw)
+	if !ok || !validGeoJSONPolygonGeometry(geometry) {
+		t.Fatalf("expected Firestore map routeBuffer to parse into valid GeoJSON geometry, got ok=%v geometry=%#v", ok, geometry)
+	}
+}
+
 func TestComputeDriverScore_CorridorIntersectsMultiPolygonWalkZone(t *testing.T) {
 	req := corridorRequest()
 	req.OriWalkIso = multiPolygon(
