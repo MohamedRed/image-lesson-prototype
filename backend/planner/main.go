@@ -3731,6 +3731,19 @@ func routeETAProfileSecondsFromRaw(value any) []int {
 			}
 		}
 		return seconds
+	case []string:
+		seconds := make([]int, 0, len(profile))
+		for _, entry := range profile {
+			parsed, ok := intValueOK(entry)
+			if !ok {
+				return nil
+			}
+			seconds, ok = appendProfileSecond(seconds, parsed)
+			if !ok {
+				return nil
+			}
+		}
+		return seconds
 	case []any:
 		seconds := make([]int, 0, len(profile))
 		for _, entry := range profile {

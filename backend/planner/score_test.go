@@ -2816,6 +2816,14 @@ func TestRouteETAProfileSecondsFromRawParsesStringBackedNumbers(t *testing.T) {
 	}
 }
 
+func TestRouteETAProfileSecondsFromRawParsesTypedStringSlices(t *testing.T) {
+	got := routeETAProfileSecondsFromRaw([]string{" 0 ", "60", "120"})
+	want := []int{0, 60, 120}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("expected typed string route ETA profile values %#v, got %#v", want, got)
+	}
+}
+
 func TestRouteETAProfileSecondsFromRawRejectsNegativeValues(t *testing.T) {
 	got := routeETAProfileSecondsFromRaw([]int64{0, -1})
 	if got != nil {
