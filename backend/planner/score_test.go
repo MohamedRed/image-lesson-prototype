@@ -1178,6 +1178,21 @@ func TestComputeDriverScore_CorridorIntersectsOriginWalkZone(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RoutePolylineCorridorIntersectsOriginAndDestinationWalkZonesWithoutBuffer(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("route-polyline-only-corridor", 0, -0.05, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.05},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected routePolyline alone to satisfy origin/destination walk-zone corridor matching without bufferPolygon fallback")
+	}
+}
+
 func TestComputeDriverScore_CorridorIntersectsDestinationWalkZone(t *testing.T) {
 	allowLongPickupETA(t)
 	req := corridorRequest()
