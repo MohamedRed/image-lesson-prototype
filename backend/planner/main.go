@@ -803,6 +803,18 @@ func resourceLedgerFromRaw(value any, field string) map[string]int {
 		switch rawEntry := entry.(type) {
 		case map[string]any:
 			addRawResourceValues(rawEntry[field])
+		case map[string]map[string]any:
+			addRawResourceValues(rawEntry[field])
+		case map[string]map[string]int:
+			addRawResourceValues(rawEntry[field])
+		case map[string]map[string]int64:
+			addRawResourceValues(rawEntry[field])
+		case map[string]map[string]float64:
+			addRawResourceValues(rawEntry[field])
+		case map[string]map[string]float32:
+			addRawResourceValues(rawEntry[field])
+		case map[string]map[string]string:
+			addRawResourceValues(rawEntry[field])
 		case cargoLedgerEntry:
 			if field == "items" {
 				addResourceTotals(total, rawEntry.Items)

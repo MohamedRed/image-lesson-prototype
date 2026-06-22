@@ -1009,6 +1009,17 @@ func TestResourceLedgerFromRawParsesTypedInt64NestedResourceMaps(t *testing.T) {
 	}
 }
 
+func TestResourceLedgerFromRawParsesFullyTypedNestedResourceMapEntries(t *testing.T) {
+	ledger := resourceLedgerFromRaw([]any{
+		map[string]map[string]int64{"items": {"suitcase": 2}},
+		map[string]map[string]string{"items": {"duffel": " 1 ", "bad": "-2"}},
+		map[string]map[string]float64{"items": {"crate": 3, "fractional": 1.5}},
+	}, "items")
+	if ledger["suitcase"] != 2 || ledger["duffel"] != 1 || ledger["crate"] != 3 || ledger["bad"] != 0 || ledger["fractional"] != 0 {
+		t.Fatalf("expected fully typed nested resource ledger maps to preserve valid counts and ignore malformed values, got %#v", ledger)
+	}
+}
+
 func TestResourceCountsFromRawParsesStringBackedCapacity(t *testing.T) {
 	capacity := resourceCountsFromRaw(map[string]any{"suitcase": " 2 ", "duffel": int64(1), "bad": -4})
 	if got := capacity["suitcase"]; got != 2 {
