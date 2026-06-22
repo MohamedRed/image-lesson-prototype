@@ -1807,7 +1807,7 @@ func maxSingleHopPickupETASeconds() int {
 }
 
 func maxSingleHopWalkMeters() float64 {
-	if value := os.Getenv("MAX_SINGLE_HOP_WALK_METERS"); value != "" {
+	if value := strings.TrimSpace(os.Getenv("MAX_SINGLE_HOP_WALK_METERS")); value != "" {
 		if parsed, err := strconv.ParseFloat(value, 64); err == nil && !nonFiniteFloat(parsed) && parsed > 0 {
 			return parsed
 		}

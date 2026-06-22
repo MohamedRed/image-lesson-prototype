@@ -1354,6 +1354,20 @@ func TestComputeDriverScore_GlobalWalkLimitRejectsBufferOnlyStaleBroadWalkPolygo
 	}
 }
 
+func TestComputeDriverScore_TrimsGlobalWalkLimitBeforeRejectingBufferOnlyStaleWalkPolygons(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", " 300 ")
+	req := corridorRequest()
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriWalkIso = rectPolygon(0.0045, -0.01, 0.0055, 0.01)
+	req.DestWalkIso = rectPolygon(0.0045, 0.99, 0.0055, 1.01)
+	driver := corridorDriver("buffer-only-stale-walk-polygons-above-trimmed-cap", 0.005, 0, rectPolygon(0.0045, -0.01, 0.0055, 1.01))
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected whitespace-padded global walk cap to reject buffer-only intersections above 300m from rider endpoints")
+	}
+}
+
 func TestComputeDriverScore_GlobalWalkLimitAllowsBufferOnlyEdgeWithinWalkCap(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "300")
 	req := corridorRequest()
