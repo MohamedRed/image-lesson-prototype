@@ -857,6 +857,22 @@ func TestResourceLedgerSumsIgnoreNegativeEntries(t *testing.T) {
 	}
 }
 
+func TestResourceLedgerFromRawParsesStringBackedCounts(t *testing.T) {
+	ledger := resourceLedgerFromRaw([]any{
+		map[string]any{"items": map[string]any{"suitcase": " 2 ", "duffel": int64(1), "bad": -4}},
+		map[string]any{"items": map[string]any{"suitcase": float64(1)}},
+	}, "items")
+	if got := ledger["suitcase"]; got != 3 {
+		t.Fatalf("expected raw string-backed suitcase ledger to total 3, got %d", got)
+	}
+	if got := ledger["duffel"]; got != 1 {
+		t.Fatalf("expected raw int64 duffel ledger to total 1, got %d", got)
+	}
+	if got := ledger["bad"]; got != 0 {
+		t.Fatalf("expected negative raw resource ledger entries to be ignored, got %d", got)
+	}
+}
+
 func TestComputeDriverScore_ClampsNegativeReservedResourceLedgerLoad(t *testing.T) {
 	req := RideRequest{
 		Origin:          GeoPoint{0, 0},

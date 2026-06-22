@@ -732,6 +732,66 @@ func sumChildSeatLedger(entries []childSeatLedgerEntry) map[string]int {
 	return total
 }
 
+func resourceLedgerFromRaw(value any, field string) map[string]int {
+	total := map[string]int{}
+	addRawResourceValues := func(values any) {
+		switch rawValues := values.(type) {
+		case map[string]any:
+			for key, rawValue := range rawValues {
+				count, ok := intValueOK(rawValue)
+				if !ok || count <= 0 {
+					continue
+				}
+				total[key] += count
+			}
+		case map[string]int:
+			addResourceTotals(total, rawValues)
+		}
+	}
+	addRawEntry := func(entry any) {
+		switch rawEntry := entry.(type) {
+		case map[string]any:
+			addRawResourceValues(rawEntry[field])
+		case cargoLedgerEntry:
+			if field == "items" {
+				addResourceTotals(total, rawEntry.Items)
+			}
+		case petLedgerEntry:
+			if field == "pets" {
+				addResourceTotals(total, rawEntry.Pets)
+			}
+		case childSeatLedgerEntry:
+			if field == "seats" {
+				addResourceTotals(total, rawEntry.Seats)
+			}
+		}
+	}
+
+	switch entries := value.(type) {
+	case []any:
+		for _, entry := range entries {
+			addRawEntry(entry)
+		}
+	case []map[string]any:
+		for _, entry := range entries {
+			addRawEntry(entry)
+		}
+	case []cargoLedgerEntry:
+		for _, entry := range entries {
+			addRawEntry(entry)
+		}
+	case []petLedgerEntry:
+		for _, entry := range entries {
+			addRawEntry(entry)
+		}
+	case []childSeatLedgerEntry:
+		for _, entry := range entries {
+			addRawEntry(entry)
+		}
+	}
+	return total
+}
+
 func addResourceTotals(total map[string]int, values map[string]int) {
 	for key, value := range values {
 		if value <= 0 {
@@ -3455,11 +3515,11 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			RouteBuffer:              routeBuffer,
 			CurbFactor:               curbFactor,
 			LuggageCapacity:          data.LuggageCapacity,
-			ReservedLuggage:          sumCargoLedger(data.CargoLedger),
+			ReservedLuggage:          resourceLedgerFromRaw(raw["cargoLedger"], "items"),
 			PetLimits:                data.PetLimits,
-			ReservedPets:             sumPetLedger(data.PetLedger),
+			ReservedPets:             resourceLedgerFromRaw(raw["petLedger"], "pets"),
 			ChildSeatInventory:       data.ChildSeatInventory,
-			ReservedChildSeats:       sumChildSeatLedger(data.ChildSeatLedger),
+			ReservedChildSeats:       resourceLedgerFromRaw(raw["childSeatLedger"], "seats"),
 			PremiumCapabilities:      data.PremiumCapabilities,
 			CurrentPassengerGenders:  data.CurrentPassengerGenders,
 			HasAvailabilityState:     hasAvailabilityState,
