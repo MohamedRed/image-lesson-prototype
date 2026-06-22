@@ -1288,6 +1288,24 @@ func TestGeoJSONGeometryFromRawParsesTypedStringCoordinateRings(t *testing.T) {
 	}
 }
 
+func TestGeoJSONGeometryFromRawParsesTypedIntegerCoordinateRings(t *testing.T) {
+	raw := map[string]any{
+		"type": "Polygon",
+		"coordinates": [][][]int{{
+			{-1, 0},
+			{1, 0},
+			{1, 1},
+			{-1, 1},
+			{-1, 0},
+		}},
+	}
+
+	geometry, ok := geoJSONGeometryFromRaw(raw)
+	if !ok || !validGeoJSONPolygonGeometry(geometry) {
+		t.Fatalf("expected typed integer raw routeBuffer coordinates to parse, got ok=%v geometry=%#v", ok, geometry)
+	}
+}
+
 func TestComputeDriverScore_CorridorIntersectsMultiPolygonWalkZone(t *testing.T) {
 	req := corridorRequest()
 	req.OriWalkIso = multiPolygon(

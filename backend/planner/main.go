@@ -2891,6 +2891,26 @@ func ringCoordinateSets(coords any) ([][][]float64, bool) {
 			rings = append(rings, ring)
 		}
 		return rings, len(rings) > 0
+	case [][][]int:
+		rings := make([][][]float64, 0, len(c))
+		for _, rawRing := range c {
+			ring, ok := coordinatePairsFromAny(rawRing)
+			if !ok {
+				return nil, false
+			}
+			rings = append(rings, ring)
+		}
+		return rings, len(rings) > 0
+	case [][][]int64:
+		rings := make([][][]float64, 0, len(c))
+		for _, rawRing := range c {
+			ring, ok := coordinatePairsFromAny(rawRing)
+			if !ok {
+				return nil, false
+			}
+			rings = append(rings, ring)
+		}
+		return rings, len(rings) > 0
 	case [][][]interface{}:
 		rings := make([][][]float64, 0, len(c))
 		for _, rawRing := range c {
@@ -2924,6 +2944,16 @@ func firstRingCoordinates(coords any) ([][]float64, bool) {
 		}
 		return c[0], true
 	case [][][]string:
+		if len(c) == 0 {
+			return nil, false
+		}
+		return coordinatePairsFromAny(c[0])
+	case [][][]int:
+		if len(c) == 0 {
+			return nil, false
+		}
+		return coordinatePairsFromAny(c[0])
+	case [][][]int64:
 		if len(c) == 0 {
 			return nil, false
 		}
@@ -3017,6 +3047,26 @@ func coordinatePairsFromAny(value any) ([][]float64, bool) {
 			pairs = append(pairs, pair)
 		}
 		return pairs, true
+	case [][]int:
+		pairs := make([][]float64, 0, len(ring))
+		for _, rawPair := range ring {
+			pair, ok := numericPair(rawPair)
+			if !ok {
+				return nil, false
+			}
+			pairs = append(pairs, pair)
+		}
+		return pairs, true
+	case [][]int64:
+		pairs := make([][]float64, 0, len(ring))
+		for _, rawPair := range ring {
+			pair, ok := numericPair(rawPair)
+			if !ok {
+				return nil, false
+			}
+			pairs = append(pairs, pair)
+		}
+		return pairs, true
 	case [][]interface{}:
 		pairs := make([][]float64, 0, len(ring))
 		for _, rawPair := range ring {
@@ -3070,6 +3120,16 @@ func numericPair(value any) ([]float64, bool) {
 		}
 		return parse(pair[0], pair[1])
 	case []string:
+		if len(pair) < 2 {
+			return nil, false
+		}
+		return parse(pair[0], pair[1])
+	case []int:
+		if len(pair) < 2 {
+			return nil, false
+		}
+		return parse(pair[0], pair[1])
+	case []int64:
 		if len(pair) < 2 {
 			return nil, false
 		}
