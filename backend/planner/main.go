@@ -1497,7 +1497,7 @@ func firstRouteEntryPositionInGeometry(points []GeoPoint, geometry GeoJSONGeomet
 }
 
 func pickupWalkTimingGraceSeconds() int {
-	if value := os.Getenv("PICKUP_WALK_TIMING_GRACE_SECONDS"); value != "" {
+	if value := strings.TrimSpace(os.Getenv("PICKUP_WALK_TIMING_GRACE_SECONDS")); value != "" {
 		if parsed, err := strconv.Atoi(value); err == nil && parsed >= 0 {
 			return parsed
 		}

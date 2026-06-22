@@ -1101,6 +1101,20 @@ func TestComputeDriverScore_MalformedOriginWalkGeometryFallsBackToWalkRadiusForB
 	}
 }
 
+func TestComputeDriverScore_MalformedDestinationWalkGeometryFallsBackToWalkRadiusForBufferCorridor(t *testing.T) {
+	allowLongPickupETA(t)
+	req := corridorRequest()
+	req.WalkRadiusM = 500
+	req.DestWalkIso = GeoJSONGeometry{}
+	req.DestinationWalkIso = GeoJSONGeometry{Type: "Polygon", Coordinates: [][][]float64{}}
+	driver := corridorDriver("buffer-corridor-radius-destination-fallback", 0, 0, routeCorridor())
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected malformed destinationWalkIso to fall back to walkRadiusM circle for a valid buffer corridor")
+	}
+}
+
 func TestGeoPointFromRawParsesStringBackedCurrentLocation(t *testing.T) {
 	point, ok := geoPointFromRaw(map[string]any{"latitude": " 0.05 ", "longitude": " -0.10 "})
 	if !ok {
@@ -3570,6 +3584,24 @@ func TestComputeDriverScore_RejectsPickupBeforeRiderCanWalkToRoutePickup(t *test
 	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
 	if ok {
 		t.Fatalf("expected route pickup to be rejected when driver reaches pickup before rider can walk to the snapped route point")
+	}
+}
+
+func TestComputeDriverScore_TrimsPickupWalkTimingGraceEnvBeforeRejectingTooSoonPickup(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "1000")
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", " 0 ")
+	req := corridorRequest()
+	req.OriWalkIso = rectPolygon(-0.01, -0.01, 0.01, 0.01)
+	req.DestWalkIso = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	driver := corridorDriver("pickup-too-soon-with-trimmed-zero-grace", 0.0005, 0, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0.0005, Longitude: 0},
+		{Latitude: 0.0005, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected whitespace-padded zero pickup walk grace to reject an immediate pickup before rider walk time")
 	}
 }
 
