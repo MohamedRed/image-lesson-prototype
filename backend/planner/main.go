@@ -704,6 +704,14 @@ func capacitySeatsFromRaw(value any) int {
 	return capacity
 }
 
+func activePickupsFromRaw(value any) int {
+	activePickups, ok := intValueOK(value)
+	if !ok || activePickups <= 0 {
+		return 0
+	}
+	return activePickups
+}
+
 type cargoLedgerEntry struct {
 	Items map[string]int `firestore:"items"`
 }
@@ -3514,7 +3522,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			ID:                       d.Ref.ID,
 			CurrentLocation:          currentLocation,
 			CapacitySeats:            capacitySeatsFromRaw(raw["capacitySeats"]),
-			ActivePickups:            data.ActivePickups,
+			ActivePickups:            activePickupsFromRaw(raw["activePickups"]),
 			HasSeatLedger:            hasSeatLedger,
 			ReservedSeats:            reservedSeatsFromRaw(raw["legs"]),
 			PickupZoneID:             pickupZoneID,

@@ -795,6 +795,15 @@ func TestCapacitySeatsFromRawParsesStringBackedCapacity(t *testing.T) {
 	}
 }
 
+func TestActivePickupsFromRawParsesStringBackedLegacyOccupancy(t *testing.T) {
+	if got := activePickupsFromRaw(" 3 "); got != 3 {
+		t.Fatalf("expected string-backed activePickups to parse as 3, got %d", got)
+	}
+	if got := activePickupsFromRaw(-2); got != 0 {
+		t.Fatalf("expected negative activePickups to be clamped to zero, got %d", got)
+	}
+}
+
 func TestComputeDriverScore_ClampsNegativeReservedSeatLedgerLoad(t *testing.T) {
 	req := corridorRequest()
 	req.PassengerCount = 5
