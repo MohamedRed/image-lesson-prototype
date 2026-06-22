@@ -786,6 +786,15 @@ func TestReservedSeatLedgerFromRawParsesStringBackedSeats(t *testing.T) {
 	}
 }
 
+func TestCapacitySeatsFromRawParsesStringBackedCapacity(t *testing.T) {
+	if got := capacitySeatsFromRaw(" 6 "); got != 6 {
+		t.Fatalf("expected string-backed capacitySeats to parse as 6, got %d", got)
+	}
+	if got := capacitySeatsFromRaw(-2); got != 0 {
+		t.Fatalf("expected negative capacitySeats to be ignored and left for defaulting, got %d", got)
+	}
+}
+
 func TestComputeDriverScore_ClampsNegativeReservedSeatLedgerLoad(t *testing.T) {
 	req := corridorRequest()
 	req.PassengerCount = 5

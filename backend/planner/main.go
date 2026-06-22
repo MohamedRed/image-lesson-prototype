@@ -696,6 +696,14 @@ func reservedSeatsFromRaw(value any) int {
 	return total
 }
 
+func capacitySeatsFromRaw(value any) int {
+	capacity, ok := intValueOK(value)
+	if !ok || capacity <= 0 {
+		return 0
+	}
+	return capacity
+}
+
 type cargoLedgerEntry struct {
 	Items map[string]int `firestore:"items"`
 }
@@ -3505,7 +3513,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		prof := DriverProfile{
 			ID:                       d.Ref.ID,
 			CurrentLocation:          currentLocation,
-			CapacitySeats:            data.CapacitySeats,
+			CapacitySeats:            capacitySeatsFromRaw(raw["capacitySeats"]),
 			ActivePickups:            data.ActivePickups,
 			HasSeatLedger:            hasSeatLedger,
 			ReservedSeats:            reservedSeatsFromRaw(raw["legs"]),
