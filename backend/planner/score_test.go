@@ -4161,6 +4161,22 @@ func TestComputeDriverScore_RejectsRouteSnapOutsideRequestWalkRadius(t *testing.
 	}
 }
 
+func TestProjectionSatisfiesEffectiveWalkGeometryTreatsWhitespaceWalkLimitEnvAsUnset(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "   ")
+	req := corridorRequest()
+	req.WalkRadiusM = 0
+	geometry := rectPolygon(-0.10, -0.10, 0.10, 0.10)
+	candidate := routeProjection{
+		point:    GeoPoint{Latitude: 0.05, Longitude: 0},
+		position: 1,
+		snapKm:   haversineKm(0.05, 0, req.Origin.Latitude, req.Origin.Longitude),
+	}
+
+	if !projectionSatisfiesEffectiveWalkGeometry(req, candidate, geometry) {
+		t.Fatalf("expected whitespace-only MAX_SINGLE_HOP_WALK_METERS to be treated as unset so broad walk geometry remains backward-compatible")
+	}
+}
+
 func TestPickBestDriverFromProfiles_RetriesNextCandidateWhenReservationFails(t *testing.T) {
 	req := corridorRequest()
 	drivers := []DriverProfile{
