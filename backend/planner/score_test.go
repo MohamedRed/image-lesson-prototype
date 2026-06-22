@@ -563,6 +563,18 @@ func TestComputeDriverScore_IgnoresFalsePremiumRequirement(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_AcceptsStringBackedPremiumCapability(t *testing.T) {
+	req := corridorRequest()
+	req.PremiumRequested = map[string]any{"exclusive": true}
+	driver := corridorDriver("string-backed-exclusive-capability", 0, 0, routeCorridor())
+	driver.PremiumCapabilities = map[string]any{"exclusive": " true "}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected string-backed true premium capability to satisfy an exclusive request")
+	}
+}
+
 func TestComputeDriverScore_RejectsNonPositivePassengerCount(t *testing.T) {
 	req := RideRequest{Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 0}
 	driver := DriverProfile{CapacitySeats: 4, CurrentLocation: GeoPoint{0, 0}}
