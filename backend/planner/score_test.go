@@ -3681,6 +3681,19 @@ func TestComputeDriverScore_RejectsExcessiveRouteDetour(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_RejectsBufferOnlyFallbackDetourAboveThreshold(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "1")
+	req := corridorRequest()
+	driver := corridorDriver("buffer-only-excessive-detour", 2, 0, routeCorridor())
+	driver.RoutePolyline = ""
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected buffer-only candidate whose fallback detour exceeds threshold to be rejected")
+	}
+}
+
 func TestComputeDriverScore_RejectsExcessiveDetourWhenLaterOriginProjectionIsNearest(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "1")
 	req := corridorRequest()

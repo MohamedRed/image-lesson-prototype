@@ -983,12 +983,12 @@ func computeDriverScore(req RideRequest, driver DriverProfile, curbFactor float6
 	}
 
 	rideDistKm := haversineKm(req.Origin.Latitude, req.Origin.Longitude, req.Destination.Latitude, req.Destination.Longitude)
-	if driver.RoutePolyline != "" {
-		if routeDetourKm, ok := routeInsertionDetourKm(req, driver.RoutePolyline, rideDistKm); ok && routeDetourKm > maxSingleHopRouteDetourKm() {
+	detourKm := driverDetourKm(req, driver, pickupKm, rideDistKm)
+	if driver.RoutePolyline != "" || explicitSingleHopDetourCapConfigured() {
+		if detourKm > maxSingleHopRouteDetourKm() {
 			return 0, 0, false
 		}
 	}
-	detourKm := driverDetourKm(req, driver, pickupKm, rideDistKm)
 
 	baseScore := wDetour*detourKm + wEta*(float64(etaSec)/60.0) + seatLoadScore(driver, seatsUsed) + cargoLoadScore(req, driver) + petLoadScore(req, driver) + childSeatLoadScore(req, driver)
 	if math.IsNaN(curbFactor) || math.IsInf(curbFactor, 0) || curbFactor <= 0 {
@@ -1808,6 +1808,10 @@ func maxSingleHopRouteDetourKm() float64 {
 		}
 	}
 	return 25.0
+}
+
+func explicitSingleHopDetourCapConfigured() bool {
+	return strings.TrimSpace(os.Getenv("MAX_SINGLE_HOP_DETOUR_KM")) != ""
 }
 
 func maxSingleHopPickupETASeconds() int {
