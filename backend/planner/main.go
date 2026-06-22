@@ -2835,6 +2835,24 @@ func multiPolygonParts(coords any) ([]geoPolygonPart, bool) {
 				return nil, false
 			}
 		}
+	case [][][][]string:
+		for _, polygon := range c {
+			if !appendPart(polygon) {
+				return nil, false
+			}
+		}
+	case [][][][]int:
+		for _, polygon := range c {
+			if !appendPart(polygon) {
+				return nil, false
+			}
+		}
+	case [][][][]int64:
+		for _, polygon := range c {
+			if !appendPart(polygon) {
+				return nil, false
+			}
+		}
 	case [][][][]interface{}:
 		for _, polygon := range c {
 			if !appendPart(polygon) {
