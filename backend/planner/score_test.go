@@ -1579,6 +1579,37 @@ func TestComputeDriverScore_RejectsDestinationWalkDropoffOutsideDestinationDrive
 	}
 }
 
+func TestComputeDriverScore_EnforcesLegacyDestDriveIsoAlias(t *testing.T) {
+	allowLongPickupETA(t)
+	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "100")
+	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "2000")
+	body := `{
+		"origin":{"latitude":0,"longitude":0},
+		"destination":{"latitude":0,"longitude":1},
+		"passengerCount":1,
+		"walkRadiusM":100,
+		"oriWalkIso":{"type":"Polygon","coordinates":[[[-0.0002,-0.0002],[0.0002,-0.0002],[0.0002,0.0002],[-0.0002,0.0002],[-0.0002,-0.0002]]]},
+		"destWalkIso":{"type":"Polygon","coordinates":[[[0.9998,-0.0002],[1.0002,-0.0002],[1.0002,0.0002],[0.9998,0.0002],[0.9998,-0.0002]]]},
+		"oriDriveIso":{"type":"Polygon","coordinates":[[[-0.01,-0.01],[0.01,-0.01],[0.01,0.01],[-0.01,0.01],[-0.01,-0.01]]]},
+		"destDriveIso":{"type":"Polygon","coordinates":[[[0.499,0.049],[0.501,0.049],[0.501,0.051],[0.499,0.051],[0.499,0.049]]]}
+	}`
+	var req RideRequest
+	if err := json.Unmarshal([]byte(body), &req); err != nil {
+		t.Fatalf("decode request: %v", err)
+	}
+	driver := corridorDriver("legacy-dest-drive-alias-miss", 0, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected legacy destDriveIso geofence to reject a route that reaches destination walk zone without entering legal destination drive area")
+	}
+}
+
 func TestComputeDriverScore_AllowsLaterNearDestinationAfterEarlierDestinationWalkPass(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "100")

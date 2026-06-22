@@ -40,6 +40,7 @@ type RideRequest struct {
 	OriWalkIso          GeoJSONGeometry `json:"oriWalkIso"`
 	DestWalkIso         GeoJSONGeometry `json:"destWalkIso"`
 	OriDriveIso         GeoJSONGeometry `json:"oriDriveIso"`
+	DestDriveIso        GeoJSONGeometry `json:"destDriveIso"`
 	OriginWalkIso       GeoJSONGeometry `json:"originWalkIso"`
 	DestinationWalkIso  GeoJSONGeometry `json:"destinationWalkIso"`
 	OriginDriveGeo      GeoJSONGeometry `json:"originDriveGeo"`
@@ -2486,8 +2487,9 @@ func (req RideRequest) originDriveGeometry() GeoJSONGeometry {
 }
 
 func (req RideRequest) destinationDriveGeometry() GeoJSONGeometry {
-	if validGeoJSONPolygonGeometry(req.DestinationDriveGeo) {
-		return req.DestinationDriveGeo
+	geometry := resolveCanonicalGeometry(req.DestinationDriveGeo, req.DestDriveIso)
+	if validGeoJSONPolygonGeometry(geometry) {
+		return geometry
 	}
 	return GeoJSONGeometry{}
 }
