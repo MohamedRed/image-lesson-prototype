@@ -3164,6 +3164,15 @@ func TestScoreWeightsFromEnvTrimsConfiguredWeights(t *testing.T) {
 	}
 }
 
+func TestScoreWeightsFromEnvPreservesZeroCurbWeight(t *testing.T) {
+	t.Setenv("WEIGHT_CURB", " 0 ")
+
+	weights := scoreWeightsFromEnv()
+	if weights.Curb != 0 {
+		t.Fatalf("expected explicit zero curb weight to disable curb-load multiplier, got %+v", weights)
+	}
+}
+
 func TestPickBestDriverFromProfiles_DefaultsNonFiniteScoreWeights(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "200000")
 	req := corridorRequest()

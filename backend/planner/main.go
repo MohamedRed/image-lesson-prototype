@@ -1978,9 +1978,6 @@ func sanitizeScoreWeights(weights scoreWeights) scoreWeights {
 	if weights.Detour == 0 && weights.ETA == 0 && weights.Walk == 0 {
 		weights = defaults
 	}
-	if weights.Curb == 0 {
-		weights.Curb = defaults.Curb
-	}
 	return weights
 }
 
