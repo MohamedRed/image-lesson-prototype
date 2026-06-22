@@ -2451,7 +2451,10 @@ func resolveCanonicalGeometry(canonical, legacy GeoJSONGeometry) GeoJSONGeometry
 
 func (req RideRequest) originWalkGeometry() GeoJSONGeometry {
 	geometry := resolveCanonicalGeometry(req.OriginWalkIso, req.OriWalkIso)
-	if !geometry.isZero() {
+	if !geometry.isZero() && validGeoJSONPolygonGeometry(geometry) {
+		return geometry
+	}
+	if !geometry.isZero() && req.WalkRadiusM <= 0 {
 		return geometry
 	}
 	if req.WalkRadiusM > 0 {
@@ -2462,7 +2465,10 @@ func (req RideRequest) originWalkGeometry() GeoJSONGeometry {
 
 func (req RideRequest) destinationWalkGeometry() GeoJSONGeometry {
 	geometry := resolveCanonicalGeometry(req.DestinationWalkIso, req.DestWalkIso)
-	if !geometry.isZero() {
+	if !geometry.isZero() && validGeoJSONPolygonGeometry(geometry) {
+		return geometry
+	}
+	if !geometry.isZero() && req.WalkRadiusM <= 0 {
 		return geometry
 	}
 	if req.WalkRadiusM > 0 {

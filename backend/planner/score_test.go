@@ -1085,6 +1085,22 @@ func TestComputeDriverScore_CorridorIntersectsDestinationWalkZone(t *testing.T) 
 	}
 }
 
+func TestComputeDriverScore_MalformedOriginWalkGeometryFallsBackToWalkRadiusForBufferCorridor(t *testing.T) {
+	allowLongPickupETA(t)
+	req := corridorRequest()
+	req.WalkRadiusM = 500
+	req.OriWalkIso = GeoJSONGeometry{}
+	req.OriginWalkIso = GeoJSONGeometry{Type: "Polygon", Coordinates: [][][]float64{}}
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{}
+	driver := corridorDriver("buffer-corridor-radius-origin-fallback", 0, 0, routeCorridor())
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected malformed originWalkIso to fall back to walkRadiusM circle for a valid buffer corridor")
+	}
+}
+
 func TestGeoPointFromRawParsesStringBackedCurrentLocation(t *testing.T) {
 	point, ok := geoPointFromRaw(map[string]any{"latitude": " 0.05 ", "longitude": " -0.10 "})
 	if !ok {
