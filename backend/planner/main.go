@@ -778,6 +778,14 @@ func resourceCountsFromRaw(value any) map[string]int {
 		for key, rawValue := range rawValues {
 			addCount(key, rawValue)
 		}
+	case map[string]float64:
+		for key, rawValue := range rawValues {
+			addCount(key, rawValue)
+		}
+	case map[string]float32:
+		for key, rawValue := range rawValues {
+			addCount(key, rawValue)
+		}
 	case map[string]string:
 		for key, rawValue := range rawValues {
 			addCount(key, rawValue)

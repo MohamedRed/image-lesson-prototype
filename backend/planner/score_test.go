@@ -858,6 +858,20 @@ func TestCapacitySeatsFromRawParsesStringBackedCapacity(t *testing.T) {
 	}
 }
 
+func TestResourceCountsFromRawParsesTypedFloatCapacityMaps(t *testing.T) {
+	for name, raw := range map[string]any{
+		"float64": map[string]float64{"suitcase": 2, "fractional": 1.5, "nan": math.NaN()},
+		"float32": map[string]float32{"suitcase": 2, "fractional": 1.5},
+	} {
+		t.Run(name, func(t *testing.T) {
+			resources := resourceCountsFromRaw(raw)
+			if resources["suitcase"] != 2 || resources["fractional"] != 0 || resources["nan"] != 0 {
+				t.Fatalf("expected typed float resource map to preserve integer counts and ignore malformed values, got %#v", resources)
+			}
+		})
+	}
+}
+
 func TestIntegerCountParsingRejectsFractionalNumericValues(t *testing.T) {
 	if got := capacitySeatsFromRaw(4.9); got != 0 {
 		t.Fatalf("expected fractional capacitySeats to be treated as malformed and left for defaulting, got %d", got)
