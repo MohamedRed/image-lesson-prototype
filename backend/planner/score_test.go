@@ -2923,6 +2923,15 @@ func TestComputeDriverScore_RejectsMalformedCanonicalRouteBuffer(t *testing.T) {
 	}
 }
 
+func TestDriverCorridorBufferTreatsMalformedCanonicalRouteBufferAsAbsent(t *testing.T) {
+	driver := corridorDriver("malformed-canonical-route-buffer-helper", 0.05, 0, GeoJSONGeometry{})
+	driver.RouteBuffer = GeoJSONGeometry{Type: "Polygon", Coordinates: [][][]float64{}}
+
+	if got := driverCorridorBuffer(driver); !got.isZero() {
+		t.Fatalf("expected malformed canonical routeBuffer to be normalized to an absent corridor, got %#v", got)
+	}
+}
+
 func TestComputeDriverScore_AcceptsCanonicalRouteBufferAlias(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("canonical-route-buffer", 0.05, 0, GeoJSONGeometry{})

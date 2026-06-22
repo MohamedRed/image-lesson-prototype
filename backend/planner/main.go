@@ -2512,7 +2512,10 @@ func driverCorridorBuffer(driver DriverProfile) GeoJSONGeometry {
 	if validGeoJSONPolygonGeometry(driver.BufferPolygon) {
 		return driver.BufferPolygon
 	}
-	return driver.RouteBuffer
+	if validGeoJSONPolygonGeometry(driver.RouteBuffer) {
+		return driver.RouteBuffer
+	}
+	return GeoJSONGeometry{}
 }
 
 func validGeoJSONPolygonGeometry(geometry GeoJSONGeometry) bool {
