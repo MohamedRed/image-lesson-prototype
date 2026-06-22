@@ -1179,6 +1179,23 @@ func TestGeoPointFromRawParsesStringBackedCurrentLocation(t *testing.T) {
 	}
 }
 
+func TestGeoPointFromRawParsesTypedCurrentLocationMaps(t *testing.T) {
+	for name, raw := range map[string]any{
+		"typed-float":  map[string]float64{"latitude": 0.05, "longitude": -0.10},
+		"typed-string": map[string]string{"latitude": " 0.05 ", "longitude": " -0.10 "},
+	} {
+		t.Run(name, func(t *testing.T) {
+			point, ok := geoPointFromRaw(raw)
+			if !ok {
+				t.Fatalf("expected %s currentLocation to parse", name)
+			}
+			if point.Latitude != 0.05 || point.Longitude != -0.10 {
+				t.Fatalf("expected parsed currentLocation lat=0.05 lon=-0.10, got %#v", point)
+			}
+		})
+	}
+}
+
 func TestGeoPointFromRawParsesNativeFirestoreLatLng(t *testing.T) {
 	point, ok := geoPointFromRaw(&latlng.LatLng{Latitude: 0.05, Longitude: -0.10})
 	if !ok {

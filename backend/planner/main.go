@@ -3402,20 +3402,49 @@ func geoPointFromRaw(value any) (GeoPoint, bool) {
 		}
 		return point, true
 	case map[string]any:
-		lat, okLat := numberAsFloat(raw["latitude"])
-		lng, okLng := numberAsFloat(raw["longitude"])
-		if !okLat || !okLng {
-			lat, okLat = numberAsFloat(raw["Latitude"])
-			lng, okLng = numberAsFloat(raw["Longitude"])
-		}
-		point := GeoPoint{Latitude: lat, Longitude: lng}
-		if !okLat || !okLng || validateGeoPoint("point", point) != nil {
-			return GeoPoint{}, false
-		}
-		return point, true
+		return geoPointFromCoordinateLookup(func(field string) (any, bool) {
+			value, ok := raw[field]
+			return value, ok
+		})
+	case map[string]float64:
+		return geoPointFromCoordinateLookup(func(field string) (any, bool) {
+			value, ok := raw[field]
+			return value, ok
+		})
+	case map[string]string:
+		return geoPointFromCoordinateLookup(func(field string) (any, bool) {
+			value, ok := raw[field]
+			return value, ok
+		})
+	case map[string]int:
+		return geoPointFromCoordinateLookup(func(field string) (any, bool) {
+			value, ok := raw[field]
+			return value, ok
+		})
+	case map[string]int64:
+		return geoPointFromCoordinateLookup(func(field string) (any, bool) {
+			value, ok := raw[field]
+			return value, ok
+		})
 	default:
 		return GeoPoint{}, false
 	}
+}
+
+func geoPointFromCoordinateLookup(lookup func(string) (any, bool)) (GeoPoint, bool) {
+	latRaw, okLat := lookup("latitude")
+	lngRaw, okLng := lookup("longitude")
+	if !okLat || !okLng {
+		latRaw, okLat = lookup("Latitude")
+		lngRaw, okLng = lookup("Longitude")
+	}
+	lat, parsedLat := numberAsFloat(latRaw)
+	lng, parsedLng := numberAsFloat(lngRaw)
+	point := GeoPoint{Latitude: lat, Longitude: lng}
+	if !okLat || !okLng || !parsedLat || !parsedLng || validateGeoPoint("point", point) != nil {
+		return GeoPoint{}, false
+	}
+	return point, true
 }
 
 func validateNonNegativeCounts(field string, counts map[string]int) error {
