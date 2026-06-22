@@ -3497,6 +3497,22 @@ func TestComputeDriverScore_RejectsExcessiveDetourWhenLaterOriginProjectionIsNea
 	}
 }
 
+func TestComputeDriverScore_TrimsRouteDetourThresholdEnvBeforeRejectingLoopingRoute(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", " 1 ")
+	req := corridorRequest()
+	driver := corridorDriver("small-loop-above-trimmed-detour-threshold", 0, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0.08, Longitude: 0.5},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected whitespace-padded detour threshold to reject a route with >1km insertion detour")
+	}
+}
+
 func TestComputeDriverScore_RejectsExcessiveDetourBeforeRouteContinuesNearOrigin(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "1")
 	req := corridorRequest()

@@ -1789,7 +1789,7 @@ func routeDistanceBetweenIndexes(points []GeoPoint, startIdx, endIdx int) float6
 }
 
 func maxSingleHopRouteDetourKm() float64 {
-	if value := os.Getenv("MAX_SINGLE_HOP_DETOUR_KM"); value != "" {
+	if value := strings.TrimSpace(os.Getenv("MAX_SINGLE_HOP_DETOUR_KM")); value != "" {
 		if parsed, err := strconv.ParseFloat(value, 64); err == nil && !nonFiniteFloat(parsed) && parsed > 0 {
 			return parsed
 		}
