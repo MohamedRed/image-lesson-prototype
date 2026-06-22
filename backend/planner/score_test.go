@@ -775,6 +775,17 @@ func TestReservedSeatLedgerSumIgnoresNegativeEntries(t *testing.T) {
 	}
 }
 
+func TestReservedSeatLedgerFromRawParsesStringBackedSeats(t *testing.T) {
+	reserved := reservedSeatsFromRaw([]any{
+		map[string]any{"seats": " 2 "},
+		map[string]any{"seats": int64(1)},
+		map[string]any{"seats": -5},
+	})
+	if reserved != 3 {
+		t.Fatalf("expected raw string-backed seat ledger to sum positive seats only, got %d", reserved)
+	}
+}
+
 func TestComputeDriverScore_ClampsNegativeReservedSeatLedgerLoad(t *testing.T) {
 	req := corridorRequest()
 	req.PassengerCount = 5

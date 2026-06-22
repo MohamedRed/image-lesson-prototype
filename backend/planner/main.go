@@ -657,6 +657,45 @@ func sumReservedSeats(legs []struct {
 	return total
 }
 
+func reservedSeatsFromRaw(value any) int {
+	sumSeatEntry := func(entry any) int {
+		switch raw := entry.(type) {
+		case map[string]any:
+			seats, ok := intValueOK(raw["seats"])
+			if !ok || seats <= 0 {
+				return 0
+			}
+			return seats
+		case struct {
+			Seats int `firestore:"seats"`
+		}:
+			if raw.Seats <= 0 {
+				return 0
+			}
+			return raw.Seats
+		default:
+			return 0
+		}
+	}
+
+	total := 0
+	switch entries := value.(type) {
+	case []any:
+		for _, entry := range entries {
+			total += sumSeatEntry(entry)
+		}
+	case []map[string]any:
+		for _, entry := range entries {
+			total += sumSeatEntry(entry)
+		}
+	case []struct {
+		Seats int `firestore:"seats"`
+	}:
+		return sumReservedSeats(entries)
+	}
+	return total
+}
+
 type cargoLedgerEntry struct {
 	Items map[string]int `firestore:"items"`
 }
@@ -3313,11 +3352,8 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		raw := d.Data()
 		_, hasSeatLedger := raw["legs"]
 		var data struct {
-			CapacitySeats int `firestore:"capacitySeats"`
-			ActivePickups int `firestore:"activePickups"`
-			Legs          []struct {
-				Seats int `firestore:"seats"`
-			} `firestore:"legs"`
+			CapacitySeats           int                    `firestore:"capacitySeats"`
+			ActivePickups           int                    `firestore:"activePickups"`
 			PickupZoneID            string                 `firestore:"pickupZoneId"`
 			DropoffZoneID           string                 `firestore:"dropoffZoneId"`
 			RoutePolyline           string                 `firestore:"routePolyline"`
@@ -3406,7 +3442,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			CapacitySeats:            data.CapacitySeats,
 			ActivePickups:            data.ActivePickups,
 			HasSeatLedger:            hasSeatLedger,
-			ReservedSeats:            sumReservedSeats(data.Legs),
+			ReservedSeats:            reservedSeatsFromRaw(raw["legs"]),
 			PickupZoneID:             pickupZoneID,
 			PickupZoneActivePickups:  pickupZoneActivePickups,
 			PickupZoneCapacityCars:   pickupZoneCapacityCars,
