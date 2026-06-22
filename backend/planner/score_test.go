@@ -3459,6 +3459,18 @@ func TestCurbFactorFromZoneDataParsesStringBackedPositiveValues(t *testing.T) {
 	}
 }
 
+func TestTransferCongestionFactorFromZoneDataMirrorsCurbNormalization(t *testing.T) {
+	if got := transferCongestionFactorFromZoneData(map[string]any{"curbLoadFactor": " 1.25 "}); got != 1.25 {
+		t.Fatalf("expected string-backed transfer curbLoadFactor to parse, got %f", got)
+	}
+	if got := transferCongestionFactorFromZoneData(map[string]any{"curbLoadFactor": int64(2)}); got != 2 {
+		t.Fatalf("expected integer transfer curbLoadFactor to parse, got %f", got)
+	}
+	if got := transferCongestionFactorFromZoneData(map[string]any{"curbLoadFactor": math.Inf(1)}); got != 1 {
+		t.Fatalf("expected non-finite transfer curbLoadFactor to fall back to neutral 1.0, got %f", got)
+	}
+}
+
 func TestPickBestDriverFromProfiles_DefaultsMissingPickupZoneCapacityBeforeReservation(t *testing.T) {
 	req := corridorRequest()
 	fullDefaultZone := corridorDriverWithPickupZone("nearest-full-default-zone", 0.001, 0, routeCorridor(), "zone-full-default")

@@ -2001,6 +2001,10 @@ func curbFactorFromZoneData(zoneData map[string]any) float64 {
 	return 1.0
 }
 
+func transferCongestionFactorFromZoneData(zoneData map[string]any) float64 {
+	return curbFactorFromZoneData(zoneData)
+}
+
 func positiveFiniteFloatValue(value any) (float64, bool) {
 	var parsed float64
 	switch v := value.(type) {
@@ -3885,11 +3889,12 @@ func getAvailableTransferPoints(ctx context.Context, origin, destination GeoPoin
 
 		// Get congestion factor from pickup zone
 		congestionFactor := 1.0
-		if zoneID, ok := data["pickupZoneId"].(string); ok && zoneID != "" {
-			zoneDoc, err := client.Collection("pickupZones").Doc(zoneID).Get(ctx)
-			if err == nil && zoneDoc.Exists() {
-				if factor, ok := zoneDoc.Data()["curbLoadFactor"].(float64); ok {
-					congestionFactor = factor
+		if rawZoneID, ok := data["pickupZoneId"].(string); ok {
+			zoneID := strings.TrimSpace(rawZoneID)
+			if zoneID != "" {
+				zoneDoc, err := client.Collection("pickupZones").Doc(zoneID).Get(ctx)
+				if err == nil && zoneDoc.Exists() {
+					congestionFactor = transferCongestionFactorFromZoneData(zoneDoc.Data())
 				}
 			}
 		}
