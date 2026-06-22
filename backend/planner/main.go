@@ -2869,6 +2869,16 @@ func ringCoordinateSets(coords any) ([][][]float64, bool) {
 	switch c := coords.(type) {
 	case [][][]float64:
 		return c, len(c) > 0
+	case [][][]string:
+		rings := make([][][]float64, 0, len(c))
+		for _, rawRing := range c {
+			ring, ok := coordinatePairsFromAny(rawRing)
+			if !ok {
+				return nil, false
+			}
+			rings = append(rings, ring)
+		}
+		return rings, len(rings) > 0
 	case [][][]interface{}:
 		rings := make([][][]float64, 0, len(c))
 		for _, rawRing := range c {
@@ -2901,6 +2911,11 @@ func firstRingCoordinates(coords any) ([][]float64, bool) {
 			return nil, false
 		}
 		return c[0], true
+	case [][][]string:
+		if len(c) == 0 {
+			return nil, false
+		}
+		return coordinatePairsFromAny(c[0])
 	case [][][]interface{}:
 		if len(c) == 0 {
 			return nil, false
@@ -2980,6 +2995,16 @@ func coordinatePairsFromAny(value any) ([][]float64, bool) {
 	switch ring := value.(type) {
 	case [][]float64:
 		return ring, true
+	case [][]string:
+		pairs := make([][]float64, 0, len(ring))
+		for _, rawPair := range ring {
+			pair, ok := numericPair(rawPair)
+			if !ok {
+				return nil, false
+			}
+			pairs = append(pairs, pair)
+		}
+		return pairs, true
 	case [][]interface{}:
 		pairs := make([][]float64, 0, len(ring))
 		for _, rawPair := range ring {
