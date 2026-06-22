@@ -1829,6 +1829,16 @@ func positiveFiniteFloatValue(value any) (float64, bool) {
 		parsed = v
 	case float32:
 		parsed = float64(v)
+	case string:
+		trimmed := strings.TrimSpace(v)
+		if trimmed == "" {
+			return 0, false
+		}
+		var err error
+		parsed, err = strconv.ParseFloat(trimmed, 64)
+		if err != nil {
+			return 0, false
+		}
 	default:
 		return 0, false
 	}
