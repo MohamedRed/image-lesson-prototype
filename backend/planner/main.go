@@ -1127,6 +1127,32 @@ func genderPoolCompatible(riderGender string, currentPassengerGenders []string) 
 	return true
 }
 
+func currentPassengerGendersFromRaw(value any) []string {
+	normalized := []string{}
+	appendGender := func(value any) {
+		gender, ok := value.(string)
+		if !ok {
+			return
+		}
+		gender = riderGenderFilter(gender)
+		if gender == "" {
+			return
+		}
+		normalized = append(normalized, gender)
+	}
+	switch values := value.(type) {
+	case []string:
+		for _, value := range values {
+			appendGender(value)
+		}
+	case []any:
+		for _, value := range values {
+			appendGender(value)
+		}
+	}
+	return normalized
+}
+
 func riderGenderFilter(riderGender string) string {
 	return strings.ToLower(strings.TrimSpace(riderGender))
 }
@@ -3552,7 +3578,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			ChildSeatInventory:       resourceCountsFromRaw(raw["childSeatInventory"]),
 			ReservedChildSeats:       resourceLedgerFromRaw(raw["childSeatLedger"], "seats"),
 			PremiumCapabilities:      data.PremiumCapabilities,
-			CurrentPassengerGenders:  data.CurrentPassengerGenders,
+			CurrentPassengerGenders:  currentPassengerGendersFromRaw(raw["currentPassengerGenders"]),
 			HasAvailabilityState:     hasAvailabilityState,
 			IsOnline:                 isOnline,
 			IsAvailable:              isAvailable,

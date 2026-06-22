@@ -474,6 +474,14 @@ func TestComputeDriverScore_RejectsMixedGenderPool(t *testing.T) {
 	}
 }
 
+func TestCurrentPassengerGendersFromRawParsesFirestoreArray(t *testing.T) {
+	got := currentPassengerGendersFromRaw([]any{" male ", "", "   ", 123, "female"})
+	want := []string{"male", "female"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("expected raw currentPassengerGenders array %#v, got %#v", want, got)
+	}
+}
+
 func TestComputeDriverScore_TrimsRiderGenderBeforePoolCompatibility(t *testing.T) {
 	req := corridorRequest()
 	req.RiderGender = " female "
