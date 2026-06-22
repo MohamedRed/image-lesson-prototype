@@ -13,6 +13,7 @@ export interface PlannerRideRequest {
   oriWalkIso?: any;
   destWalkIso?: any;
   oriDriveIso?: any;
+  destDriveIso?: any;
   originWalkIso?: any;
   destinationWalkIso?: any;
   originDriveGeo?: any;
@@ -95,7 +96,8 @@ export function buildPlannerRequest(
   const originWalkIso = rideRequest.originWalkIso ?? geoUpdates.originWalkIso ?? oriWalkIso;
   const destinationWalkIso = rideRequest.destinationWalkIso ?? geoUpdates.destinationWalkIso ?? destWalkIso;
   const originDriveGeo = rideRequest.originDriveGeo ?? geoUpdates.originDriveGeo ?? oriDriveIso;
-  const destinationDriveGeo = rideRequest.destinationDriveGeo ?? geoUpdates.destinationDriveGeo;
+  const destinationDriveGeo = rideRequest.destinationDriveGeo ?? geoUpdates.destinationDriveGeo ?? rideRequest.destDriveIso ?? geoUpdates.destDriveIso;
+  const destDriveIso = rideRequest.destDriveIso ?? geoUpdates.destDriveIso ?? destinationDriveGeo;
 
   return {
     origin: rideRequest.origin,
@@ -114,6 +116,7 @@ export function buildPlannerRequest(
     destinationWalkIso,
     originDriveGeo,
     destinationDriveGeo,
+    destDriveIso,
     excludedDriverIds: normalizeDriverIds(excludedDriverIds),
   };
 }

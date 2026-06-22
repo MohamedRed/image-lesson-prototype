@@ -63,7 +63,20 @@ describe("planner client", () => {
       destinationWalkIso,
       originDriveGeo,
       destinationDriveGeo,
+      destDriveIso: destinationDriveGeo,
     });
+  });
+
+  it("passes legacy destDriveIso to planner destination-drive aliases", () => {
+    const legacyDestDriveIso = { type: "Polygon", coordinates: [[[16, 16], [17, 16], [17, 17], [16, 16]]] };
+    const request = buildPlannerRequest(
+      { origin, destination, passengerCount: 1, destDriveIso: legacyDestDriveIso },
+      {},
+      []
+    );
+
+    expect(request.destinationDriveGeo).toEqual(legacyDestDriveIso);
+    expect(request.destDriveIso).toEqual(legacyDestDriveIso);
   });
 
   it("adds a metadata ID-token Authorization header for private Cloud Run planner calls", async () => {
