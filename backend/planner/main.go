@@ -2844,6 +2844,16 @@ func numberAsFloat(value any) (float64, bool) {
 		return float64(n), true
 	case int64:
 		return float64(n), true
+	case string:
+		trimmed := strings.TrimSpace(n)
+		if trimmed == "" {
+			return 0, false
+		}
+		f, err := strconv.ParseFloat(trimmed, 64)
+		if err != nil {
+			return 0, false
+		}
+		return finite(f)
 	case json.Number:
 		f, err := n.Float64()
 		if err != nil {
