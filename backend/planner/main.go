@@ -1196,6 +1196,10 @@ func premiumCapabilitiesFromRaw(value any) map[string]any {
 		for key, capability := range rawCapabilities {
 			appendCapability(key, capability)
 		}
+	case map[string]string:
+		for key, capability := range rawCapabilities {
+			appendCapability(key, capability)
+		}
 	}
 	return capabilities
 }

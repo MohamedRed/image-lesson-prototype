@@ -616,6 +616,16 @@ func TestPremiumCapabilitiesFromRawParsesTypedCapabilityMaps(t *testing.T) {
 	}
 }
 
+func TestPremiumCapabilitiesFromRawParsesStringCapabilityMaps(t *testing.T) {
+	capabilities := premiumCapabilitiesFromRaw(map[string]string{"exclusive": " true ", "  ": "true"})
+	if got, ok := capabilities["exclusive"].(string); !ok || got != " true " {
+		t.Fatalf("expected raw string premium capability map to preserve exclusive string value, got %#v", capabilities)
+	}
+	if _, ok := capabilities[""]; ok || len(capabilities) != 1 {
+		t.Fatalf("expected blank premium capability keys to be ignored, got %#v", capabilities)
+	}
+}
+
 func TestComputeDriverScore_RejectsNonPositivePassengerCount(t *testing.T) {
 	req := RideRequest{Origin: GeoPoint{0, 0}, Destination: GeoPoint{1, 1}, PassengerCount: 0}
 	driver := DriverProfile{CapacitySeats: 4, CurrentLocation: GeoPoint{0, 0}}
