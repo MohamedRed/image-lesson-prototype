@@ -2897,9 +2897,23 @@ func TestComputeDriverScore_RejectsBufferOnlyOnOriginWalkZoneHoleBoundary(t *tes
 	}
 }
 
-func TestComputeDriverScore_RejectsPolylineMissingWalkZoneDespiteBroadBuffer(t *testing.T) {
+func TestComputeDriverScore_RejectsRoutePolylineMissingOriginWalkZoneEvenWhenBufferIntersects(t *testing.T) {
 	req := corridorRequest()
-	driver := corridorDriver("stale-broad-buffer", 0, 0, routeCorridor())
+	driver := corridorDriver("polyline-misses-origin-stale-buffer", 0.05, -0.10, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0.05, Longitude: -0.10},
+		{Latitude: 0.05, Longitude: 1.10},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected routePolyline that misses origin walk zone to be rejected even when broad bufferPolygon intersects it")
+	}
+}
+
+func TestComputeDriverScore_RejectsRoutePolylineMissingDestinationWalkZoneEvenWhenBufferIntersects(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("polyline-misses-destination-stale-buffer", 0, 0, routeCorridor())
 	driver.RoutePolyline = encodePolyline([]GeoPoint{
 		{Latitude: 0, Longitude: 0},
 		{Latitude: 0, Longitude: 0.50},
