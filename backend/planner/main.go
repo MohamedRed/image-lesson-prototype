@@ -3675,33 +3675,50 @@ func intValueOK(value any) (int, bool) {
 	case int:
 		return v, true
 	case int64:
-		return int(v), true
+		return int64ValueOK(v)
 	case int32:
-		return int(v), true
+		return int64ValueOK(int64(v))
 	case float64:
-		if math.IsNaN(v) || math.IsInf(v, 0) || math.Trunc(v) != v {
-			return 0, false
-		}
-		return int(v), true
+		return floatIntegerValueOK(v)
 	case float32:
-		f := float64(v)
-		if math.IsNaN(f) || math.IsInf(f, 0) || math.Trunc(f) != f {
-			return 0, false
-		}
-		return int(v), true
+		return floatIntegerValueOK(float64(v))
 	case string:
 		trimmed := strings.TrimSpace(v)
 		if trimmed == "" {
 			return 0, false
 		}
+		if parsedInt, err := strconv.ParseInt(trimmed, 10, 0); err == nil {
+			return int(parsedInt), true
+		}
 		parsed, err := strconv.ParseFloat(trimmed, 64)
-		if err != nil || math.IsNaN(parsed) || math.IsInf(parsed, 0) || math.Trunc(parsed) != parsed {
+		if err != nil {
 			return 0, false
 		}
-		return int(parsed), true
+		return floatIntegerValueOK(parsed)
 	default:
 		return 0, false
 	}
+}
+
+func int64ValueOK(value int64) (int, bool) {
+	maxInt := int64(int(^uint(0) >> 1))
+	minInt := -maxInt - 1
+	if value < minInt || value > maxInt {
+		return 0, false
+	}
+	return int(value), true
+}
+
+func floatIntegerValueOK(value float64) (int, bool) {
+	if math.IsNaN(value) || math.IsInf(value, 0) || math.Trunc(value) != value {
+		return 0, false
+	}
+	maxInt := int(^uint(0) >> 1)
+	minInt := -maxInt - 1
+	if value <= float64(minInt) || value >= float64(maxInt) {
+		return 0, false
+	}
+	return int(value), true
 }
 
 func routeETAProfileSecondsFromRaw(value any) []int {

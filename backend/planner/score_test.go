@@ -884,6 +884,18 @@ func TestActivePickupsFromRawParsesStringBackedLegacyOccupancy(t *testing.T) {
 	}
 }
 
+func TestIntValueOKRejectsOutOfRangeNumericValues(t *testing.T) {
+	if got, ok := intValueOK("9223372036854775808"); ok {
+		t.Fatalf("expected out-of-range string-backed integer to be rejected, got %d", got)
+	}
+	if got, ok := intValueOK("-9223372036854775809"); ok {
+		t.Fatalf("expected negative out-of-range string-backed integer to be rejected, got %d", got)
+	}
+	if got, ok := intValueOK(1e20); ok {
+		t.Fatalf("expected out-of-range float integer to be rejected, got %d", got)
+	}
+}
+
 func TestComputeDriverScore_ClampsNegativeReservedSeatLedgerLoad(t *testing.T) {
 	req := corridorRequest()
 	req.PassengerCount = 5
