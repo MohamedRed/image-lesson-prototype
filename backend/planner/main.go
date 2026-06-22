@@ -2014,10 +2014,11 @@ func rankDriverProfiles(req RideRequest, drivers []DriverProfile, exclude []stri
 
 	ranked := make([]scoredDriver, 0, len(drivers))
 	for _, driver := range drivers {
+		driver.ID = strings.TrimSpace(driver.ID)
 		driver.RoutePolyline = normalizeRoutePolyline(driver.RoutePolyline)
 		driver.PickupZoneID = strings.TrimSpace(driver.PickupZoneID)
 		driver.DropoffZoneID = strings.TrimSpace(driver.DropoffZoneID)
-		if contains(exclude, driver.ID) {
+		if driver.ID == "" || contains(exclude, driver.ID) {
 			continue
 		}
 		if driver.PickupZoneID == "" {

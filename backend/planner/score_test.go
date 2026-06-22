@@ -3680,6 +3680,33 @@ func TestPickBestDriverFromProfiles_TrimsExcludedDriverIDsForReservationRetry(t 
 	}
 }
 
+func TestPickBestDriverFromProfiles_TrimsDriverIDsBeforeApplyingExclusions(t *testing.T) {
+	req := corridorRequest()
+	failedReservation := corridorDriverWithPickupZone(" failed-reservation-driver\n", 0.001, 0, routeCorridor(), "zone-failed")
+	nextCandidate := corridorDriverWithPickupZone("next-reservation-candidate", 0.02, 0, routeCorridor(), "zone-next")
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{failedReservation, nextCandidate}, []string{"failed-reservation-driver"}, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected planner to choose next reservable corridor driver, got error: %v", err)
+	}
+	if driverID != "next-reservation-candidate" {
+		t.Fatalf("expected trimmed driver ID to match excludedDriverIds and skip failed candidate, got %q", driverID)
+	}
+}
+
+func TestPickBestDriverFromProfiles_ReturnsTrimmedDriverID(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriverWithPickupZone(" selected-driver\n", 0.001, 0, routeCorridor(), "zone-selected")
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{driver}, nil, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected planner to choose valid corridor driver, got error: %v", err)
+	}
+	if driverID != "selected-driver" {
+		t.Fatalf("expected planner selection to return trimmed driverId, got %q", driverID)
+	}
+}
+
 func TestPickBestDriverFromProfiles_HonorsRequestExcludedDriverIDs(t *testing.T) {
 	req := corridorRequest()
 	req.ExcludedDriverIDs = []string{"  failed-reservation-driver\n"}
