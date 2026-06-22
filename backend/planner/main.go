@@ -3018,22 +3018,30 @@ func coordinatePairsFromInterfaces(ring []interface{}) ([][]float64, bool) {
 }
 
 func numericPair(value any) ([]float64, bool) {
+	parse := func(lngValue, latValue any) ([]float64, bool) {
+		lng, okLng := numberAsFloat(lngValue)
+		lat, okLat := numberAsFloat(latValue)
+		if !okLng || !okLat {
+			return nil, false
+		}
+		return []float64{lng, lat}, true
+	}
 	switch pair := value.(type) {
 	case []float64:
 		if len(pair) < 2 {
 			return nil, false
 		}
-		return pair[:2], true
+		return parse(pair[0], pair[1])
+	case []string:
+		if len(pair) < 2 {
+			return nil, false
+		}
+		return parse(pair[0], pair[1])
 	case []interface{}:
 		if len(pair) < 2 {
 			return nil, false
 		}
-		lng, okLng := numberAsFloat(pair[0])
-		lat, okLat := numberAsFloat(pair[1])
-		if !okLng || !okLat {
-			return nil, false
-		}
-		return []float64{lng, lat}, true
+		return parse(pair[0], pair[1])
 	default:
 		return nil, false
 	}
