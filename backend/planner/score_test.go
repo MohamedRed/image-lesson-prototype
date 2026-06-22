@@ -3166,6 +3166,17 @@ func TestRouteETAProfileSecondsFromDriverRawAcceptsCanonicalAcronymAlias(t *test
 	}
 }
 
+func TestRouteETAProfileSecondsFromDriverRawSkipsEmptyLegacyAlias(t *testing.T) {
+	got := routeETAProfileSecondsFromDriverRaw(map[string]any{
+		"routeEtaProfile": []any{},
+		"routeETAProfile": []any{0, "60", int64(120)},
+	})
+	want := []int{0, 60, 120}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("expected empty legacy route ETA profile to fall through to canonical alias values %#v, got %#v", want, got)
+	}
+}
+
 func TestRouteETAProfileSecondsFromRawRejectsNegativeValues(t *testing.T) {
 	got := routeETAProfileSecondsFromRaw([]int64{0, -1})
 	if got != nil {

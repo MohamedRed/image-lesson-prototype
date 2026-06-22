@@ -3857,7 +3857,7 @@ func floatIntegerValueOK(value float64) (int, bool) {
 
 func routeETAProfileSecondsFromDriverRaw(raw map[string]any) []int {
 	for _, field := range []string{"routeEtaProfile", "routeETAProfile", "routeETAProfileSeconds"} {
-		if profile := routeETAProfileSecondsFromRaw(raw[field]); profile != nil {
+		if profile := routeETAProfileSecondsFromRaw(raw[field]); len(profile) > 0 {
 			return profile
 		}
 	}
