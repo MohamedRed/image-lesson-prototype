@@ -2816,6 +2816,13 @@ func TestRouteETAProfileSecondsFromRawParsesStringBackedNumbers(t *testing.T) {
 	}
 }
 
+func TestRouteETAProfileSecondsFromRawRejectsNegativeValues(t *testing.T) {
+	got := routeETAProfileSecondsFromRaw([]int64{0, -1})
+	if got != nil {
+		t.Fatalf("expected negative raw route ETA profile values to be treated as malformed, got %#v", got)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RanksRouteEtaProfileAboveEqualGeometry(t *testing.T) {
 	req := corridorRequest()
 	slowProfile := corridorDriverWithPickupZone("aaa-slow-profile", 0, -0.10, routeCorridor(), "zone-slow")

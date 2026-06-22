@@ -3688,13 +3688,34 @@ func intValueOK(value any) (int, bool) {
 }
 
 func routeETAProfileSecondsFromRaw(value any) []int {
+	appendProfileSecond := func(seconds []int, entry int) ([]int, bool) {
+		if entry < 0 {
+			return nil, false
+		}
+		return append(seconds, entry), true
+	}
 	switch profile := value.(type) {
 	case []int:
-		return append([]int(nil), profile...)
+		seconds := make([]int, 0, len(profile))
+		for _, entry := range profile {
+			var ok bool
+			seconds, ok = appendProfileSecond(seconds, entry)
+			if !ok {
+				return nil
+			}
+		}
+		return seconds
 	case []int64:
 		seconds := make([]int, 0, len(profile))
 		for _, entry := range profile {
-			seconds = append(seconds, int(entry))
+			parsed, ok := intValueOK(entry)
+			if !ok {
+				return nil
+			}
+			seconds, ok = appendProfileSecond(seconds, parsed)
+			if !ok {
+				return nil
+			}
 		}
 		return seconds
 	case []float64:
@@ -3704,7 +3725,10 @@ func routeETAProfileSecondsFromRaw(value any) []int {
 			if !ok {
 				return nil
 			}
-			seconds = append(seconds, parsed)
+			seconds, ok = appendProfileSecond(seconds, parsed)
+			if !ok {
+				return nil
+			}
 		}
 		return seconds
 	case []any:
@@ -3714,7 +3738,10 @@ func routeETAProfileSecondsFromRaw(value any) []int {
 			if !ok {
 				return nil
 			}
-			seconds = append(seconds, parsed)
+			seconds, ok = appendProfileSecond(seconds, parsed)
+			if !ok {
+				return nil
+			}
 		}
 		return seconds
 	default:
