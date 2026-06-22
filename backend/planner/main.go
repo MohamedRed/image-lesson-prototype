@@ -732,21 +732,27 @@ func sumChildSeatLedger(entries []childSeatLedgerEntry) map[string]int {
 	return total
 }
 
+func resourceCountsFromRaw(value any) map[string]int {
+	total := map[string]int{}
+	switch rawValues := value.(type) {
+	case map[string]any:
+		for key, rawValue := range rawValues {
+			count, ok := intValueOK(rawValue)
+			if !ok || count <= 0 {
+				continue
+			}
+			total[key] += count
+		}
+	case map[string]int:
+		addResourceTotals(total, rawValues)
+	}
+	return total
+}
+
 func resourceLedgerFromRaw(value any, field string) map[string]int {
 	total := map[string]int{}
 	addRawResourceValues := func(values any) {
-		switch rawValues := values.(type) {
-		case map[string]any:
-			for key, rawValue := range rawValues {
-				count, ok := intValueOK(rawValue)
-				if !ok || count <= 0 {
-					continue
-				}
-				total[key] += count
-			}
-		case map[string]int:
-			addResourceTotals(total, rawValues)
-		}
+		addResourceTotals(total, resourceCountsFromRaw(values))
 	}
 	addRawEntry := func(entry any) {
 		switch rawEntry := entry.(type) {
@@ -3514,11 +3520,11 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			BufferPolygon:            bufferPolygon,
 			RouteBuffer:              routeBuffer,
 			CurbFactor:               curbFactor,
-			LuggageCapacity:          data.LuggageCapacity,
+			LuggageCapacity:          resourceCountsFromRaw(raw["luggageCapacity"]),
 			ReservedLuggage:          resourceLedgerFromRaw(raw["cargoLedger"], "items"),
-			PetLimits:                data.PetLimits,
+			PetLimits:                resourceCountsFromRaw(raw["petLimits"]),
 			ReservedPets:             resourceLedgerFromRaw(raw["petLedger"], "pets"),
-			ChildSeatInventory:       data.ChildSeatInventory,
+			ChildSeatInventory:       resourceCountsFromRaw(raw["childSeatInventory"]),
 			ReservedChildSeats:       resourceLedgerFromRaw(raw["childSeatLedger"], "seats"),
 			PremiumCapabilities:      data.PremiumCapabilities,
 			CurrentPassengerGenders:  data.CurrentPassengerGenders,

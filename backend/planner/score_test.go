@@ -873,6 +873,19 @@ func TestResourceLedgerFromRawParsesStringBackedCounts(t *testing.T) {
 	}
 }
 
+func TestResourceCountsFromRawParsesStringBackedCapacity(t *testing.T) {
+	capacity := resourceCountsFromRaw(map[string]any{"suitcase": " 2 ", "duffel": int64(1), "bad": -4})
+	if got := capacity["suitcase"]; got != 2 {
+		t.Fatalf("expected raw string-backed suitcase capacity to parse as 2, got %d", got)
+	}
+	if got := capacity["duffel"]; got != 1 {
+		t.Fatalf("expected raw int64 duffel capacity to parse as 1, got %d", got)
+	}
+	if got := capacity["bad"]; got != 0 {
+		t.Fatalf("expected negative raw capacity entries to be ignored, got %d", got)
+	}
+}
+
 func TestComputeDriverScore_ClampsNegativeReservedResourceLedgerLoad(t *testing.T) {
 	req := RideRequest{
 		Origin:          GeoPoint{0, 0},
