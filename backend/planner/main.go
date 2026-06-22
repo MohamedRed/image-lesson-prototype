@@ -92,7 +92,7 @@ type Leg struct {
 
 func buildJourneyLeg(driver DriverProfile, pickup, dropoff GeoPoint, etaSec int) Leg {
 	return Leg{
-		DriverID:             driver.ID,
+		DriverID:             strings.TrimSpace(driver.ID),
 		PickupZoneID:         strings.TrimSpace(driver.PickupZoneID),
 		DropoffZoneID:        strings.TrimSpace(driver.DropoffZoneID),
 		Pickup:               pickup,

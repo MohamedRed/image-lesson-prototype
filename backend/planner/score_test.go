@@ -4364,30 +4364,33 @@ func TestDriverPickupEtaUsesOriginDriveGeoWhenWalkZoneMissing(t *testing.T) {
 	}
 }
 
-func TestBuildSingleHopJourneyIncludesReservationZoneIDs(t *testing.T) {
+func TestBuildSingleHopJourneyIncludesTrimmedReservationIdentifiers(t *testing.T) {
 	req := corridorRequest()
-	driver := corridorDriver("driver-with-zones", 0.01, 0, routeCorridor())
-	driver.PickupZoneID = "zone-123"
-	driver.DropoffZoneID = "zone-456"
+	driver := corridorDriver(" driver-with-zones\n", 0.01, 0, routeCorridor())
+	driver.PickupZoneID = " zone-123 "
+	driver.DropoffZoneID = "	zone-456\n"
 
 	journey := buildSingleHopJourney(req, driver, 90)
 
 	if len(journey.Legs) != 1 {
 		t.Fatalf("expected one leg, got %d", len(journey.Legs))
 	}
+	if journey.Legs[0].DriverID != "driver-with-zones" {
+		t.Fatalf("expected leg driverId to be trimmed for reservation, got %q", journey.Legs[0].DriverID)
+	}
 	if journey.Legs[0].PickupZoneID != "zone-123" {
-		t.Fatalf("expected leg pickupZoneId to preserve driver zone, got %q", journey.Legs[0].PickupZoneID)
+		t.Fatalf("expected leg pickupZoneId to be trimmed for reservation, got %q", journey.Legs[0].PickupZoneID)
 	}
 	if journey.Legs[0].DropoffZoneID != "zone-456" {
-		t.Fatalf("expected leg dropoffZoneId to preserve driver zone, got %q", journey.Legs[0].DropoffZoneID)
+		t.Fatalf("expected leg dropoffZoneId to be trimmed for reservation, got %q", journey.Legs[0].DropoffZoneID)
 	}
 
 	payload, err := json.Marshal(journey)
 	if err != nil {
 		t.Fatalf("marshal journey: %v", err)
 	}
-	if !json.Valid(payload) || !strings.Contains(string(payload), `"pickupZoneId":"zone-123"`) || !strings.Contains(string(payload), `"dropoffZoneId":"zone-456"`) {
-		t.Fatalf("expected JSON payload to expose pickupZoneId and dropoffZoneId, got %s", payload)
+	if !json.Valid(payload) || !strings.Contains(string(payload), `"driverId":"driver-with-zones"`) || !strings.Contains(string(payload), `"pickupZoneId":"zone-123"`) || !strings.Contains(string(payload), `"dropoffZoneId":"zone-456"`) {
+		t.Fatalf("expected JSON payload to expose trimmed reservation identifiers, got %s", payload)
 	}
 }
 
