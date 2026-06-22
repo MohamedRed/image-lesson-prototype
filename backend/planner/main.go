@@ -3413,6 +3413,16 @@ func intValue(value any, fallback int) int {
 			return fallback
 		}
 		return int(v)
+	case string:
+		trimmed := strings.TrimSpace(v)
+		if trimmed == "" {
+			return fallback
+		}
+		parsed, err := strconv.ParseFloat(trimmed, 64)
+		if err != nil || math.IsNaN(parsed) || math.IsInf(parsed, 0) {
+			return fallback
+		}
+		return int(parsed)
 	default:
 		return fallback
 	}
