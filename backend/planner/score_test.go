@@ -3177,6 +3177,16 @@ func TestRouteETAProfileSecondsFromDriverRawSkipsEmptyLegacyAlias(t *testing.T) 
 	}
 }
 
+func TestRouteETAProfileSecondsFromDriverRawAcceptsLowerCamelSecondsAlias(t *testing.T) {
+	got := routeETAProfileSecondsFromDriverRaw(map[string]any{
+		"routeEtaProfileSeconds": []any{0, "60", int64(120)},
+	})
+	want := []int{0, 60, 120}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("expected lower-camel routeEtaProfileSeconds alias values %#v, got %#v", want, got)
+	}
+}
+
 func TestRouteETAProfileSecondsFromRawRejectsNegativeValues(t *testing.T) {
 	got := routeETAProfileSecondsFromRaw([]int64{0, -1})
 	if got != nil {
