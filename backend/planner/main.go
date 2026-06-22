@@ -752,8 +752,7 @@ func sumChildSeatLedger(entries []childSeatLedgerEntry) map[string]int {
 
 func resourceCountsFromRaw(value any) map[string]int {
 	total := map[string]int{}
-	switch rawValues := value.(type) {
-	case map[string]any:
+	addRawValues := func(rawValues map[string]any) {
 		for key, rawValue := range rawValues {
 			count, ok := intValueOK(rawValue)
 			if !ok || count <= 0 {
@@ -761,8 +760,20 @@ func resourceCountsFromRaw(value any) map[string]int {
 			}
 			total[key] += count
 		}
+	}
+	switch rawValues := value.(type) {
+	case map[string]any:
+		addRawValues(rawValues)
 	case map[string]int:
 		addResourceTotals(total, rawValues)
+	case map[string]int64:
+		for key, rawValue := range rawValues {
+			count, ok := intValueOK(rawValue)
+			if !ok || count <= 0 {
+				continue
+			}
+			total[key] += count
+		}
 	}
 	return total
 }
