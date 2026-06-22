@@ -2478,7 +2478,11 @@ func (req RideRequest) destinationWalkGeometry() GeoJSONGeometry {
 }
 
 func (req RideRequest) originDriveGeometry() GeoJSONGeometry {
-	return resolveCanonicalGeometry(req.OriginDriveGeo, req.OriDriveIso)
+	geometry := resolveCanonicalGeometry(req.OriginDriveGeo, req.OriDriveIso)
+	if validGeoJSONPolygonGeometry(geometry) {
+		return geometry
+	}
+	return GeoJSONGeometry{}
 }
 
 func (req RideRequest) destinationDriveGeometry() GeoJSONGeometry {

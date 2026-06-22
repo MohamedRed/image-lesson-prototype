@@ -1735,6 +1735,24 @@ func TestComputeDriverScore_IgnoresMalformedOptionalDestinationDriveGeo(t *testi
 	}
 }
 
+func TestComputeDriverScore_IgnoresMalformedOptionalOriginDriveGeo(t *testing.T) {
+	allowLongPickupETA(t)
+	req := corridorRequest()
+	req.OriDriveIso = GeoJSONGeometry{}
+	req.OriginDriveGeo = GeoJSONGeometry{Type: "Polygon", Coordinates: [][][]float64{}}
+	driver := corridorDriver("valid-corridor-malformed-origin-drive", 0, -0.10, GeoJSONGeometry{})
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected malformed optional originDriveGeo not to reject an otherwise valid corridor")
+	}
+}
+
 func TestComputeDriverScore_RejectsDestinationDriveGeoOnlyBeforeOrigin(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("MAX_SINGLE_HOP_WALK_METERS", "200000")
