@@ -1164,6 +1164,21 @@ func TestGeoPointFromRawParsesNativeFirestoreLatLng(t *testing.T) {
 	}
 }
 
+func TestTransferPointLocationFromDataParsesStringBackedCoordinates(t *testing.T) {
+	point, ok := transferPointLocationFromData(map[string]any{
+		"geometry": map[string]any{
+			"type":        "Point",
+			"coordinates": []any{" -0.10 ", " 0.05 "},
+		},
+	})
+	if !ok {
+		t.Fatalf("expected string-backed transfer point coordinates to parse")
+	}
+	if point.Latitude != 0.05 || point.Longitude != -0.10 {
+		t.Fatalf("expected transfer point lat=0.05 lon=-0.10, got %#v", point)
+	}
+}
+
 func TestGeoJSONGeometryFromRawParsesFirestoreMapRouteBuffer(t *testing.T) {
 	raw := map[string]any{
 		"type": "Polygon",

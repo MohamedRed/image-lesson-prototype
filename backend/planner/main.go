@@ -3875,28 +3875,14 @@ func getAvailableTransferPoints(ctx context.Context, origin, destination GeoPoin
 	for _, doc := range docs {
 		data := doc.Data()
 
-		// Extract location from geometry (assuming point geometry)
-		geometry, ok := data["geometry"].(map[string]interface{})
+		location, ok := transferPointLocationFromData(data)
 		if !ok {
 			continue
 		}
 
-		coordinates, ok := geometry["coordinates"].([]interface{})
-		if !ok || len(coordinates) < 2 {
-			continue
-		}
-
-		lng, ok1 := coordinates[0].(float64)
-		lat, ok2 := coordinates[1].(float64)
-		if !ok1 || !ok2 {
-			continue
-		}
-
-		location := GeoPoint{Latitude: lat, Longitude: lng}
-
 		// Filter by distance from route (rough heuristic)
-		originDist := haversineKm(origin.Latitude, origin.Longitude, lat, lng)
-		destDist := haversineKm(destination.Latitude, destination.Longitude, lat, lng)
+		originDist := haversineKm(origin.Latitude, origin.Longitude, location.Latitude, location.Longitude)
+		destDist := haversineKm(destination.Latitude, destination.Longitude, location.Latitude, location.Longitude)
 		routeDist := haversineKm(origin.Latitude, origin.Longitude, destination.Latitude, destination.Longitude)
 
 		// Skip if transfer point would add too much detour
@@ -3936,6 +3922,24 @@ func getMaxStopCapacity(data map[string]interface{}) int {
 		return maxStop / 60
 	}
 	return 2 // Default capacity
+}
+
+func transferPointLocationFromData(data map[string]any) (GeoPoint, bool) {
+	geometry, ok := data["geometry"].(map[string]any)
+	if !ok {
+		return GeoPoint{}, false
+	}
+	coordinates, ok := geometry["coordinates"].([]any)
+	if !ok || len(coordinates) < 2 {
+		return GeoPoint{}, false
+	}
+	lng, okLng := numberAsFloat(coordinates[0])
+	lat, okLat := numberAsFloat(coordinates[1])
+	point := GeoPoint{Latitude: lat, Longitude: lng}
+	if !okLng || !okLat || validateGeoPoint("transfer.location", point) != nil {
+		return GeoPoint{}, false
+	}
+	return point, true
 }
 
 func transferAvailableCapacity(data map[string]interface{}) int {
