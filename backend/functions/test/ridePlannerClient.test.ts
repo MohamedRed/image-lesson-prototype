@@ -196,6 +196,41 @@ describe("planner client", () => {
     expect(reserve).not.toHaveBeenCalled();
   });
 
+  it("requires planner driverId before attempting reservation", async () => {
+    const fetchImpl = jest.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        legs: [{
+          pickupZoneId: "zone-pickup",
+          dropoffZoneId: "zone-dropoff",
+          etaSeconds: 120,
+          pickup: origin,
+          dropoff: destination,
+        }],
+        totalEtaSeconds: 120,
+      }),
+    }));
+
+    const reserve = jest.fn(async () => ({
+      success: true,
+      driverId: "default-driver",
+      pickupZoneId: "zone-pickup",
+      dropoffZoneId: "zone-dropoff",
+      reservedResources: { seats: 1, cargo: {}, pets: {}, childSeats: {} },
+    }));
+
+    await expect(planJourneyWithSingleLegReservationRetry({
+      plannerUrl: "https://planner.example",
+      rideRequest: { origin, destination, passengerCount: 1, riderGender: "female" },
+      resourceRequirements: { passengerCount: 1, riderGender: "female" },
+      reserveResources: reserve,
+      fetchImpl,
+    })).rejects.toThrow("Planner leg missing driverId");
+
+    expect(reserve).not.toHaveBeenCalled();
+  });
+
   it("requires planner pickupZoneId before attempting reservation", async () => {
     const fetchImpl = jest.fn(async () => ({
       ok: true,

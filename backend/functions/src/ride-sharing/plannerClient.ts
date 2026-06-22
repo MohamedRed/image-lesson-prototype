@@ -267,7 +267,10 @@ export async function planJourneyWithSingleLegReservationRetry({
     }
 
     const firstLeg = journey.legs[0];
-    const driverId = firstLeg.driverId;
+    const driverId = String(firstLeg.driverId ?? "").trim();
+    if (!driverId) {
+      throw new Error("Planner leg missing driverId");
+    }
     if (!firstLeg.pickupZoneId) {
       throw new Error(`Planner leg missing pickupZoneId for driver ${driverId}`);
     }
