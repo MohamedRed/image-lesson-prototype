@@ -2402,7 +2402,7 @@ func driverRouteIntersectsOrPassesNearGeometry(req RideRequest, driver DriverPro
 }
 
 func explicitSingleHopWalkCapConfigured(req RideRequest) bool {
-	return req.WalkRadiusM > 0 || os.Getenv("MAX_SINGLE_HOP_WALK_METERS") != ""
+	return req.WalkRadiusM > 0 || strings.TrimSpace(os.Getenv("MAX_SINGLE_HOP_WALK_METERS")) != ""
 }
 
 func driverCorridorBuffer(driver DriverProfile) GeoJSONGeometry {
