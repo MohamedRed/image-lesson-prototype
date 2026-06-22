@@ -2629,6 +2629,14 @@ func TestPickBestDriverFromProfiles_DefaultsNonFiniteCurbFactor(t *testing.T) {
 	}
 }
 
+func TestRouteETAProfileSecondsFromRawParsesStringBackedNumbers(t *testing.T) {
+	got := routeETAProfileSecondsFromRaw([]any{int64(0), " 60 ", float64(120)})
+	want := []int{0, 60, 120}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("expected string-backed route ETA profile values %#v, got %#v", want, got)
+	}
+}
+
 func TestPickBestDriverFromProfiles_RanksRouteEtaProfileAboveEqualGeometry(t *testing.T) {
 	req := corridorRequest()
 	slowProfile := corridorDriverWithPickupZone("aaa-slow-profile", 0, -0.10, routeCorridor(), "zone-slow")

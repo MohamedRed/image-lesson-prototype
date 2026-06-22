@@ -3256,7 +3256,6 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			PickupZoneID            string                 `firestore:"pickupZoneId"`
 			DropoffZoneID           string                 `firestore:"dropoffZoneId"`
 			RoutePolyline           string                 `firestore:"routePolyline"`
-			RouteETAProfileSeconds  []int                  `firestore:"routeEtaProfile"`
 			BufferPolygon           GeoJSONGeometry        `firestore:"bufferPolygon"`
 			RouteBuffer             GeoJSONGeometry        `firestore:"routeBuffer"`
 			LuggageCapacity         map[string]int         `firestore:"luggageCapacity"`
@@ -3341,7 +3340,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			DropoffZoneActivePickups: dropoffZoneActivePickups,
 			DropoffZoneCapacityCars:  dropoffZoneCapacityCars,
 			RoutePolyline:            normalizeRoutePolyline(data.RoutePolyline),
-			RouteETAProfileSeconds:   data.RouteETAProfileSeconds,
+			RouteETAProfileSeconds:   routeETAProfileSecondsFromRaw(raw["routeEtaProfile"]),
 			BufferPolygon:            data.BufferPolygon,
 			RouteBuffer:              data.RouteBuffer,
 			CurbFactor:               curbFactor,
@@ -3395,36 +3394,78 @@ func contains(arr []string, v string) bool {
 }
 
 func intValue(value any, fallback int) int {
+	if parsed, ok := intValueOK(value); ok {
+		return parsed
+	}
+	return fallback
+}
+
+func intValueOK(value any) (int, bool) {
 	switch v := value.(type) {
 	case int:
-		return v
+		return v, true
 	case int64:
-		return int(v)
+		return int(v), true
 	case int32:
-		return int(v)
+		return int(v), true
 	case float64:
 		if math.IsNaN(v) || math.IsInf(v, 0) {
-			return fallback
+			return 0, false
 		}
-		return int(v)
+		return int(v), true
 	case float32:
 		f := float64(v)
 		if math.IsNaN(f) || math.IsInf(f, 0) {
-			return fallback
+			return 0, false
 		}
-		return int(v)
+		return int(v), true
 	case string:
 		trimmed := strings.TrimSpace(v)
 		if trimmed == "" {
-			return fallback
+			return 0, false
 		}
 		parsed, err := strconv.ParseFloat(trimmed, 64)
 		if err != nil || math.IsNaN(parsed) || math.IsInf(parsed, 0) {
-			return fallback
+			return 0, false
 		}
-		return int(parsed)
+		return int(parsed), true
 	default:
-		return fallback
+		return 0, false
+	}
+}
+
+func routeETAProfileSecondsFromRaw(value any) []int {
+	switch profile := value.(type) {
+	case []int:
+		return append([]int(nil), profile...)
+	case []int64:
+		seconds := make([]int, 0, len(profile))
+		for _, entry := range profile {
+			seconds = append(seconds, int(entry))
+		}
+		return seconds
+	case []float64:
+		seconds := make([]int, 0, len(profile))
+		for _, entry := range profile {
+			parsed, ok := intValueOK(entry)
+			if !ok {
+				return nil
+			}
+			seconds = append(seconds, parsed)
+		}
+		return seconds
+	case []any:
+		seconds := make([]int, 0, len(profile))
+		for _, entry := range profile {
+			parsed, ok := intValueOK(entry)
+			if !ok {
+				return nil
+			}
+			seconds = append(seconds, parsed)
+		}
+		return seconds
+	default:
+		return nil
 	}
 }
 
