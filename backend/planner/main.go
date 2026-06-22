@@ -1798,7 +1798,7 @@ func maxSingleHopRouteDetourKm() float64 {
 }
 
 func maxSingleHopPickupETASeconds() int {
-	if value := os.Getenv("MAX_SINGLE_HOP_PICKUP_ETA_SECONDS"); value != "" {
+	if value := strings.TrimSpace(os.Getenv("MAX_SINGLE_HOP_PICKUP_ETA_SECONDS")); value != "" {
 		if parsed, err := strconv.Atoi(value); err == nil && parsed > 0 {
 			return parsed
 		}

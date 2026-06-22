@@ -2663,6 +2663,23 @@ func TestSingleHopThresholdsIgnoreNonFiniteFloatEnv(t *testing.T) {
 	}
 }
 
+func TestComputeDriverScore_TrimsPickupETAThresholdEnvBeforeRejectingLateRoute(t *testing.T) {
+	t.Setenv("MAX_SINGLE_HOP_PICKUP_ETA_SECONDS", " 60 ")
+	req := corridorRequest()
+	driver := corridorDriver("late-route-pickup", 0, -0.10, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 0, Longitude: -0.10},
+		{Latitude: 0, Longitude: 0},
+		{Latitude: 0, Longitude: 1},
+	})
+	driver.RouteETAProfileSeconds = []int{0, 90, 600}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected whitespace-padded pickup ETA threshold to reject a 90-second route pickup against a 60-second limit")
+	}
+}
+
 func TestRouteInsertionDetourExcludesRiderWalkSnapDistance(t *testing.T) {
 	req := corridorRequest()
 	req.WalkRadiusM = 1000
