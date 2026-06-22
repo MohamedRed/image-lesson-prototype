@@ -16,6 +16,7 @@ import (
 	"unicode"
 
 	"cloud.google.com/go/firestore"
+	"google.golang.org/genproto/googleapis/type/latlng"
 )
 
 // RideRequest is a minimal subset of the Firestore rideRequest document
@@ -3052,6 +3053,21 @@ func geoPointFromRaw(value any) (GeoPoint, bool) {
 			return GeoPoint{}, false
 		}
 		return raw, true
+	case *latlng.LatLng:
+		if raw == nil {
+			return GeoPoint{}, false
+		}
+		point := GeoPoint{Latitude: raw.Latitude, Longitude: raw.Longitude}
+		if validateGeoPoint("point", point) != nil {
+			return GeoPoint{}, false
+		}
+		return point, true
+	case latlng.LatLng:
+		point := GeoPoint{Latitude: raw.Latitude, Longitude: raw.Longitude}
+		if validateGeoPoint("point", point) != nil {
+			return GeoPoint{}, false
+		}
+		return point, true
 	case map[string]any:
 		lat, okLat := numberAsFloat(raw["latitude"])
 		lng, okLng := numberAsFloat(raw["longitude"])

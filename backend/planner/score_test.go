@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"google.golang.org/genproto/googleapis/type/latlng"
 )
 
 func TestRegisterPlannerRoutes_HealthEndpointReturnsOK(t *testing.T) {
@@ -969,6 +971,16 @@ func TestGeoPointFromRawParsesStringBackedCurrentLocation(t *testing.T) {
 	}
 	if point.Latitude != 0.05 || point.Longitude != -0.10 {
 		t.Fatalf("expected parsed currentLocation lat=0.05 lon=-0.10, got %#v", point)
+	}
+}
+
+func TestGeoPointFromRawParsesNativeFirestoreLatLng(t *testing.T) {
+	point, ok := geoPointFromRaw(&latlng.LatLng{Latitude: 0.05, Longitude: -0.10})
+	if !ok {
+		t.Fatalf("expected native Firestore latlng currentLocation to parse")
+	}
+	if point.Latitude != 0.05 || point.Longitude != -0.10 {
+		t.Fatalf("expected parsed native currentLocation lat=0.05 lon=-0.10, got %#v", point)
 	}
 }
 
