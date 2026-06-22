@@ -133,6 +133,11 @@ func normalizeRoutePolyline(encoded string) string {
 	if !ok || len(points) < 2 {
 		return ""
 	}
+	for _, point := range points {
+		if validateGeoPoint("routePolyline", point) != nil {
+			return ""
+		}
+	}
 	return trimmed
 }
 

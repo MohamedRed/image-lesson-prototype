@@ -1778,6 +1778,20 @@ func TestComputeDriverScore_TreatsInvalidRoutePolylineAsMissingAndUsesBuffer(t *
 	}
 }
 
+func TestComputeDriverScore_TreatsOutOfRangeRoutePolylineAsMissingAndUsesBuffer(t *testing.T) {
+	req := corridorRequest()
+	driver := corridorDriver("out-of-range-route-polyline-buffer-fallback", 0.05, 0, routeCorridor())
+	driver.RoutePolyline = encodePolyline([]GeoPoint{
+		{Latitude: 91, Longitude: 0},
+		{Latitude: 92, Longitude: 1},
+	})
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected routePolyline with out-of-range decoded coordinates to be treated as unusable so valid bufferPolygon corridor can match")
+	}
+}
+
 func TestDriverRouteIntersectsGeometry_TreatsInvalidRoutePolylineAsMissing(t *testing.T) {
 	req := corridorRequest()
 	driver := corridorDriver("invalid-route-polyline-helper-fallback", 0.05, 0, routeCorridor())
