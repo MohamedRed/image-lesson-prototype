@@ -3940,14 +3940,12 @@ func transferPointLocationFromData(data map[string]any) (GeoPoint, bool) {
 	if !ok {
 		return GeoPoint{}, false
 	}
-	coordinates, ok := geometry["coordinates"].([]any)
-	if !ok || len(coordinates) < 2 {
+	coordinates, ok := numericPair(geometry["coordinates"])
+	if !ok {
 		return GeoPoint{}, false
 	}
-	lng, okLng := numberAsFloat(coordinates[0])
-	lat, okLat := numberAsFloat(coordinates[1])
-	point := GeoPoint{Latitude: lat, Longitude: lng}
-	if !okLng || !okLat || validateGeoPoint("transfer.location", point) != nil {
+	point := GeoPoint{Latitude: coordinates[1], Longitude: coordinates[0]}
+	if validateGeoPoint("transfer.location", point) != nil {
 		return GeoPoint{}, false
 	}
 	return point, true
