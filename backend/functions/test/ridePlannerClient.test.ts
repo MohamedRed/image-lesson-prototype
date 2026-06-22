@@ -79,6 +79,45 @@ describe("planner client", () => {
     expect(request.destDriveIso).toEqual(legacyDestDriveIso);
   });
 
+  it("prefers same-invocation generated geometry over stale persisted aliases", () => {
+    const staleOriginWalk = { type: "Polygon", coordinates: [[[20, 20], [21, 20], [21, 21], [20, 20]]] };
+    const staleDestinationWalk = { type: "Polygon", coordinates: [[[22, 22], [23, 22], [23, 23], [22, 22]]] };
+    const staleOriginDrive = { type: "Polygon", coordinates: [[[24, 24], [25, 24], [25, 25], [24, 24]]] };
+    const staleDestinationDrive = { type: "Polygon", coordinates: [[[26, 26], [27, 26], [27, 27], [26, 26]]] };
+    const generatedOriginWalk = { type: "Polygon", coordinates: [[[30, 30], [31, 30], [31, 31], [30, 30]]] };
+    const generatedDestinationWalk = { type: "Polygon", coordinates: [[[32, 32], [33, 32], [33, 33], [32, 32]]] };
+    const generatedOriginDrive = { type: "Polygon", coordinates: [[[34, 34], [35, 34], [35, 35], [34, 34]]] };
+    const generatedDestinationDrive = { type: "Polygon", coordinates: [[[36, 36], [37, 36], [37, 37], [36, 36]]] };
+
+    const request = buildPlannerRequest(
+      {
+        origin,
+        destination,
+        passengerCount: 1,
+        oriWalkIso: staleOriginWalk,
+        destinationWalkIso: staleDestinationWalk,
+        originDriveGeo: staleOriginDrive,
+        destDriveIso: staleDestinationDrive,
+      },
+      {
+        originWalkIso: generatedOriginWalk,
+        destinationWalkIso: generatedDestinationWalk,
+        originDriveGeo: generatedOriginDrive,
+        destinationDriveGeo: generatedDestinationDrive,
+      },
+      []
+    );
+
+    expect(request.oriWalkIso).toEqual(generatedOriginWalk);
+    expect(request.originWalkIso).toEqual(generatedOriginWalk);
+    expect(request.destWalkIso).toEqual(generatedDestinationWalk);
+    expect(request.destinationWalkIso).toEqual(generatedDestinationWalk);
+    expect(request.oriDriveIso).toEqual(generatedOriginDrive);
+    expect(request.originDriveGeo).toEqual(generatedOriginDrive);
+    expect(request.destDriveIso).toEqual(generatedDestinationDrive);
+    expect(request.destinationDriveGeo).toEqual(generatedDestinationDrive);
+  });
+
   it("adds a metadata ID-token Authorization header for private Cloud Run planner calls", async () => {
     const previousFunctionTarget = process.env.FUNCTION_TARGET;
     const previousPlannerAuthDisabled = process.env.PLANNER_AUTH_DISABLED;
