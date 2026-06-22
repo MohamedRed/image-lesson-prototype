@@ -3008,6 +3008,19 @@ func TestScoreWeightsFromEnvDefaultsNonFiniteValues(t *testing.T) {
 	}
 }
 
+func TestScoreWeightsFromEnvDefaultsNegativeValues(t *testing.T) {
+	t.Setenv("WEIGHT_DETOUR", "-1")
+	t.Setenv("WEIGHT_ETA", "-2")
+	t.Setenv("WEIGHT_WALK", "-3")
+	t.Setenv("WEIGHT_CURB", "-4")
+
+	weights := scoreWeightsFromEnv()
+	defaults := defaultScoreWeights()
+	if weights != defaults {
+		t.Fatalf("expected negative env score weights to fall back to defaults, got %+v want %+v", weights, defaults)
+	}
+}
+
 func TestScoreWeightsFromEnvTrimsConfiguredWeights(t *testing.T) {
 	t.Setenv("WEIGHT_DETOUR", " 1.5 ")
 	t.Setenv("WEIGHT_ETA", "\n0.25	")

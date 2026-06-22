@@ -1889,16 +1889,16 @@ func nonFiniteFloat(value float64) bool {
 
 func sanitizeScoreWeights(weights scoreWeights) scoreWeights {
 	defaults := defaultScoreWeights()
-	if nonFiniteFloat(weights.Detour) {
+	if nonFiniteFloat(weights.Detour) || weights.Detour < 0 {
 		weights.Detour = defaults.Detour
 	}
-	if nonFiniteFloat(weights.ETA) {
+	if nonFiniteFloat(weights.ETA) || weights.ETA < 0 {
 		weights.ETA = defaults.ETA
 	}
-	if nonFiniteFloat(weights.Walk) {
+	if nonFiniteFloat(weights.Walk) || weights.Walk < 0 {
 		weights.Walk = defaults.Walk
 	}
-	if nonFiniteFloat(weights.Curb) {
+	if nonFiniteFloat(weights.Curb) || weights.Curb < 0 {
 		weights.Curb = defaults.Curb
 	}
 	if weights.Detour == 0 && weights.ETA == 0 && weights.Walk == 0 {
