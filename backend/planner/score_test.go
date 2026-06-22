@@ -3707,6 +3707,20 @@ func TestPickBestDriverFromProfiles_ReturnsTrimmedDriverID(t *testing.T) {
 	}
 }
 
+func TestPickBestDriverFromProfiles_SkipsBlankDriverID(t *testing.T) {
+	req := corridorRequest()
+	blankID := corridorDriverWithPickupZone(" \n	 ", 0.001, 0, routeCorridor(), "zone-blank-id")
+	withID := corridorDriverWithPickupZone("identified-driver", 0.02, 0, routeCorridor(), "zone-identified")
+
+	driverID, _, err := pickBestDriverFromProfiles(req, []DriverProfile{blankID, withID}, nil, defaultScoreWeights())
+	if err != nil {
+		t.Fatalf("expected planner to choose identified corridor driver, got error: %v", err)
+	}
+	if driverID != "identified-driver" {
+		t.Fatalf("expected blank driverId to be rejected before reservation ranking, got %q", driverID)
+	}
+}
+
 func TestPickBestDriverFromProfiles_HonorsRequestExcludedDriverIDs(t *testing.T) {
 	req := corridorRequest()
 	req.ExcludedDriverIDs = []string{"  failed-reservation-driver\n"}
