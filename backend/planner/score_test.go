@@ -2814,6 +2814,19 @@ func TestScoreWeightsFromEnvDefaultsNonFiniteValues(t *testing.T) {
 	}
 }
 
+func TestScoreWeightsFromEnvTrimsConfiguredWeights(t *testing.T) {
+	t.Setenv("WEIGHT_DETOUR", " 1.5 ")
+	t.Setenv("WEIGHT_ETA", "\n0.25	")
+	t.Setenv("WEIGHT_WALK", " 0.75 ")
+	t.Setenv("WEIGHT_CURB", " 2 ")
+
+	weights := scoreWeightsFromEnv()
+	want := scoreWeights{Detour: 1.5, ETA: 0.25, Walk: 0.75, Curb: 2}
+	if weights != want {
+		t.Fatalf("expected whitespace-padded score weight env values to parse, got %+v want %+v", weights, want)
+	}
+}
+
 func TestPickBestDriverFromProfiles_DefaultsNonFiniteScoreWeights(t *testing.T) {
 	t.Setenv("MAX_SINGLE_HOP_DETOUR_KM", "200000")
 	req := corridorRequest()

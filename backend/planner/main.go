@@ -1850,7 +1850,7 @@ func scoreWeightsFromEnv() scoreWeights {
 }
 
 func finiteEnvFloat(name string, fallback float64) float64 {
-	if value := os.Getenv(name); value != "" {
+	if value := strings.TrimSpace(os.Getenv(name)); value != "" {
 		if parsed, err := strconv.ParseFloat(value, 64); err == nil && !nonFiniteFloat(parsed) {
 			return parsed
 		}
