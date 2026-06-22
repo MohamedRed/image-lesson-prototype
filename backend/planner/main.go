@@ -665,21 +665,31 @@ func sumReservedSeats(legs []struct {
 }
 
 func reservedSeatsFromRaw(value any) int {
+	seatCountFromValue := func(value any) int {
+		seats, ok := intValueOK(value)
+		if !ok || seats <= 0 {
+			return 0
+		}
+		return seats
+	}
 	sumSeatEntry := func(entry any) int {
 		switch raw := entry.(type) {
 		case map[string]any:
-			seats, ok := intValueOK(raw["seats"])
-			if !ok || seats <= 0 {
-				return 0
-			}
-			return seats
+			return seatCountFromValue(raw["seats"])
+		case map[string]int:
+			return seatCountFromValue(raw["seats"])
+		case map[string]int64:
+			return seatCountFromValue(raw["seats"])
+		case map[string]float64:
+			return seatCountFromValue(raw["seats"])
+		case map[string]float32:
+			return seatCountFromValue(raw["seats"])
+		case map[string]string:
+			return seatCountFromValue(raw["seats"])
 		case struct {
 			Seats int `firestore:"seats"`
 		}:
-			if raw.Seats <= 0 {
-				return 0
-			}
-			return raw.Seats
+			return seatCountFromValue(raw.Seats)
 		default:
 			return 0
 		}

@@ -849,6 +849,18 @@ func TestReservedSeatLedgerFromRawParsesStringBackedSeats(t *testing.T) {
 	}
 }
 
+func TestReservedSeatLedgerFromRawParsesFullyTypedSeatMaps(t *testing.T) {
+	reserved := reservedSeatsFromRaw([]any{
+		map[string]int64{"seats": 2},
+		map[string]string{"seats": " 1 "},
+		map[string]float64{"seats": 3},
+		map[string]float32{"seats": 1.5},
+	})
+	if reserved != 6 {
+		t.Fatalf("expected fully typed raw seat ledger maps to sum integer seat counts and ignore malformed entries, got %d", reserved)
+	}
+}
+
 func TestCapacitySeatsFromRawParsesStringBackedCapacity(t *testing.T) {
 	if got := capacitySeatsFromRaw(" 6 "); got != 6 {
 		t.Fatalf("expected string-backed capacitySeats to parse as 6, got %d", got)
