@@ -530,6 +530,21 @@ func TestComputeDriverScore_RejectsExclusiveRequestWithExistingReservedSeats(t *
 	}
 }
 
+func TestComputeDriverScore_RejectsStringBackedExclusiveRequestWithExistingReservedSeats(t *testing.T) {
+	req := corridorRequest()
+	req.RiderGender = "female"
+	req.PremiumRequested = map[string]any{"exclusive": " true "}
+	driver := corridorDriver("string-exclusive-capable-but-occupied", 0, 0, routeCorridor())
+	driver.PremiumCapabilities = map[string]any{"exclusive": true}
+	driver.ReservedSeats = 1
+	driver.CurrentPassengerGenders = []string{"female"}
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if ok {
+		t.Fatalf("expected string-backed exclusive request to reject a driver with existing reserved passengers")
+	}
+}
+
 func TestComputeDriverScore_ExclusiveRequestUsesSeatLedgerNotStaleActivePickups(t *testing.T) {
 	req := corridorRequest()
 	req.PremiumRequested = map[string]any{"exclusive": true}
@@ -568,6 +583,17 @@ func TestComputeDriverScore_IgnoresFalsePremiumRequirement(t *testing.T) {
 	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
 	if !ok {
 		t.Fatalf("expected false premium flag to be ignored instead of requiring an explicit false capability")
+	}
+}
+
+func TestComputeDriverScore_IgnoresStringBackedFalsePremiumRequirement(t *testing.T) {
+	req := corridorRequest()
+	req.PremiumRequested = map[string]any{"exclusive": " false "}
+	driver := corridorDriver("standard-driver-string-false-premium", 0, 0, routeCorridor())
+
+	_, _, ok := computeDriverScore(req, driver, 1, 0.7, 0.3, 1)
+	if !ok {
+		t.Fatalf("expected string-backed false premium flag to be ignored instead of requiring an explicit false capability")
 	}
 }
 

@@ -1161,12 +1161,12 @@ func exclusiveRequested(premiumRequested map[string]any) bool {
 	if premiumRequested == nil {
 		return false
 	}
-	exclusive, ok := premiumRequested["exclusive"].(bool)
+	exclusive, ok := boolFromValue(premiumRequested["exclusive"])
 	return ok && exclusive
 }
 
 func premiumCapabilityRequired(value any) bool {
-	requested, isBool := value.(bool)
+	requested, isBool := boolFromValue(value)
 	return !isBool || requested
 }
 
