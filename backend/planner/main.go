@@ -3675,13 +3675,13 @@ func intValueOK(value any) (int, bool) {
 	case int32:
 		return int(v), true
 	case float64:
-		if math.IsNaN(v) || math.IsInf(v, 0) {
+		if math.IsNaN(v) || math.IsInf(v, 0) || math.Trunc(v) != v {
 			return 0, false
 		}
 		return int(v), true
 	case float32:
 		f := float64(v)
-		if math.IsNaN(f) || math.IsInf(f, 0) {
+		if math.IsNaN(f) || math.IsInf(f, 0) || math.Trunc(f) != f {
 			return 0, false
 		}
 		return int(v), true
@@ -3691,7 +3691,7 @@ func intValueOK(value any) (int, bool) {
 			return 0, false
 		}
 		parsed, err := strconv.ParseFloat(trimmed, 64)
-		if err != nil || math.IsNaN(parsed) || math.IsInf(parsed, 0) {
+		if err != nil || math.IsNaN(parsed) || math.IsInf(parsed, 0) || math.Trunc(parsed) != parsed {
 			return 0, false
 		}
 		return int(parsed), true

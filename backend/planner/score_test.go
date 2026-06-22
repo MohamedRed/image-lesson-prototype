@@ -858,6 +858,23 @@ func TestCapacitySeatsFromRawParsesStringBackedCapacity(t *testing.T) {
 	}
 }
 
+func TestIntegerCountParsingRejectsFractionalNumericValues(t *testing.T) {
+	if got := capacitySeatsFromRaw(4.9); got != 0 {
+		t.Fatalf("expected fractional capacitySeats to be treated as malformed and left for defaulting, got %d", got)
+	}
+	if got := activePickupsFromRaw(" 2.5 "); got != 0 {
+		t.Fatalf("expected fractional legacy activePickups to be ignored instead of truncated, got %d", got)
+	}
+	reserved := reservedSeatsFromRaw([]any{map[string]any{"seats": 1.5}, map[string]any{"seats": 2}})
+	if reserved != 2 {
+		t.Fatalf("expected fractional reserved seat ledger entries to be ignored instead of truncated, got %d", reserved)
+	}
+	resources := resourceCountsFromRaw(map[string]any{"suitcase": 1.5, "duffel": 2})
+	if resources["suitcase"] != 0 || resources["duffel"] != 2 {
+		t.Fatalf("expected fractional resource counts to be ignored and integer counts preserved, got %#v", resources)
+	}
+}
+
 func TestActivePickupsFromRawParsesStringBackedLegacyOccupancy(t *testing.T) {
 	if got := activePickupsFromRaw(" 3 "); got != 3 {
 		t.Fatalf("expected string-backed activePickups to parse as 3, got %d", got)
