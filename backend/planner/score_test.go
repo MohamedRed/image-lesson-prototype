@@ -962,6 +962,16 @@ func TestComputeDriverScore_CorridorIntersectsDestinationWalkZone(t *testing.T) 
 	}
 }
 
+func TestGeoPointFromRawParsesStringBackedCurrentLocation(t *testing.T) {
+	point, ok := geoPointFromRaw(map[string]any{"latitude": " 0.05 ", "longitude": " -0.10 "})
+	if !ok {
+		t.Fatalf("expected string-backed Firestore currentLocation to parse")
+	}
+	if point.Latitude != 0.05 || point.Longitude != -0.10 {
+		t.Fatalf("expected parsed currentLocation lat=0.05 lon=-0.10, got %#v", point)
+	}
+}
+
 func TestGeoJSONGeometryFromRawParsesFirestoreMapRouteBuffer(t *testing.T) {
 	raw := map[string]any{
 		"type": "Polygon",

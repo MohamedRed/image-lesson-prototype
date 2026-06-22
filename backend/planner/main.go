@@ -3045,6 +3045,30 @@ func validLongitude(value float64) bool {
 	return !nonFiniteFloat(value) && value >= -180 && value <= 180
 }
 
+func geoPointFromRaw(value any) (GeoPoint, bool) {
+	switch raw := value.(type) {
+	case GeoPoint:
+		if validateGeoPoint("point", raw) != nil {
+			return GeoPoint{}, false
+		}
+		return raw, true
+	case map[string]any:
+		lat, okLat := numberAsFloat(raw["latitude"])
+		lng, okLng := numberAsFloat(raw["longitude"])
+		if !okLat || !okLng {
+			lat, okLat = numberAsFloat(raw["Latitude"])
+			lng, okLng = numberAsFloat(raw["Longitude"])
+		}
+		point := GeoPoint{Latitude: lat, Longitude: lng}
+		if !okLat || !okLng || validateGeoPoint("point", point) != nil {
+			return GeoPoint{}, false
+		}
+		return point, true
+	default:
+		return GeoPoint{}, false
+	}
+}
+
 func validateNonNegativeCounts(field string, counts map[string]int) error {
 	for key, count := range counts {
 		if count < 0 {
@@ -3273,10 +3297,9 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		raw := d.Data()
 		_, hasSeatLedger := raw["legs"]
 		var data struct {
-			CurrentLocation GeoPoint `firestore:"currentLocation"`
-			CapacitySeats   int      `firestore:"capacitySeats"`
-			ActivePickups   int      `firestore:"activePickups"`
-			Legs            []struct {
+			CapacitySeats int `firestore:"capacitySeats"`
+			ActivePickups int `firestore:"activePickups"`
+			Legs          []struct {
 				Seats int `firestore:"seats"`
 			} `firestore:"legs"`
 			PickupZoneID            string                 `firestore:"pickupZoneId"`
@@ -3303,7 +3326,8 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 		if err := d.DataTo(&data); err != nil {
 			continue
 		}
-		if data.CurrentLocation.Latitude == 0 && data.CurrentLocation.Longitude == 0 {
+		currentLocation, ok := geoPointFromRaw(raw["currentLocation"])
+		if !ok || (currentLocation.Latitude == 0 && currentLocation.Longitude == 0) {
 			continue
 		}
 
@@ -3362,7 +3386,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 
 		prof := DriverProfile{
 			ID:                       d.Ref.ID,
-			CurrentLocation:          GeoPoint{Latitude: data.CurrentLocation.Latitude, Longitude: data.CurrentLocation.Longitude},
+			CurrentLocation:          currentLocation,
 			CapacitySeats:            data.CapacitySeats,
 			ActivePickups:            data.ActivePickups,
 			HasSeatLedger:            hasSeatLedger,
