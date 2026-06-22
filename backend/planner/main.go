@@ -3744,7 +3744,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			DropoffZoneActivePickups: dropoffZoneActivePickups,
 			DropoffZoneCapacityCars:  dropoffZoneCapacityCars,
 			RoutePolyline:            normalizeRoutePolyline(data.RoutePolyline),
-			RouteETAProfileSeconds:   routeETAProfileSecondsFromRaw(raw["routeEtaProfile"]),
+			RouteETAProfileSeconds:   routeETAProfileSecondsFromDriverRaw(raw),
 			BufferPolygon:            bufferPolygon,
 			RouteBuffer:              routeBuffer,
 			CurbFactor:               curbFactor,
@@ -3853,6 +3853,15 @@ func floatIntegerValueOK(value float64) (int, bool) {
 		return 0, false
 	}
 	return int(value), true
+}
+
+func routeETAProfileSecondsFromDriverRaw(raw map[string]any) []int {
+	for _, field := range []string{"routeEtaProfile", "routeETAProfile", "routeETAProfileSeconds"} {
+		if profile := routeETAProfileSecondsFromRaw(raw[field]); profile != nil {
+			return profile
+		}
+	}
+	return nil
 }
 
 func routeETAProfileSecondsFromRaw(value any) []int {
