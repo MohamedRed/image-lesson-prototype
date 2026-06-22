@@ -861,6 +861,13 @@ func TestReservedSeatLedgerFromRawParsesFullyTypedSeatMaps(t *testing.T) {
 	}
 }
 
+func TestReservedSeatLedgerFromRawParsesFullyTypedSeatMapSlices(t *testing.T) {
+	reserved := reservedSeatsFromRaw([]map[string]int64{{"seats": 2}, {"seats": -1}})
+	if reserved != 2 {
+		t.Fatalf("expected typed raw seat ledger slice to sum positive seats only, got %d", reserved)
+	}
+}
+
 func TestCapacitySeatsFromRawParsesStringBackedCapacity(t *testing.T) {
 	if got := capacitySeatsFromRaw(" 6 "); got != 6 {
 		t.Fatalf("expected string-backed capacitySeats to parse as 6, got %d", got)
@@ -1029,6 +1036,16 @@ func TestResourceLedgerFromRawParsesFullyTypedNestedResourceMapEntries(t *testin
 	}, "items")
 	if ledger["suitcase"] != 2 || ledger["duffel"] != 1 || ledger["crate"] != 3 || ledger["bad"] != 0 || ledger["fractional"] != 0 {
 		t.Fatalf("expected fully typed nested resource ledger maps to preserve valid counts and ignore malformed values, got %#v", ledger)
+	}
+}
+
+func TestResourceLedgerFromRawParsesFullyTypedNestedResourceMapSlices(t *testing.T) {
+	ledger := resourceLedgerFromRaw([]map[string]map[string]int64{
+		{"items": {"suitcase": 2}},
+		{"items": {"bad": -1}},
+	}, "items")
+	if ledger["suitcase"] != 2 || ledger["bad"] != 0 {
+		t.Fatalf("expected typed nested resource ledger slice to preserve valid counts and ignore malformed values, got %#v", ledger)
 	}
 }
 

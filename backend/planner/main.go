@@ -705,6 +705,26 @@ func reservedSeatsFromRaw(value any) int {
 		for _, entry := range entries {
 			total += sumSeatEntry(entry)
 		}
+	case []map[string]int:
+		for _, entry := range entries {
+			total += sumSeatEntry(entry)
+		}
+	case []map[string]int64:
+		for _, entry := range entries {
+			total += sumSeatEntry(entry)
+		}
+	case []map[string]float64:
+		for _, entry := range entries {
+			total += sumSeatEntry(entry)
+		}
+	case []map[string]float32:
+		for _, entry := range entries {
+			total += sumSeatEntry(entry)
+		}
+	case []map[string]string:
+		for _, entry := range entries {
+			total += sumSeatEntry(entry)
+		}
 	case []struct {
 		Seats int `firestore:"seats"`
 	}:
@@ -846,6 +866,30 @@ func resourceLedgerFromRaw(value any, field string) map[string]int {
 			addRawEntry(entry)
 		}
 	case []map[string]any:
+		for _, entry := range entries {
+			addRawEntry(entry)
+		}
+	case []map[string]map[string]any:
+		for _, entry := range entries {
+			addRawEntry(entry)
+		}
+	case []map[string]map[string]int:
+		for _, entry := range entries {
+			addRawEntry(entry)
+		}
+	case []map[string]map[string]int64:
+		for _, entry := range entries {
+			addRawEntry(entry)
+		}
+	case []map[string]map[string]float64:
+		for _, entry := range entries {
+			addRawEntry(entry)
+		}
+	case []map[string]map[string]float32:
+		for _, entry := range entries {
+			addRawEntry(entry)
+		}
+	case []map[string]map[string]string:
 		for _, entry := range entries {
 			addRawEntry(entry)
 		}
