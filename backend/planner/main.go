@@ -1178,6 +1178,28 @@ func premiumCapabilityMatches(requested any, capability any) bool {
 	return capability == requested
 }
 
+func premiumCapabilitiesFromRaw(value any) map[string]any {
+	capabilities := map[string]any{}
+	appendCapability := func(key string, capability any) {
+		key = strings.TrimSpace(key)
+		if key == "" {
+			return
+		}
+		capabilities[key] = capability
+	}
+	switch rawCapabilities := value.(type) {
+	case map[string]any:
+		for key, capability := range rawCapabilities {
+			appendCapability(key, capability)
+		}
+	case map[string]bool:
+		for key, capability := range rawCapabilities {
+			appendCapability(key, capability)
+		}
+	}
+	return capabilities
+}
+
 func driverHasExistingPassengers(driver DriverProfile, seatsUsed int) bool {
 	legacyActivePickupsOccupied := !driver.HasSeatLedger && driver.ActivePickups > 0
 	return seatsUsed > 0 || legacyActivePickupsOccupied || hasPassengerGenderPool(driver.CurrentPassengerGenders)
@@ -3577,7 +3599,7 @@ func pickBestDriver(ctx context.Context, req RideRequest, exclude []string) (Dri
 			ReservedPets:             resourceLedgerFromRaw(raw["petLedger"], "pets"),
 			ChildSeatInventory:       resourceCountsFromRaw(raw["childSeatInventory"]),
 			ReservedChildSeats:       resourceLedgerFromRaw(raw["childSeatLedger"], "seats"),
-			PremiumCapabilities:      data.PremiumCapabilities,
+			PremiumCapabilities:      premiumCapabilitiesFromRaw(raw["premiumCapabilities"]),
 			CurrentPassengerGenders:  currentPassengerGendersFromRaw(raw["currentPassengerGenders"]),
 			HasAvailabilityState:     hasAvailabilityState,
 			IsOnline:                 isOnline,
