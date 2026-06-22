@@ -618,6 +618,7 @@ func buildLegRequest(req RideRequest, origin, destination GeoPoint) RideRequest 
 	}
 	legReq.OriDriveIso = originDrive
 	legReq.OriginDriveGeo = originDrive
+	legReq.DestDriveIso = destinationDrive
 	legReq.DestinationDriveGeo = destinationDrive
 
 	return legReq

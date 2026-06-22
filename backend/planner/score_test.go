@@ -4793,6 +4793,23 @@ func TestBuildLegRequestRebindsDestinationDriveGeoToLegDestination(t *testing.T)
 	}
 }
 
+func TestBuildLegRequestRebindsLegacyDestDriveIsoAliasToLegDestination(t *testing.T) {
+	req := corridorRequest()
+	req.WalkRadiusM = 1000
+	req.DestinationDriveGeo = GeoJSONGeometry{}
+	req.DestDriveIso = rectPolygon(-0.01, 0.99, 0.01, 1.01)
+	transfer := GeoPoint{Latitude: 0, Longitude: 0.5}
+
+	legReq := buildLegRequest(req, req.Origin, transfer)
+
+	if !reflect.DeepEqual(legReq.DestDriveIso, legReq.DestinationDriveGeo) {
+		t.Fatalf("expected legacy destDriveIso alias to be rebound with canonical destinationDriveGeo for the leg; got dest=%#v destination=%#v", legReq.DestDriveIso, legReq.DestinationDriveGeo)
+	}
+	if reflect.DeepEqual(legReq.DestDriveIso, req.DestDriveIso) {
+		t.Fatalf("expected non-final leg destDriveIso to stop inheriting the original trip destination drive geofence")
+	}
+}
+
 func TestBuildLegRequestPreservesOriginalOriginDriveGeoForFirstLeg(t *testing.T) {
 	allowLongPickupETA(t)
 	t.Setenv("PICKUP_WALK_TIMING_GRACE_SECONDS", "2000")
