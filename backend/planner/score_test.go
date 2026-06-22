@@ -3141,6 +3141,21 @@ func TestRouteETAProfileSecondsFromRawParsesTypedStringSlices(t *testing.T) {
 	}
 }
 
+func TestRouteETAProfileSecondsFromRawParsesTypedNarrowNumericSlices(t *testing.T) {
+	for name, raw := range map[string]any{
+		"int32":   []int32{0, 60, 120},
+		"float32": []float32{0, 60, 120},
+	} {
+		t.Run(name, func(t *testing.T) {
+			got := routeETAProfileSecondsFromRaw(raw)
+			want := []int{0, 60, 120}
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("expected typed %s route ETA profile values %#v, got %#v", name, want, got)
+			}
+		})
+	}
+}
+
 func TestRouteETAProfileSecondsFromRawRejectsNegativeValues(t *testing.T) {
 	got := routeETAProfileSecondsFromRaw([]int64{0, -1})
 	if got != nil {
