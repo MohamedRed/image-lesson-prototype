@@ -29,6 +29,16 @@ describe("reserve resource capacity helpers", () => {
 
     expect(seats).toBe(3);
   });
+
+  it("ignores malformed negative seat ledger entries", () => {
+    const seats = calculateAvailableSeats({
+      capacitySeats: 4,
+      activePickups: 0,
+      legs: [{ seats: -3 }, { seats: 2 }],
+    });
+
+    expect(seats).toBe(2);
+  });
 });
 
 describe("reserveResourcesTransaction", () => {

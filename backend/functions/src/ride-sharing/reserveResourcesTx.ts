@@ -245,15 +245,29 @@ export async function reserveResourcesTransaction(
 }
 
 export function calculateAvailableSeats(driverData: any): number {
-  const capacitySeats = driverData.capacitySeats || 4;
+  const capacitySeats = positiveIntegerCount(driverData.capacitySeats) || 4;
   const hasSeatLedger = Object.prototype.hasOwnProperty.call(driverData, "legs");
   const reservedSeats = getCurrentSeatUsage(driverData.legs || []);
-  const seatsUsed = hasSeatLedger ? reservedSeats : (driverData.activePickups || 0);
+  const seatsUsed = hasSeatLedger ? reservedSeats : positiveIntegerCount(driverData.activePickups);
   return capacitySeats - seatsUsed;
 }
 
 function getCurrentSeatUsage(legs: any[]): number {
-  return legs.reduce((total, leg) => total + (leg.seats || 0), 0);
+  return legs.reduce((total, leg) => total + positiveIntegerCount(leg?.seats), 0);
+}
+
+function positiveIntegerCount(value: any): number {
+  if (typeof value === "number" && Number.isInteger(value) && value > 0) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (/^[0-9]+$/.test(trimmed)) {
+      const parsed = Number(trimmed);
+      return parsed > 0 ? parsed : 0;
+    }
+  }
+  return 0;
 }
 
 function normalizePassengerGender(gender?: string): string | undefined {
