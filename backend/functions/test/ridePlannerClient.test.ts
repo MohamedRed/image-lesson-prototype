@@ -1,6 +1,7 @@
 import {
   buildMultiLegReservationRequirements,
   buildPlannerRequest,
+  buildSingleLegProposalUpdate,
   planJourneyWithSingleLegReservationRetry,
   requestPlannerJourney,
 } from "../src/ride-sharing/plannerClient";
@@ -471,6 +472,45 @@ describe("planner client", () => {
     expect(result.journey.legs[0].driverId).toBe("driverB");
     expect(result.attemptedDriverIds).toEqual(["driverA", "driverB"]);
     expect(fetchBodies.map((body) => body.excludedDriverIds)).toEqual([[], ["driverA"]]);
+  });
+
+  it("builds single-leg proposal updates with planner-selected pickup and dropoff zones", () => {
+    const proposedAt = { sentinel: "serverTimestamp" };
+    const update = buildSingleLegProposalUpdate({
+      journey: {
+        legs: [{
+          driverId: " driverA ",
+          pickupZoneId: "zone-pickup",
+          dropoffZoneId: "zone-dropoff",
+          pickup: origin,
+          dropoff: destination,
+          etaSeconds: 120,
+        }],
+        totalEtaSeconds: 120,
+      },
+      reservation: {
+        success: true,
+        driverId: "driverA",
+        pickupZoneId: "zone-pickup",
+        dropoffZoneId: "zone-dropoff",
+        reservedResources: { seats: 1, cargo: {}, pets: {}, childSeats: {} },
+      },
+      pickupZoneId: "zone-pickup",
+      dropoffZoneId: "zone-dropoff",
+      attemptedDriverIds: ["driverA"],
+      excludedDriverIds: [],
+    }, proposedAt);
+
+    expect(update).toMatchObject({
+      assignedDriverId: "driverA",
+      pickupZoneId: "zone-pickup",
+      dropoffZoneId: "zone-dropoff",
+      state: "proposed",
+      proposedAt,
+      reservedResources: { seats: 1, cargo: {}, pets: {}, childSeats: {} },
+      attemptedDriverIds: ["driverA"],
+    });
+    expect(update.journey.legs[0].dropoffZoneId).toBe("zone-dropoff");
   });
 
   it("builds multi-leg reservation requirements only from planner-provided pickup/dropoff zones", () => {

@@ -20,7 +20,7 @@ import {
   encodeGeohash
 } from "./shared/geoHelpers";
 import { RadarTripService, RadarUserService } from "./services/location/radarService";
-import { planJourneyWithSingleLegReservationRetry, buildMultiLegReservationRequirements, buildResourceRequirements } from "./ride-sharing/plannerClient";
+import { planJourneyWithSingleLegReservationRetry, buildMultiLegReservationRequirements, buildResourceRequirements, buildSingleLegProposalUpdate } from "./ride-sharing/plannerClient";
 
 // Events functions
 export * from "./events/index";
@@ -189,25 +189,12 @@ export const singleHopMatcher = withMetrics("singleHopMatcher", onDocumentCreate
 
     // Handle both single-leg and multi-leg journeys
     if (journey.legs.length === 1) {
-      const firstLeg = journey.legs[0];
-      const driverId = firstLeg.driverId;
-      const pickupZoneId = planned.pickupZoneId || firstLeg.pickupZoneId;
-      const reservation = planned.reservation;
-
-      if (!reservation?.success) {
-        throw new Error("Single-leg planner returned without a successful reservation");
-      }
-
-      // Update ride request with single-leg match
-      await event.data!.ref.update({
-        assignedDriverId: driverId,
-        pickupZoneId,
-        state: "proposed",
-        proposedAt: admin.firestore.FieldValue.serverTimestamp(),
-        journey,
-        reservedResources: reservation.reservedResources,
-        attemptedDriverIds: planned.attemptedDriverIds,
-      });
+      // Update ride request with single-leg match, including the backend-selected
+      // legal dropoff curb so reservation/UI state stays aligned with planner output.
+      await event.data!.ref.update(buildSingleLegProposalUpdate(
+        planned,
+        admin.firestore.FieldValue.serverTimestamp()
+      ));
 
     } else {
       // Multi-leg journey - use multi-leg resource reservation

@@ -68,6 +68,46 @@ export interface PlannerReservationRetryResult {
   excludedDriverIds: string[];
 }
 
+export function buildSingleLegProposalUpdate(
+  planned: PlannerReservationRetryResult,
+  proposedAt: any
+): Record<string, any> {
+  const journey = planned.journey;
+  if (!journey.legs || journey.legs.length !== 1) {
+    throw new Error("Single-leg proposal update requires exactly one planner leg");
+  }
+
+  const firstLeg = journey.legs[0];
+  const driverId = String(firstLeg.driverId ?? "").trim();
+  const pickupZoneId = planned.pickupZoneId || firstLeg.pickupZoneId;
+  const dropoffZoneId = planned.dropoffZoneId || firstLeg.dropoffZoneId;
+  const reservation = planned.reservation;
+
+  if (!driverId) {
+    throw new Error("Planner leg missing driverId");
+  }
+  if (!pickupZoneId) {
+    throw new Error(`Planner leg missing pickupZoneId for driver ${driverId}`);
+  }
+  if (!dropoffZoneId) {
+    throw new Error(`Planner leg missing dropoffZoneId for driver ${driverId}`);
+  }
+  if (!reservation?.success) {
+    throw new Error("Single-leg planner returned without a successful reservation");
+  }
+
+  return {
+    assignedDriverId: driverId,
+    pickupZoneId,
+    dropoffZoneId,
+    state: "proposed",
+    proposedAt,
+    journey,
+    reservedResources: reservation.reservedResources,
+    attemptedDriverIds: planned.attemptedDriverIds,
+  };
+}
+
 export function normalizeDriverIds(driverIds: string[] = []): string[] {
   const normalized: string[] = [];
   const seen = new Set<string>();
