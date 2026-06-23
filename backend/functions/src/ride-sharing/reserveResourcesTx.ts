@@ -285,12 +285,44 @@ function passengerGenderUpdate(currentPassengerGenders: unknown[], riderGender?:
   return [...currentPassengerGenderPool(currentPassengerGenders), normalizedRiderGender];
 }
 
+function booleanLike(value: any): boolean | undefined {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+  }
+  return undefined;
+}
+
 function premiumCapabilityRequired(value: any): boolean {
-  return typeof value !== "boolean" || value === true;
+  const normalized = booleanLike(value);
+  if (normalized === false) {
+    return false;
+  }
+  return true;
+}
+
+function premiumCapabilityMatches(requested: any, capability: any): boolean {
+  const requestedBool = booleanLike(requested);
+  if (requestedBool === false) {
+    return true;
+  }
+  if (requestedBool === true) {
+    return booleanLike(capability) === true;
+  }
+
+  const capabilityBool = booleanLike(capability);
+  if (capabilityBool !== undefined) {
+    return capabilityBool === true;
+  }
+  return capability === requested;
 }
 
 function exclusiveRequested(premiumRequested?: Record<string, any>): boolean {
-  return premiumRequested?.exclusive === true;
+  return booleanLike(premiumRequested?.exclusive) === true;
 }
 
 function driverHasExistingPassengers(driverData: any): boolean {
@@ -312,7 +344,7 @@ function validatePremiumRequirements(driverData: any, premiumRequested?: Record<
     if (!premiumCapabilityRequired(value)) {
       continue;
     }
-    if (capabilities[key] !== value) {
+    if (!premiumCapabilityMatches(value, capabilities[key])) {
       return { valid: false, error: `Missing premium capability: ${key}` };
     }
   }

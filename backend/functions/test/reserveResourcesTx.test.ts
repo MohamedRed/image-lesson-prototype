@@ -147,6 +147,80 @@ describe("reserveResourcesTransaction", () => {
     expect(result.error).toContain("exclusive ride requires empty vehicle");
   });
 
+  it("treats string-backed exclusive premium requests as occupancy-restricting", async () => {
+    const db = fakeReservationDb({
+      "drivers/exclusive-occupied-string": {
+        capacitySeats: 4,
+        activePickups: 0,
+        legs: [{ seats: 1 }],
+        premiumCapabilities: { exclusive: "true" },
+      },
+      "pickupZones/zone-1": {
+        capacityCars: 10,
+        activePickups: 0,
+      },
+    }, []);
+
+    const result = await reserveResourcesTransaction(
+      "exclusive-occupied-string",
+      "zone-1",
+      { passengerCount: 1, premiumRequested: { exclusive: "true" } } as any,
+      db as never
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("exclusive ride requires empty vehicle");
+  });
+
+  it("matches string-backed true premium requests against boolean driver capabilities", async () => {
+    const updates: Array<{ path: string; data: Record<string, unknown> }> = [];
+    const db = fakeReservationDb({
+      "drivers/exclusive-empty-string-request": {
+        capacitySeats: 4,
+        activePickups: 0,
+        premiumCapabilities: { exclusive: true },
+      },
+      "pickupZones/zone-1": {
+        capacityCars: 10,
+        activePickups: 0,
+      },
+    }, updates);
+
+    const result = await reserveResourcesTransaction(
+      "exclusive-empty-string-request",
+      "zone-1",
+      { passengerCount: 1, premiumRequested: { exclusive: "true" } } as any,
+      db as never
+    );
+
+    expect(result.success).toBe(true);
+    expect(updates.map((update) => update.path)).toEqual(["drivers/exclusive-empty-string-request", "pickupZones/zone-1"]);
+  });
+
+  it("ignores string-backed false premium toggles", async () => {
+    const updates: Array<{ path: string; data: Record<string, unknown> }> = [];
+    const db = fakeReservationDb({
+      "drivers/non-exclusive-string-false": {
+        capacitySeats: 4,
+        activePickups: 0,
+        premiumCapabilities: {},
+      },
+      "pickupZones/zone-1": {
+        capacityCars: 10,
+        activePickups: 0,
+      },
+    }, updates);
+
+    const result = await reserveResourcesTransaction(
+      "non-exclusive-string-false",
+      "zone-1",
+      { passengerCount: 1, premiumRequested: { exclusive: "false" } } as any,
+      db as never
+    );
+
+    expect(result.success).toBe(true);
+  });
+
   it("normalizes rider gender before reservation pool comparison and persistence", async () => {
     const updates: Array<{ path: string; data: Record<string, unknown> }> = [];
     const db = fakeReservationDb({
