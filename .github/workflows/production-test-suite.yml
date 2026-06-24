@@ -1,0 +1,252 @@
+name: Production Test Suite
+
+on:
+  push:
+    branches: [main, develop, "codex/**"]
+    paths:
+      - ".github/workflows/production-test-suite.yml"
+      - "backend/planner/**"
+      - "backend/functions/src/ride-sharing/**"
+      - "backend/functions/test/ridePlannerClient.test.ts"
+      - "backend/functions/test/reserveResourcesTx.test.ts"
+      - "backend/functions/package.json"
+      - "backend/functions/package-lock.json"
+      - "backend/functions/tsconfig.json"
+      - "backend/functions/tsconfig.test.json"
+      - "backend/functions/jest.config.js"
+      - "infra/ride-sharing/**"
+      - "android/**"
+      - "Packages/RideSharingFeature/**"
+      - "Liive Ride Design System/**"
+      - "ci/production-test-suite.sh"
+      - "docs/production-test-suite.md"
+      - "scripts/verify-production-test-suite.py"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/production-test-suite.yml"
+      - "backend/planner/**"
+      - "backend/functions/src/ride-sharing/**"
+      - "backend/functions/test/ridePlannerClient.test.ts"
+      - "backend/functions/test/reserveResourcesTx.test.ts"
+      - "backend/functions/package.json"
+      - "backend/functions/package-lock.json"
+      - "backend/functions/tsconfig.json"
+      - "backend/functions/tsconfig.test.json"
+      - "backend/functions/jest.config.js"
+      - "infra/ride-sharing/**"
+      - "android/**"
+      - "Packages/RideSharingFeature/**"
+      - "Liive Ride Design System/**"
+      - "ci/production-test-suite.sh"
+      - "docs/production-test-suite.md"
+      - "scripts/verify-production-test-suite.py"
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: production-test-suite-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  suite-contract:
+    name: Suite wiring contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify production test suite source contract
+        run: python3 scripts/verify-production-test-suite.py
+
+  planner:
+    name: Planner unit/build/container
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: suite-contract
+    defaults:
+      run:
+        shell: bash
+        working-directory: backend/planner
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/planner/go.mod
+          cache-dependency-path: backend/planner/go.sum
+
+      - name: Run planner tests
+        run: go test ./...
+
+      - name: Build planner binary
+        run: go build -o /tmp/rideplanner-build-check .
+
+      - name: Build planner container image
+        run: docker build -t rideplanner:test .
+
+  functions:
+    name: Functions planner/reservation seam
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: suite-contract
+    defaults:
+      run:
+        shell: bash
+        working-directory: backend/functions
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/functions/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Run ride-sharing seam tests
+        run: npm run test:ride-sharing
+
+      - name: Typecheck ride-sharing seam
+        run: npm run typecheck:ride-sharing
+
+  terraform:
+    name: Terraform ride-sharing validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: suite-contract
+    defaults:
+      run:
+        shell: bash
+        working-directory: infra/ride-sharing
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.5
+
+      - name: Run ride-sharing Terraform source contracts
+        run: python3 test_cloud_run_security.py
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init without remote backend
+        run: terraform init -backend=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+  android:
+    name: Android visual parity/unit/APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    needs: suite-contract
+    env:
+      APPETIZE_API_TOKEN: ${{ secrets.APPETIZE_API_TOKEN }}
+      APPETIZE_PUBLIC_KEY: ${{ secrets.APPETIZE_PUBLIC_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run Android visual parity, unit tests, and debug build
+        run: ./android/ci/cloud-apk-build.sh
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: liive-ride-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Upload debug APK to Appetize
+        id: appetize
+        if: ${{ env.APPETIZE_API_TOKEN != '' }}
+        uses: appetizeio/github-action-appetize@v1.0.5
+        with:
+          apiToken: ${{ env.APPETIZE_API_TOKEN }}
+          publicKey: ${{ env.APPETIZE_PUBLIC_KEY }}
+          platform: android
+          appFile: android/app/build/outputs/apk/debug/app-debug.apk
+          fileType: apk
+          note: "Liive Ride Android debug APK from ${{ github.sha }}"
+          timeout: "120"
+
+      - name: Publish Appetize preview link
+        if: ${{ steps.appetize.outputs.publicKey != '' }}
+        run: |
+          URL="https://appetize.io/app/${{ steps.appetize.outputs.publicKey }}"
+          mkdir -p "$RUNNER_TEMP/liive-ride-appetize"
+          printf '%s\n' "$URL" > "$RUNNER_TEMP/liive-ride-appetize/url.txt"
+          echo "### Liive Ride Android Appetize preview" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "$URL" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Appetize preview link artifact
+        if: ${{ steps.appetize.outputs.publicKey != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: liive-ride-appetize-preview
+          path: ${{ runner.temp }}/liive-ride-appetize/url.txt
+          if-no-files-found: error
+
+      - name: Missing Appetize token note
+        if: ${{ env.APPETIZE_API_TOKEN == '' }}
+        run: |
+          echo "### Liive Ride Android APK built" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Set the APPETIZE_API_TOKEN repository secret to enable automatic Appetize upload." >> "$GITHUB_STEP_SUMMARY"
+
+  ios:
+    name: iOS flow/snapshot checks
+    runs-on: macos-15
+    timeout-minutes: 30
+    needs: suite-contract
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Run flow check
+        run: swift run --package-path Packages/RideSharingFeature -j 1 RideSharingFeatureFlowCheck
+
+      - name: Render native snapshots
+        run: swift run --package-path Packages/RideSharingFeature -j 1 RideSharingFeatureSnapshot "$RUNNER_TEMP/liive-ride-ios-snapshots"
+
+      - name: Upload snapshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: liive-ride-ios-snapshots
+          path: ${{ runner.temp }}/liive-ride-ios-snapshots
+          if-no-files-found: error
